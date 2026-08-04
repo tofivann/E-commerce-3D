@@ -1,0 +1,20 @@
+# Entorno virtual
+backend/venv/
+venv/
+env/
+
+# Base de datos local de SQLite
+*.sqlite3
+backend/db.sqlite3
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+
+# Variables de entorno secretas (si las tienes)
+.env
+
+# Archivos de Node/Frontend (para cuando instales paquetes)
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
