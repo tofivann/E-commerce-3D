@@ -3,16 +3,12 @@ from django.contrib.auth.models import AbstractUser
 
 
 # ------------------------------------------------------------------------------
-# 1. USUARIOS Y PERFILES
+# 1. USUARIOS Y PERFILES (HERENCIA 1:1)
 # ------------------------------------------------------------------------------
 
 class Usuario(AbstractUser):
-    """
-    Modelo de Usuario personalizado basado en el AbstractUser de Django.
-    Aprovecha la autenticación nativa (hash de contraseñas, permisos, etc.).
-    """
-    email = models.EmailField(unique=True, max_length=150)
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
@@ -23,60 +19,56 @@ class Usuario(AbstractUser):
 
 
 class Administrador(models.Model):
-    class NivelAcceso(models.TextChoices):
-        SUPER_ADMIN = 'SUPER_ADMIN', 'Super Admin'
-        ADMIN = 'ADMIN', 'Administrador'
-
     usuario = models.OneToOneField(
         Usuario, 
         on_delete=models.CASCADE, 
-        primary_key=True,
+        primary_key=True, 
         related_name='perfil_admin'
     )
-    nivel_acceso = models.CharField(
-        max_length=20, 
-        choices=NivelAcceso.choices, 
-        default=NivelAcceso.SUPER_ADMIN
-    )
+    nivel_acceso = models.CharField(max_length=50, default='General')
+
+    class Meta:
+        verbose_name = "Administrador"
+        verbose_name_plural = "Administradores"
 
     def __str__(self):
         return f"Admin: {self.usuario.nombre}"
 
 
 class Cliente(models.Model):
-    class EstadoSuscripcion(models.TextChoices):
-        ACTIVO = 'ACT', 'Activo'
-        INACTIVO = 'INA', 'Inactivo'
-
     usuario = models.OneToOneField(
         Usuario, 
         on_delete=models.CASCADE, 
-        primary_key=True,
+        primary_key=True, 
         related_name='perfil_cliente'
     )
-    estado_suscripcion = models.CharField(
-        max_length=3, 
-        choices=EstadoSuscripcion.choices, 
-        default=EstadoSuscripcion.INACTIVO
-    )
+    estado_suscripcion = models.CharField(max_length=50, default='Inactivo')
+
+    class Meta:
+        verbose_name = "Cliente"
+        verbose_name_plural = "Clientes"
 
     def __str__(self):
         return f"Cliente: {self.usuario.nombre}"
 
 
 # ------------------------------------------------------------------------------
-# 2. CATÁLOGO DE PRODUCTOS (MODELOS 3D / ARCHIVOS)
+# 2. CATÁLOGO DE PRODUCTOS (MODELOS 3D)
 # ------------------------------------------------------------------------------
 
 class Producto(models.Model):
-    titulo = models.CharField(max_length=150)
-    descripcion = models.TextField(blank=True, null=True)
-    formato_archivo = models.CharField(max_length=20, help_text="Ej: OBJ, FBX, STL, BLEND")
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    archivo_url = models.URLField(max_length=255, help_text="Enlace al archivo 3D o almacenamiento cloud")
-    imagen_url_preview = models.URLField(max_length=255, help_text="Enlace a la vista previa / render")
+    formato_archivo = models.CharField(max_length=50, help_text="Ej: STL, OBJ, FBX")
+    archivo_3d = models.FileField(upload_to='modelos_3d/')
+    imagen_previa = models.URLField(max_length=500, null=True, blank=True, help_text="URL de la imagen de previsualización")
     activo = models.BooleanField(default=True)
-    fecha_de_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Producto"
+        verbose_name_plural = "Productos"
 
     def __str__(self):
         return self.titulo
@@ -86,18 +78,38 @@ class Producto(models.Model):
 # 3. CARRITO DE COMPRAS
 # ------------------------------------------------------------------------------
 
+class Carrito(models.Model):
+    cliente = models.OneToOneField(
+        Cliente, 
+        on_delete=models.CASCADE, 
+        related_name='carrito'
+    )
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Carrito"
+        verbose_name_plural = "Carritos"
+
+    def __str__(self):
+        return f"Carrito de {self.cliente.usuario.nombre}"
+
+
 class CarritoItem(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='carrito_items')
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='en_carritos')
+    carrito = models.ForeignKey(
+        Carrito, 
+        on_delete=models.CASCADE, 
+        related_name='items'
+    )
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
 
     class Meta:
-        verbose_name = "Item de Carrito"
-        verbose_name_plural = "Items de Carrito"
-        unique_together = ('cliente', 'producto')
+        verbose_name = "Ítem de Carrito"
+        verbose_name_plural = "Ítems de Carrito"
+        unique_together = ('carrito', 'producto')
 
     def __str__(self):
-        return f"{self.cantidad}x {self.producto.titulo} (Cliente: {self.cliente.usuario.nombre})"
+        return f"{self.cantidad}x {self.producto.titulo}"
 
 
 # ------------------------------------------------------------------------------
@@ -105,77 +117,171 @@ class CarritoItem(models.Model):
 # ------------------------------------------------------------------------------
 
 class Orden(models.Model):
+    class EstadoPago(models.TextChoices):
+        PENDIENTE = 'PENDIENTE', 'Pendiente'
+        COMPLETADO = 'COMPLETADO', 'Completado'
+        REEMBOLSADO = 'REEMBOLSADO', 'Reembolsado'
+        CANCELADO = 'CANCELADO', 'Cancelado'
+
     class TipoOrden(models.TextChoices):
         CATALOGO = 'CATALOGO', 'Catálogo'
         ENCARGO = 'ENCARGO', 'Encargo Personalizado'
 
-    class PasarelaPago(models.TextChoices):
-        PAYPAL = 'PAYPAL', 'PayPal'
-        STRIPE = 'STRIPE', 'Stripe'
-
-    class EstadoPago(models.TextChoices):
-        PENDIENTE = 'PENDIENTE', 'Pendiente'
-        COMPLETADO = 'COMPLETADO', 'Completado'
-        CANCELADO = 'CANCELADO', 'Cancelado'
-
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='ordenes')
-    tipo_de_orden = models.CharField(max_length=20, choices=TipoOrden.choices)
+    codigo_orden = models.CharField(max_length=100, unique=True)
+    cliente = models.ForeignKey(
+        Cliente, 
+        on_delete=models.CASCADE, 
+        related_name='ordenes'
+    )
     total = models.DecimalField(max_digits=10, decimal_places=2)
-    pasarela_de_pago = models.CharField(max_length=20, choices=PasarelaPago.choices)
-    transaccion_pasarela_id = models.CharField(max_length=255, blank=True, null=True)
-    estado_de_pago = models.CharField(max_length=20, choices=EstadoPago.choices, default=EstadoPago.PENDIENTE)
+    estado_pago = models.CharField(
+        max_length=20, 
+        choices=EstadoPago.choices, 
+        default=EstadoPago.PENDIENTE
+    )
+    tipo_orden = models.CharField(
+        max_length=20, 
+        choices=TipoOrden.choices, 
+        default=TipoOrden.CATALOGO
+    )
+    pasarela_pago = models.CharField(max_length=50, help_text="Ej: Stripe, PayPal")
     fecha_orden = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Orden"
+        verbose_name_plural = "Órdenes"
+
     def __str__(self):
-        return f"Orden #{self.id} - {self.cliente.usuario.nombre} ({self.estado_de_pago})"
+        return f"Orden {self.codigo_orden} - {self.cliente.usuario.nombre}"
 
 
 class DetalleOrden(models.Model):
-    orden = models.ForeignKey(Orden, on_delete=models.CASCADE, related_name='detalles')
-    producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True, related_name='detalles_orden')
-    cantidad = models.PositiveIntegerField(default=1)
+    orden = models.ForeignKey(
+        Orden, 
+        on_delete=models.CASCADE, 
+        related_name='detalles'
+    )
+    producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
 
+    class Meta:
+        verbose_name = "Detalle de Orden"
+        verbose_name_plural = "Detalles de Órdenes"
+
     def __str__(self):
-        return f"Detalle Orden #{self.orden.id} - Producto: {self.producto}"
+        return f"{self.producto.titulo if self.producto else 'Producto Eliminado'} (${self.precio_unitario})"
 
 
 # ------------------------------------------------------------------------------
-# 5. ENCARGOS PERSONALIZADOS
+# 5. COMPRAS DIGITALES (PERMISOS DE DESCARGA / HISTORIAL ADQUIRIDO)
+# ------------------------------------------------------------------------------
+
+class ComprasDigitales(models.Model):
+    cliente = models.ForeignKey(
+        Cliente, 
+        on_delete=models.CASCADE, 
+        related_name='compras_digitales'
+    )
+    producto = models.ForeignKey(
+        Producto, 
+        on_delete=models.CASCADE, 
+        related_name='comprado_en'
+    )
+    orden = models.ForeignKey(
+        Orden, 
+        on_delete=models.CASCADE, 
+        related_name='compras_digitales',
+        help_text="Orden de compra que originó este registro."
+    )
+    activo = models.BooleanField(
+        default=True, 
+        help_text="Indica si el cliente conserva el acceso para descargar el archivo."
+    )
+    fecha_adquisicion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'compras_digitales'
+        verbose_name = "Compra Digital"
+        verbose_name_plural = "Compras Digitales"
+        unique_together = ('cliente', 'producto', 'orden')
+
+    def __str__(self):
+        estado_str = "Activo" if self.activo else "Inactivo"
+        return f"{self.cliente.usuario.nombre} - {self.producto.titulo} [{estado_str}]"
+
+
+# ------------------------------------------------------------------------------
+# 6. ENCARGOS PERSONALIZADOS
 # ------------------------------------------------------------------------------
 
 class EncargoPersonalizado(models.Model):
     class EstadoEncargo(models.TextChoices):
         SOLICITADO = 'SOLICITADO', 'Solicitado'
         EN_PROCESO = 'EN_PROCESO', 'En Proceso'
-        REVISION = 'REVISION', 'En Revisión'
         COMPLETADO = 'COMPLETADO', 'Completado'
         CANCELADO = 'CANCELADO', 'Cancelado'
 
-    orden = models.OneToOneField(Orden, on_delete=models.CASCADE, related_name='encargo_personalizado')
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='encargos')
-    brief_instrucciones = models.TextField()
-    archivos_de_referencia_url = models.TextField(blank=True, null=True, help_text="URLs o referencias de archivos adjuntos")
-    presupuesto_estimado = models.DecimalField(max_digits=10, decimal_places=2)
-    fecha_de_entrega_estimada = models.DateField(blank=True, null=True)
-    estado_de_encargo = models.CharField(
+    orden = models.OneToOneField(
+        Orden, 
+        on_delete=models.CASCADE, 
+        related_name='encargo'
+    )
+    cliente = models.ForeignKey(
+        Cliente, 
+        on_delete=models.CASCADE, 
+        related_name='encargos'
+    )
+    descripcion_requerimientos = models.TextField()
+    archivo_referencia = models.FileField(upload_to='referencias_encargos/', null=True, blank=True)
+    estado_encargo = models.CharField(
         max_length=20, 
         choices=EstadoEncargo.choices, 
         default=EstadoEncargo.SOLICITADO
     )
-    archivo_final_url = models.CharField(max_length=255, blank=True, null=True, help_text="Enlace de entrega del modelo 3D final")
+    fecha_entrega_estimada = models.DateField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Encargo Personalizado"
+        verbose_name_plural = "Encargos Personalizados"
 
     def __str__(self):
-        return f"Encargo #{self.id} - Orden #{self.orden.id}"
+        return f"Encargo #{self.id} - {self.cliente.usuario.nombre}"
 
 
 # ------------------------------------------------------------------------------
-# 6. MÓDULO DE CHAT / CONVERSACIONES
+# 7. CHAT Y MENSAJERÍA
 # ------------------------------------------------------------------------------
 
 class Conversacion(models.Model):
-    cliente = models.OneToOneField(Cliente, on_delete=models.CASCADE, related_name='conversacion')
+    cliente = models.ForeignKey(
+        Cliente, 
+        on_delete=models.CASCADE, 
+        related_name='conversaciones'
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_ultima_actividad = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Conversación"
+        verbose_name_plural = "Conversaciones"
 
     def __str__(self):
-        return f"Conversación con {self.cliente.usuario.nombre}"
+        return f"Conversación #{self.id} con {self.cliente.usuario.nombre}"
+
+
+class Mensaje(models.Model):
+    conversacion = models.ForeignKey(
+        Conversacion, 
+        on_delete=models.CASCADE, 
+        related_name='mensajes'
+    )
+    remitente = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    contenido = models.TextField()
+    fecha_envio = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Mensaje"
+        verbose_name_plural = "Mensajes"
+
+    def __str__(self):
+        return f"Mensaje de {self.remitente.nombre} en Conv #{self.conversacion.id}"
