@@ -2,8 +2,6 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     Usuario,
-    Administrador,
-    Cliente,
     Producto,
     Carrito,
     CarritoItem,
@@ -17,30 +15,27 @@ from .models import (
 
 
 # ------------------------------------------------------------------------------
-# 1. USUARIOS Y PERFILES
+# 1. USUARIOS Y PERFILES (MODELO UNIFICADO)
 # ------------------------------------------------------------------------------
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
-    list_display = ('email', 'nombre', 'username', 'is_staff', 'fecha_registro')
+    list_display = ('email', 'nombre', 'username', 'rol', 'estado_suscripcion', 'is_staff', 'fecha_registro')
+    list_filter = ('rol', 'estado_suscripcion', 'is_staff', 'is_active')
     search_fields = ('email', 'nombre', 'username')
     ordering = ('-fecha_registro',)
+    
+    # Adaptación de fieldsets para incluir los nuevos campos del modelo unificado
     fieldsets = UserAdmin.fieldsets + (
-        ('Información Adicional', {'fields': ('nombre',)}),
+        ('Información de Perfil y Suscripción', {
+            'fields': ('nombre', 'rol', 'estado_suscripcion')
+        }),
     )
-
-
-@admin.register(Administrador)
-class AdministradorAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'nivel_acceso')
-    search_fields = ('usuario__nombre', 'usuario__email')
-
-
-@admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'estado_suscripcion')
-    search_fields = ('usuario__nombre', 'usuario__email')
-    list_filter = ('estado_suscripcion',)
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Información Adicional', {
+            'fields': ('nombre', 'email', 'rol', 'estado_suscripcion')
+        }),
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -59,17 +54,23 @@ class ProductoAdmin(admin.ModelAdmin):
 # 3. CARRITO DE COMPRAS
 # ------------------------------------------------------------------------------
 
+class CarritoItemInline(admin.TabularInline):
+    model = CarritoItem
+    extra = 1
+
+
 @admin.register(Carrito)
 class CarritoAdmin(admin.ModelAdmin):
-    list_display = ('cliente', 'fecha_actualizacion')
-    search_fields = ('cliente__usuario__nombre', 'cliente__usuario__email')
+    list_display = ('usuario', 'fecha_actualizacion')
+    search_fields = ('usuario__nombre', 'usuario__email')
     readonly_fields = ('fecha_actualizacion',)
+    inlines = [CarritoItemInline]
 
 
 @admin.register(CarritoItem)
 class CarritoItemAdmin(admin.ModelAdmin):
     list_display = ('carrito', 'producto')
-    search_fields = ('carrito__cliente__usuario__nombre', 'producto__titulo')
+    search_fields = ('carrito__usuario__nombre', 'producto__titulo')
     list_filter = ('producto',)
 
 
@@ -77,13 +78,20 @@ class CarritoItemAdmin(admin.ModelAdmin):
 # 4. ÓRDENES Y DETALLES
 # ------------------------------------------------------------------------------
 
+class DetalleOrdenInline(admin.TabularInline):
+    model = DetalleOrden
+    extra = 0
+    readonly_fields = ('precio_unitario',)
+
+
 @admin.register(Orden)
 class OrdenAdmin(admin.ModelAdmin):
-    list_display = ('codigo_orden', 'cliente', 'total', 'estado_pago', 'tipo_orden', 'fecha_orden')
+    list_display = ('codigo_orden', 'usuario', 'total', 'estado_pago', 'tipo_orden', 'fecha_orden')
     list_filter = ('estado_pago', 'tipo_orden', 'fecha_orden')
-    search_fields = ('codigo_orden', 'cliente__usuario__nombre', 'cliente__usuario__email')
+    search_fields = ('codigo_orden', 'usuario__nombre', 'usuario__email')
     list_editable = ('estado_pago',)
     readonly_fields = ('fecha_orden',)
+    inlines = [DetalleOrdenInline]
 
 
 @admin.register(DetalleOrden)
@@ -99,11 +107,11 @@ class DetalleOrdenAdmin(admin.ModelAdmin):
 
 @admin.register(ComprasDigitales)
 class ComprasDigitalesAdmin(admin.ModelAdmin):
-    list_display = ('cliente', 'producto', 'orden', 'activo', 'fecha_adquisicion')
+    list_display = ('usuario', 'producto', 'orden', 'activo', 'fecha_adquisicion')
     list_filter = ('activo', 'fecha_adquisicion')
     search_fields = (
-        'cliente__usuario__nombre',
-        'cliente__usuario__email',
+        'usuario__nombre',
+        'usuario__email',
         'producto__titulo',
         'orden__codigo_orden',
     )
@@ -117,9 +125,9 @@ class ComprasDigitalesAdmin(admin.ModelAdmin):
 
 @admin.register(EncargoPersonalizado)
 class EncargoPersonalizadoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'cliente', 'orden', 'estado_encargo', 'fecha_entrega_estimada')
+    list_display = ('id', 'usuario', 'orden', 'estado_encargo', 'fecha_entrega_estimada')
     list_filter = ('estado_encargo', 'fecha_entrega_estimada')
-    search_fields = ('cliente__usuario__nombre', 'descripcion_requerimientos', 'orden__codigo_orden')
+    search_fields = ('usuario__nombre', 'descripcion_requerimientos', 'orden__codigo_orden')
     list_editable = ('estado_encargo', 'fecha_entrega_estimada')
 
 
@@ -127,11 +135,18 @@ class EncargoPersonalizadoAdmin(admin.ModelAdmin):
 # 7. CHAT Y MENSAJERÍA
 # ------------------------------------------------------------------------------
 
+class MensajeInline(admin.TabularInline):
+    model = Mensaje
+    extra = 1
+    readonly_fields = ('fecha_envio',)
+
+
 @admin.register(Conversacion)
 class ConversacionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'cliente', 'fecha_creacion', 'fecha_ultima_actividad')
-    search_fields = ('cliente__usuario__nombre', 'cliente__usuario__email')
+    list_display = ('id', 'usuario', 'fecha_creacion', 'fecha_ultima_actividad')
+    search_fields = ('usuario__nombre', 'usuario__email')
     readonly_fields = ('fecha_creacion', 'fecha_ultima_actividad')
+    inlines = [MensajeInline]
 
 
 @admin.register(Mensaje)
