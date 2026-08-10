@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from users.models import Usuario
+from products.models import Producto
+from shopping_cart.models import *
+
 from .models import (
-    Usuario,
-    Producto,
-    Carrito,
-    CarritoItem,
     Orden,
     DetalleOrden,
     ComprasDigitales,
@@ -12,66 +12,6 @@ from .models import (
     Conversacion,
     Mensaje,
 )
-
-
-# ------------------------------------------------------------------------------
-# 1. USUARIOS Y PERFILES (MODELO UNIFICADO)
-# ------------------------------------------------------------------------------
-
-@admin.register(Usuario)
-class UsuarioAdmin(UserAdmin):
-    list_display = ('email', 'nombre', 'username', 'rol', 'estado_suscripcion', 'is_staff', 'fecha_registro')
-    list_filter = ('rol', 'estado_suscripcion', 'is_staff', 'is_active')
-    search_fields = ('email', 'nombre', 'username')
-    ordering = ('-fecha_registro',)
-    
-    # Adaptación de fieldsets para incluir los nuevos campos del modelo unificado
-    fieldsets = UserAdmin.fieldsets + (
-        ('Información de Perfil y Suscripción', {
-            'fields': ('nombre', 'rol', 'estado_suscripcion')
-        }),
-    )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información Adicional', {
-            'fields': ('nombre', 'email', 'rol', 'estado_suscripcion')
-        }),
-    )
-
-
-# ------------------------------------------------------------------------------
-# 2. CATÁLOGO DE PRODUCTOS (MODELOS 3D)
-# ------------------------------------------------------------------------------
-
-@admin.register(Producto)
-class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'precio', 'formato_archivo', 'activo', 'fecha_creacion')
-    list_filter = ('activo', 'formato_archivo', 'fecha_creacion')
-    search_fields = ('titulo', 'descripcion')
-    list_editable = ('precio', 'activo')
-
-
-# ------------------------------------------------------------------------------
-# 3. CARRITO DE COMPRAS
-# ------------------------------------------------------------------------------
-
-class CarritoItemInline(admin.TabularInline):
-    model = CarritoItem
-    extra = 1
-
-
-@admin.register(Carrito)
-class CarritoAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'fecha_actualizacion')
-    search_fields = ('usuario__nombre', 'usuario__email')
-    readonly_fields = ('fecha_actualizacion',)
-    inlines = [CarritoItemInline]
-
-
-@admin.register(CarritoItem)
-class CarritoItemAdmin(admin.ModelAdmin):
-    list_display = ('carrito', 'producto')
-    search_fields = ('carrito__usuario__nombre', 'producto__titulo')
-    list_filter = ('producto',)
 
 
 # ------------------------------------------------------------------------------

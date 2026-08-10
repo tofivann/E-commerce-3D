@@ -19,7 +19,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']  # <-- CORREGIDO: Permite conexiones en desarrollo local
 
 # 1. Modelo de usuario personalizado
-AUTH_USER_MODEL = 'store.Usuario'
+AUTH_USER_MODEL = 'users.Usuario'
 
 # 2. Apps instaladas
 INSTALLED_APPS = [
@@ -36,6 +36,9 @@ INSTALLED_APPS = [
     
     # Apps locales
     'store',
+    'users', 
+    'products',
+    'shopping_cart'
 ]
 
 # 3. Middleware (CorsMiddleware debe ir arriba de CommonMiddleware)
