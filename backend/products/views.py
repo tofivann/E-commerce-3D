@@ -19,6 +19,6 @@ class ProductoViewSet(viewsets.ModelViewSet):
         # Para usuarios normales solo muestra productos activos.
         # Si es un administrador, muestra absolutamente todos los productos.
         user = self.request.user
-        if user.is_staff:
+        if user.is_staff: #is_staff, is_superuser son propiedades de el usuario de django para indicar si son admin u superuser.
             return Producto.objects.all()
         return Producto.objects.filter(activo=True)
