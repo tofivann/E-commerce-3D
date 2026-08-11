@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Usuario
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -35,3 +36,22 @@ class UsuarioSerializer(serializers.ModelSerializer):
             
         instance.save()
         return instance
+
+# ==========================================
+# SERIALIZER PERSONALIZADO PARA LOGIN (JWT)
+# ==========================================
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Inyectamos los datos del usuario en la respuesta del Login
+        data['user'] = {
+            'id': self.user.id,
+            'username': self.user.username,
+            'email': self.user.email,
+            'first_name': getattr(self.user, 'first_name', ''),
+            'last_name': getattr(self.user, 'last_name', ''),
+            'is_staff': self.user.is_staff,
+        }
+
+        return data
