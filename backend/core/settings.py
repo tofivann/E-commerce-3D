@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url  
+from .jwt_settings import SIMPLE_JWT
 
 # Cargar variables del archivo .env
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,6 +34,8 @@ INSTALLED_APPS = [
     # Librerías de terceros
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
+
     
     # Apps locales
     'store',
