@@ -31,17 +31,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # Librerías de terceros
+   # Librerías de terceros
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
 
     
     # Apps locales
-    'store',
     'users', 
     'products',
-    'shopping_cart'
+    'shopping_cart',
+    'orders',
+    'custom_orders',
+    'chat',
 ]
 
 # 3. Middleware (CorsMiddleware debe ir arriba de CommonMiddleware)
