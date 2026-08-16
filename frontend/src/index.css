@@ -1,1 +1,61 @@
 @import "tailwindcss";
+
+@theme {
+  /* Colores de Aether3D / MMD3D */
+  --color-background: #111317;
+  --color-surface: #111317;
+  --color-surface-dim: #111317;
+  --color-surface-bright: #37393e;
+  --color-surface-container-lowest: #0c0e12;
+  --color-surface-container-low: #1a1c20;
+  --color-surface-container: #1e2024;
+  --color-surface-container-high: #282a2e;
+  --color-surface-container-highest: #333539;
+  --color-surface-variant: #333539;
+
+  --color-primary: #dbfcff;
+  --color-primary-container: #00f0ff;
+  --color-primary-fixed: #7df4ff;
+  --color-primary-fixed-dim: #00dbe9;
+  --color-on-primary: #00363a;
+  --color-on-primary-container: #006970;
+  --color-on-primary-fixed: #002022;
+
+  --color-secondary: #e9b3ff;
+  --color-secondary-container: #7d01b1;
+  --color-on-secondary-container: #e5a9ff;
+
+  --color-on-surface: #e2e2e8;
+  --color-on-surface-variant: #b9cacb;
+  --color-outline: #849495;
+  --color-outline-variant: #3b494b;
+
+  /* Espaciados personalizados */
+  --spacing-gutter: 24px;
+  --spacing-container-max: 1440px;
+}
+
+/* Clases especiales del diseño */
+.glass-panel {
+  background: rgba(26, 28, 32, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(132, 148, 149, 0.2);
+}
+
+.btn-glow-inner {
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.2);
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.card-hover:hover img {
+  transform: scale(1.05);
+}

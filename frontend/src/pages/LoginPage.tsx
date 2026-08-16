@@ -1,38 +1,48 @@
-import React, { useState } from 'react';
-import { authApi } from '../services/authApi';
-import { InputField } from '../components/ui/InputField';
-import { Button } from '../components/ui/Button';
-import { AuthCard } from '../components/ui/AuthCard';
+import React, { useState } from "react";
+import { authApi } from "../services/authApi";
+import { InputField } from "../components/ui/InputField";
+import { Button } from "../components/ui/Button";
+import { AuthCard } from "../components/ui/AuthCard";
 
-export const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+// 1. AGREGAMOS ESTO: Le decimos a TypeScript que este componente acepta una función llamada "onLoginSuccess"
+interface LoginPageProps {
+  onLoginSuccess?: () => void;
+}
+
+// 2. MODIFICAMOS ESTA LÍNEA: Agregamos <LoginPageProps> y recibimos { onLoginSuccess }
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
+
+    //REVISARRR ESTO IVAN PARA EL INICIO DE SESION-------------------------------------
 
     try {
       // Intentamos loguear con el backend
       const data = await authApi.login({ email, password });
 
-      // Guardamos tokens en localStorage para las pruebas
-      localStorage.setItem('access_token', data.access);
-      localStorage.setItem('refresh_token', data.refresh);
+      // Guardamos tokens en localStorage
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
 
-      alert('¡Login exitoso! Revisa la consola o localStorage para ver los tokens.');
-      console.log('Tokens recibidos:', data);
-      
+      // 3. AGREGAMOS ESTO: Si el login es exitoso, ejecutamos la función que nos mandó App.tsx
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     } catch (err: any) {
-      // Mensaje genérico como buena práctica
-      setError('El correo electrónico o la contraseña son incorrectos.');
+      setError("El correo electrónico o la contraseña son incorrectos.");
     } finally {
       setLoading(false);
     }
   };
+
+  //REVISARRR ESTO IVAN PARA EL INICIO DE SESION-------------------------------------
 
   return (
     <AuthCard
@@ -69,7 +79,10 @@ export const LoginPage: React.FC = () => {
           required
           isMono
           extraRightContent={
-            <a className="text-xs font-mono text-[#00f0ff] hover:text-[#dbfcff] transition-colors" href="#">
+            <a
+              className="text-xs font-mono text-[#00f0ff] hover:text-[#dbfcff] transition-colors"
+              href="#"
+            >
               Forgot Password?
             </a>
           }
@@ -82,17 +95,23 @@ export const LoginPage: React.FC = () => {
 
       <div className="relative flex py-2 items-center">
         <div className="flex-grow border-t border-[#3b494b]/50"></div>
-        <span className="flex-shrink-0 mx-4 text-[#b9cacb] font-mono text-xs">OR CONTINUE WITH</span>
+        <span className="flex-shrink-0 mx-4 text-[#b9cacb] font-mono text-xs">
+          OR CONTINUE WITH
+        </span>
         <div className="flex-grow border-t border-[#3b494b]/50"></div>
       </div>
 
       <div className="flex gap-4">
         <Button variant="outline" type="button">
-          <span className="material-symbols-outlined text-[#b9cacb]">account_circle</span>
+          <span className="material-symbols-outlined text-[#b9cacb]">
+            account_circle
+          </span>
           Google
         </Button>
         <Button variant="outline" type="button">
-          <span className="material-symbols-outlined text-[#e9b3ff]">forum</span>
+          <span className="material-symbols-outlined text-[#e9b3ff]">
+            forum
+          </span>
           Discord
         </Button>
       </div>
