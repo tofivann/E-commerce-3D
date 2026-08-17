@@ -29,3 +29,22 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
+
+
+class RegistroView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = RegistroSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = serializer.save()
+
+        return Response(
+            {
+                "mensaje": "¡Registro exitoso! Su cuenta ha sido creada y se encuentra pendiente de verificación de pago de suscripción.",
+                "email": usuario.email,
+                "estado_suscripcion": usuario.estado_suscripcion
+            },
+            status=status.HTTP_201_CREATED
+        )
