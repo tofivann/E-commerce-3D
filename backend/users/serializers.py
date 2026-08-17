@@ -55,3 +55,35 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         }
 
         return data
+
+# ==========================================
+# SERIALIZADOR DE REGISTRO 
+# ==========================================
+class RegistroSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+
+    class Meta:
+        model = Usuario
+        fields = ['username', 'email', 'nombre', 'password']
+
+    def validate_email(self, value):
+        # Convertimos a minúsculas para verificar sin importar si escriben mayúsculas
+        email_lower = value.lower()
+        
+        # Verificamos si ya existe en la base de datos
+        if Usuario.objects.filter(email__iexact=email_lower).exists():
+            raise serializers.ValidationError("Ya existe un usuario registrado con este correo electrónico.")
+        
+        return email_lower
+
+    def create(self, validated_data):
+        # Creamos el usuario asegurando el rol de cliente y estado pendiente de pago
+        user = Usuario.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            nombre=validated_data['nombre'],
+            password=validated_data['password'],
+            rol=Usuario.Rol.CLIENTE,
+            estado_suscripcion=Usuario.EstadoSuscripcion.PENDIENTE_PAGO
+        )
+        return user
