@@ -61,7 +61,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* Error */}
       {error && (
-        <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-md text-red-300 text-center">
+        <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
           {error}
         </div>
       )}

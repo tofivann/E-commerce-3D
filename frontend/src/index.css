@@ -1,34 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  /* Colores de Aether3D / MMD3D */
-  --color-background: #111317;
-  --color-surface: #111317;
-  --color-surface-dim: #111317;
-  --color-surface-bright: #37393e;
-  --color-surface-container-lowest: #0c0e12;
-  --color-surface-container-low: #1a1c20;
-  --color-surface-container: #1e2024;
-  --color-surface-container-high: #282a2e;
-  --color-surface-container-highest: #333539;
-  --color-surface-variant: #333539;
+  /* Colores de Aether3D / MMD3D — paleta "Mimi Pastel" (clara) */
+  --color-background: #fff5f7;
+  --color-surface: #fff5f7;
+  --color-surface-dim: #fbe4ea;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fdeef2;
+  --color-surface-container: #f6c7d8;
+  --color-surface-container-high: #f2b4cb;
+  --color-surface-container-highest: #eda3bd;
+  --color-surface-variant: #fbe4ea;
 
-  --color-primary: #dbfcff;
-  --color-primary-container: #00f0ff;
-  --color-primary-fixed: #7df4ff;
-  --color-primary-fixed-dim: #00dbe9;
-  --color-on-primary: #00363a;
-  --color-on-primary-container: #006970;
-  --color-on-primary-fixed: #002022;
+  --color-primary: #e889ae;
+  --color-primary-container: #e889ae;
+  --color-primary-fixed: #e889ae;
+  --color-primary-fixed-dim: #d5648f;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-on-primary-fixed: #ffffff;
 
-  --color-secondary: #e9b3ff;
-  --color-secondary-container: #7d01b1;
-  --color-on-secondary-container: #e5a9ff;
+  --color-secondary: #9b7fc9;
+  --color-secondary-container: #c9b8e8;
+  --color-on-secondary-container: #40334f;
 
-  --color-on-surface: #e2e2e8;
-  --color-on-surface-variant: #b9cacb;
-  --color-outline: #849495;
-  --color-outline-variant: #3b494b;
+  --color-on-surface: #40334f;
+  --color-on-surface-variant: #7a6b8a;
+  --color-outline: #b39dcf;
+  --color-outline-variant: #cde7f0;
+
+  --color-error: #d64550;
+  --color-on-error-container: #7a1f26;
 
   /* Espaciados personalizados */
   --spacing-gutter: 24px;
@@ -37,14 +40,14 @@
 
 /* Clases especiales del diseño */
 .glass-panel {
-  background: rgba(26, 28, 32, 0.7);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(132, 148, 149, 0.2);
+  border: 1px solid rgba(201, 184, 232, 0.35);
 }
 
 .btn-glow-inner {
-  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.2);
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.5);
 }
 
 .card-hover {
@@ -53,7 +56,7 @@
 
 .card-hover:hover {
   transform: translateY(-4px);
-  border-color: rgba(0, 240, 255, 0.4);
+  border-color: rgba(232, 137, 174, 0.5);
 }
 
 .card-hover:hover img {

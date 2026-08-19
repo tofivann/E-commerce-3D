@@ -19,8 +19,8 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'w-full py-3 rounded-lg font-semibold transition-all flex justify-center items-center gap-2 cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-[#00f0ff] text-[#00363a] hover:shadow-[0_0_15px_rgba(0,240,255,0.4)]',
-    outline: 'bg-transparent border border-[#3b494b] text-[#e2e2e8] hover:bg-[#333539]'
+    primary: 'bg-primary-container text-on-primary-fixed hover:bg-primary-fixed-dim hover:shadow-[0_4px_14px_rgba(232,137,174,0.45)]',
+    outline: 'bg-transparent border border-outline-variant text-on-surface hover:bg-surface-container-low'
   };
 
   return (

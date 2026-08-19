@@ -56,7 +56,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         {/* Banner Hero (solo si no ha iniciado sesión) */}
         {!isLoggedIn && (
           <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-[400px] flex items-center justify-center text-center p-10 mt-8">
-            <div className="absolute inset-0 z-0 opacity-40">
+            <div className="absolute inset-0 z-0 opacity-25">
               <div
                 className="bg-cover bg-center w-full h-full"
                 style={{
@@ -65,8 +65,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 }}
               ></div>
             </div>
+            <div className="absolute inset-0 z-0 bg-background/50"></div>
             <div className="relative z-10 flex flex-col items-center gap-6 max-w-2xl">
-              <h1 className="text-3xl md:text-5xl text-primary font-bold text-balance leading-tight drop-shadow-md">
+              <h1 className="text-3xl md:text-5xl text-on-surface font-bold text-balance leading-tight drop-shadow-sm">
                 Descubre el Futuro del Arte Digital en 3D
               </h1>
               <p className="text-lg text-on-surface-variant max-w-xl text-balance">
@@ -76,7 +77,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               </p>
               <button
                 onClick={onLoginClick}
-                className="mt-4 bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                className="mt-4 bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_4px_18px_rgba(232,137,174,0.45)]"
               >
                 Crear Cuenta Ahora
               </button>

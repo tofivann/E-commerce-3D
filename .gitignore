@@ -18,3 +18,5 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 frontend/.next/
+
+CLAUDE.md

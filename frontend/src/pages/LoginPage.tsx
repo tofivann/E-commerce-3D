@@ -51,7 +51,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       description="Enter your credentials to access the marketplace."
     >
       {error && (
-        <div className="bg-[#93000a]/30 border border-[#ffb4ab] text-[#ffdad6] p-3 rounded-md text-sm text-center">
+        <div className="bg-error/20 border border-error text-on-error-container p-3 rounded-md text-sm text-center">
           {error}
         </div>
       )}
@@ -80,7 +80,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           isMono
           extraRightContent={
             <a
-              className="text-xs font-mono text-[#00f0ff] hover:text-[#dbfcff] transition-colors"
+              className="text-xs font-mono text-primary hover:text-primary-fixed transition-colors"
               href="#"
             >
               Forgot Password?
@@ -94,22 +94,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       </form>
 
       <div className="relative flex py-2 items-center">
-        <div className="flex-grow border-t border-[#3b494b]/50"></div>
-        <span className="flex-shrink-0 mx-4 text-[#b9cacb] font-mono text-xs">
+        <div className="flex-grow border-t border-outline-variant/50"></div>
+        <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
           OR CONTINUE WITH
         </span>
-        <div className="flex-grow border-t border-[#3b494b]/50"></div>
+        <div className="flex-grow border-t border-outline-variant/50"></div>
       </div>
 
       <div className="flex gap-4">
         <Button variant="outline" type="button">
-          <span className="material-symbols-outlined text-[#b9cacb]">
+          <span className="material-symbols-outlined text-on-surface-variant">
             account_circle
           </span>
           Google
         </Button>
         <Button variant="outline" type="button">
-          <span className="material-symbols-outlined text-[#e9b3ff]">
+          <span className="material-symbols-outlined text-secondary">
             forum
           </span>
           Discord

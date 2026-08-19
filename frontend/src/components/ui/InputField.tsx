@@ -28,19 +28,19 @@ export const InputField: React.FC<InputFieldProps> = ({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center">
-        <label className="text-xs font-semibold tracking-wider text-[#b9cacb] uppercase" htmlFor={id}>
+        <label className="text-xs font-semibold tracking-wider text-on-surface-variant uppercase" htmlFor={id}>
           {label}
         </label>
         {extraRightContent}
       </div>
       <div className="relative group">
         {icon && (
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#849495] group-focus-within:text-[#dbfcff] transition-colors">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">
             {icon}
           </span>
         )}
         <input
-          className={`w-full bg-[#333539] border border-[#3b494b] rounded-lg py-3 ${icon ? 'pl-12' : 'pl-4'} pr-4 text-[#e2e2e8] placeholder:text-[#849495] focus:border-[#00dbe9] focus:ring-1 focus:ring-[#00dbe9] transition-all outline-none shadow-inner ${isMono ? 'font-mono text-sm' : ''}`}
+          className={`w-full bg-surface-variant border border-outline-variant rounded-lg py-3 ${icon ? 'pl-12' : 'pl-4'} pr-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner ${isMono ? 'font-mono text-sm' : ''}`}
           id={id}
           name={id}
           type={type}
