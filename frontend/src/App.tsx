@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useNavigate, Navigate, Link } from "react
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
+import { RegisterPage } from "./pages/RegisterPage";
 
 /**
  * Componente principal App que configura las rutas de la aplicación.
@@ -71,6 +72,7 @@ function AppRoutes() {
               navigate("/login");
             }}
             onLogoutClick={handleLogout}
+            onRegisterClick={() => navigate("/register")}
           />
         } 
       />
@@ -120,6 +122,27 @@ function AppRoutes() {
             <Navigate to="/" replace />
           )
         }
+      />
+      {/* Ruta de Registro */}
+      <Route 
+        path="/register" 
+        element={
+          <div className="bg-background min-h-screen relative">
+            <Link
+              to="/"
+              className="absolute top-4 left-4 z-50 text-on-surface-variant hover:text-primary flex items-center gap-1 bg-surface/50 px-4 py-2 rounded-full border border-outline-variant/30 no-underline"
+            >
+              <span className="material-symbols-outlined">arrow_back</span> Volver
+            </Link>
+            
+            <RegisterPage
+              onRegisterSuccess={() => {
+                // Al registrarse con éxito, los mandamos al login para que inicien sesión
+                navigate("/login");
+              }}
+            />
+          </div>
+        } 
       />
     </Routes>
   );

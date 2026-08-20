@@ -8,6 +8,7 @@ interface HomePageProps {
   isStaff?: boolean;
   onLoginClick: () => void;
   onLogoutClick: () => void;
+  onRegisterClick: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
@@ -15,6 +16,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   isStaff = false,
   onLoginClick,
   onLogoutClick,
+  onRegisterClick,
 }) => {
   return (
     <div className="bg-background text-on-surface font-sans min-h-screen flex flex-col">
@@ -59,7 +61,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                 >
                   Iniciar Sesión
                 </button>
-                <button className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-6 py-2 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95">
+                <button
+                onClick={onRegisterClick}
+                 className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-6 py-2 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95">
                   Registrarse
                 </button>
               </>
@@ -81,7 +85,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent"></div>
             <div className="relative z-10 flex flex-col items-center gap-4 max-w-xl p-8">
               <button
-                onClick={onLoginClick}
+                onClick={onRegisterClick}
                 className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_4px_18px_rgba(232,137,174,0.45)]"
               >
                 Crear Cuenta Ahora

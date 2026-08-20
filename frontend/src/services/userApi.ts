@@ -31,15 +31,14 @@ export interface Usuario {
 }
 
 export const userApi = {
-  // Petición para registrar un nuevo cliente (Estado pendiente de pago)
+  // Como baseURL es http://127.0.0.1:8000/api/v1/, 
+  
   register: async (data: RegisterData): Promise<RegisterResponse> => {
     const response = await axiosClient.post<RegisterResponse>('users/auth/register/', data);
     return response.data;
   },
 
-  // ==========================================
-  // CRUD de usuarios (solo administradores)
-  // ==========================================
+  // CRUD de usuarios
   listar: async (): Promise<Usuario[]> => {
     const response = await axiosClient.get<Usuario[]>('users/users/');
     return response.data;
