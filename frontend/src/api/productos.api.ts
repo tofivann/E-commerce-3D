@@ -8,7 +8,7 @@ export interface Producto {
   precio: number | string; // DecimalField llega como string/number desde el JSON
   formato_archivo: string;
   archivo_3d?: File | string; // File cuando se sube desde un input tipo file, string si es la URL
-  imagen_previa?: string;
+  imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada
   activo?: boolean;
   fecha_creacion?: string;
 }
@@ -21,7 +21,7 @@ const productosApi = axios.create({
 
 // Interceptor opcional: Adjunta automáticamente el Token JWT si el usuario está autenticado
 productosApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token"); // Ajusta según dónde guardes el JWT
+  const token = localStorage.getItem("access_token"); // Ajusta según dónde guardes el JWT
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -54,10 +54,10 @@ export function updateProducto(
   return productosApi.put(`/${id}/`, producto);
 }
 
-// Actualizar un producto parcialmente (PATCH - ej: activar/desactivar)
+// Actualizar un producto parcialmente (PATCH - ej: activar/desactivar, o editar sin reenviar los archivos)
 export function patchProducto(
   id: string | number,
-  producto: Partial<Producto>,
+  producto: FormData | Partial<Producto>,
 ) {
   return productosApi.patch(`/${id}/`, producto);
 }

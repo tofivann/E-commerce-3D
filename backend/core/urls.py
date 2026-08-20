@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
@@ -26,3 +28,8 @@ urlpatterns = [
     #
     # path('api/v1/cart/', include('shopping_cart.urls')),
 ]
+
+if settings.DEBUG:
+    # Sirve los archivos subidos (archivo_3d, imagen_previa) durante desarrollo local.
+    # En producción con Supabase Storage/S3 esto no hace falta.
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Colores de Aether3D / MMD3D — paleta "Mimi Pastel" (clara) */
+  /* Colores de MimiMMDart — paleta "Mimi Pastel" (clara) */
   --color-background: #fff5f7;
   --color-surface: #fff5f7;
   --color-surface-dim: #fbe4ea;

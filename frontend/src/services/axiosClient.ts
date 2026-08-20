@@ -6,3 +6,12 @@ export const axiosClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Adjunta el JWT guardado en el login a toda petición autenticada.
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});

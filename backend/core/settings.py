@@ -120,3 +120,23 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 7. Archivos subidos por el usuario (archivo_3d, imagen_previa, etc.)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    # Cuando se conecte Supabase Storage (compatible con S3), reemplazar 'default' por:
+    # 'default': {
+    #     'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+    # },
+    # (requiere instalar 'django-storages' y 'boto3', y definir las credenciales
+    # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_STORAGE_BUCKET_NAME / AWS_S3_ENDPOINT_URL
+    # apuntando al endpoint S3 del proyecto de Supabase).
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}

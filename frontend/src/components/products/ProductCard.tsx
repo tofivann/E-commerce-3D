@@ -26,7 +26,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative grow h-48 overflow-hidden bg-surface-container-lowest">
         <img
           alt={producto.titulo}
-          src={producto.imagen_previa || fallbackImage}
+          src={
+            typeof producto.imagen_previa === "string"
+              ? producto.imagen_previa
+              : fallbackImage
+          }
           className="object-cover w-full h-full transition-transform duration-500"
         />
 

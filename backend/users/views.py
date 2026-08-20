@@ -5,6 +5,8 @@ from .serializers import UsuarioSerializer , CustomTokenObtainPairSerializer, Re
 from rest_framework import generics
 
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 
 # ==========================================
 # VISTA DE LOGIN Y GENERACIÓN DE TOKENS (JWT)
@@ -21,17 +23,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 # CRUD DE USUARIOS (VIEWSET)
 # ==========================================
 class UsuarioViewSet(viewsets.ModelViewSet):
+    """
+    Gestión completa de usuarios (incluye rol y estado de suscripción).
+    El registro público de clientes se hace por separado en RegistroView,
+    que fija el rol en CLIENTE. Este ViewSet permite elegir el rol libremente,
+    por lo que se restringe por completo a administradores.
+    """
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    
+
     def get_permissions(self):
-        """
-        Permite que CUALQUIERA se registre (POST /api/users/),
-        pero exige estar AUTENTICADO para listar, editar o borrar usuarios.
-        """
-        if self.action == 'create':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
 
 
 class RegistroView(generics.CreateAPIView):

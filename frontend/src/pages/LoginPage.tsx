@@ -6,7 +6,7 @@ import { AuthCard } from "../components/ui/AuthCard";
 
 // 1. AGREGAMOS ESTO: Le decimos a TypeScript que este componente acepta una función llamada "onLoginSuccess"
 interface LoginPageProps {
-  onLoginSuccess?: () => void;
+  onLoginSuccess?: (isStaff: boolean) => void;
 }
 
 // 2. MODIFICAMOS ESTA LÍNEA: Agregamos <LoginPageProps> y recibimos { onLoginSuccess }
@@ -31,9 +31,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
 
+      const isStaff = Boolean(data.user?.is_staff);
+      localStorage.setItem("is_staff", String(isStaff));
+
       // 3. AGREGAMOS ESTO: Si el login es exitoso, ejecutamos la función que nos mandó App.tsx
       if (onLoginSuccess) {
-        onLoginSuccess();
+        onLoginSuccess(isStaff);
       }
     } catch (err: any) {
       setError("El correo electrónico o la contraseña son incorrectos.");
@@ -46,7 +49,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   return (
     <AuthCard
-      title="Aether3D"
+      title="MimiMMDart"
       subtitle="Welcome Back"
       description="Enter your credentials to access the marketplace."
     >
@@ -63,7 +66,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="agent@aether3d.net"
+          placeholder="usuario@gmail.com"
           icon="mail"
           required
         />

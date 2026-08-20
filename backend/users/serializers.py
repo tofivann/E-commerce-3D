@@ -5,21 +5,21 @@ from .models import Usuario
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'nombre', 'rol', 'estado_suscripcion', 'is_active',
+            'fecha_registro', 'password',
+        ]
+        read_only_fields = ['fecha_registro']
         extra_kwargs = {
             # 'write_only': True evita que el password viaje en la respuesta JSON al consultar
-            'password': {'write_only': True, 'required': True} 
+            'password': {'write_only': True, 'required': True}
         }
 
     # Sobrescribimos el método create para encriptar la contraseña correctamente
     def create(self, validated_data):
-        user = Usuario.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
-        )
+        password = validated_data.pop('password')
+        user = Usuario.objects.create_user(password=password, **validated_data)
         return user
 
     def update(self, instance, validated_data):
