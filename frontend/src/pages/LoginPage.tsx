@@ -6,7 +6,7 @@ import { AuthCard } from "../components/ui/AuthCard";
 
 // 1. AGREGAMOS ESTO: Le decimos a TypeScript que este componente acepta una función llamada "onLoginSuccess"
 interface LoginPageProps {
-  onLoginSuccess?: (isStaff: boolean) => void;
+  onLoginSuccess?: (isStaff: boolean, estadoSuscripcion: string) => void;
 }
 
 // 2. MODIFICAMOS ESTA LÍNEA: Agregamos <LoginPageProps> y recibimos { onLoginSuccess }
@@ -32,11 +32,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       localStorage.setItem("refresh_token", data.refresh);
 
       const isStaff = Boolean(data.user?.is_staff);
+      const estadoSuscripcion = data.user?.estado_suscripcion || "INACTIVO";
       localStorage.setItem("is_staff", String(isStaff));
+      localStorage.setItem("estado_suscripcion", estadoSuscripcion);
 
       // 3. AGREGAMOS ESTO: Si el login es exitoso, ejecutamos la función que nos mandó App.tsx
       if (onLoginSuccess) {
-        onLoginSuccess(isStaff);
+        onLoginSuccess(isStaff, estadoSuscripcion);
       }
     } catch (err: any) {
       setError("El correo electrónico o la contraseña son incorrectos.");

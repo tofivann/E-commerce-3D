@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, Navigate, Link } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { LibraryPage } from "./pages/LibraryPage";
+import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
 
 /**
  * Componente principal App que configura las rutas de la aplicación.
@@ -21,28 +23,31 @@ export default function App() {
  * (como useNavigate) de forma limpia y directa.
  */
 function AppRoutes() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
+  // =========================================================================
+  // 🔒 NOTA SOBRE PERSISTENCIA Y COOKIES HTTP-ONLY:
+  // Si migras a Cookies HTTP-only, este 'localStorage.getItem("access_token")' ya no funcionará
+  // en el frontend porque JavaScript no tiene acceso a cookies HTTP-only por seguridad.
+  //
+  // En su lugar, el flujo correcto para saber si el usuario está logueado en el frontend será:
+  // - Hacer una petición ligera al backend (ej. GET /api/auth/me) al cargar la app.
+  // - Si el backend responde con los datos del usuario (porque la cookie viajó sola),
+  //   entonces 'setIsLoggedIn(true)'. Si responde 401 Unauthorized, el usuario no está logueado.
+  // =========================================================================
+  // Se leen de forma perezosa (en el estado inicial, no en un efecto) para que las rutas
+  // protegidas (/admin, /biblioteca) vean el estado real de sesión desde el primer render:
+  // si se inicializaran en `false` y se corrigieran luego en un useEffect, un <Navigate>
+  // en esas rutas redirigiría al usuario a "/" antes de que el efecto llegara a ejecutarse
+  // (por ejemplo, al recargar la página estando ya logueado).
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => Boolean(localStorage.getItem("access_token"))
+  );
+  const [isStaff, setIsStaff] = useState(
+    () => localStorage.getItem("is_staff") === "true"
+  );
+  const [isSubscribed, setIsSubscribed] = useState(
+    () => localStorage.getItem("estado_suscripcion") === "ACTIVO"
+  );
   const navigate = useNavigate();
-
-  // Verificación de sesión al cargar/recargar
-  useEffect(() => {
-    // =========================================================================
-    // 🔒 NOTA SOBRE PERSISTENCIA Y COOKIES HTTP-ONLY:
-    // Si migras a Cookies HTTP-only, este 'localStorage.getItem("access_token")' ya no funcionará
-    // en el frontend porque JavaScript no tiene acceso a cookies HTTP-only por seguridad.
-    //
-    // En su lugar, el flujo correcto para saber si el usuario está logueado en el frontend será:
-    // - Hacer una petición ligera al backend (ej. GET /api/auth/me) al cargar la app.
-    // - Si el backend responde con los datos del usuario (porque la cookie viajó sola),
-    //   entonces 'setIsLoggedIn(true)'. Si responde 401 Unauthorized, el usuario no está logueado.
-    // =========================================================================
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      setIsLoggedIn(true);
-      setIsStaff(localStorage.getItem("is_staff") === "true");
-    }
-  }, []);
 
   const handleLogout = () => {
     // =========================================================================
@@ -54,8 +59,10 @@ function AppRoutes() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("is_staff");
+    localStorage.removeItem("estado_suscripcion");
     setIsLoggedIn(false);
     setIsStaff(false);
+    setIsSubscribed(false);
     navigate("/");
   };
 
@@ -68,6 +75,7 @@ function AppRoutes() {
           <HomePage
             isLoggedIn={isLoggedIn}
             isStaff={isStaff}
+            isSubscribed={isSubscribed}
             onLoginClick={() => {
               navigate("/login");
             }}
@@ -90,7 +98,7 @@ function AppRoutes() {
             </Link>
             
             <LoginPage
-              onLoginSuccess={(isStaffUser) => {
+              onLoginSuccess={(isStaffUser, estadoSuscripcion) => {
                 // =========================================================================
                 // 🔒 NOTA DE SEGURIDAD (MEJORA PARA PRODUCCIÓN - HTTP-ONLY COOKIES):
                 // Actualmente el token se guarda en 'localStorage' (ej. localStorage.setItem("access_token", token)).
@@ -105,6 +113,7 @@ function AppRoutes() {
                 // =========================================================================
                 setIsLoggedIn(true);
                 setIsStaff(isStaffUser);
+                setIsSubscribed(estadoSuscripcion === "ACTIVO");
                 navigate(isStaffUser ? "/admin" : "/");
               }}
             />
@@ -118,6 +127,28 @@ function AppRoutes() {
         element={
           isLoggedIn && isStaff ? (
             <AdminPage onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Biblioteca Digital: solo accesible con sesión iniciada */}
+      <Route
+        path="/biblioteca"
+        element={
+          isLoggedIn ? (
+            <LibraryPage isStaff={isStaff} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de retorno de Stripe Checkout tras completar el pago */}
+      <Route
+        path="/pago-completado"
+        element={
+          isLoggedIn ? (
+            <PaymentSuccessPage />
           ) : (
             <Navigate to="/" replace />
           )

@@ -2,19 +2,39 @@ import React, { useEffect, useState } from "react";
 import { getAllProductos } from "../../api/productos.api";
 import type { Producto } from "../../api/productos.api";
 import { ProductCard } from "./ProductCard";
+import { coincideBusqueda } from "../../utils/normalizarTexto";
 
 interface ProductListProps {
   isLoggedIn: boolean;
+  // true solo si además de tener sesión, puede ver/comprar el catálogo
+  // (suscripción activa, o administrador).
+  hasAccess: boolean;
+  // ids de productos que el usuario ya adquirió (están en su biblioteca digital).
+  purchasedIds?: Set<number>;
   onSelectProducto?: (producto: Producto) => void;
+  onAddToCart?: (producto: Producto) => void;
+  onGoToLibrary?: (producto: Producto) => void;
+  searchQuery?: string;
 }
 
 export const ProductList: React.FC<ProductListProps> = ({
   isLoggedIn,
+  hasAccess,
+  purchasedIds,
   onSelectProducto,
+  onAddToCart,
+  onGoToLibrary,
+  searchQuery = "",
 }) => {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const productosFiltrados = productos.filter(
+    (p) =>
+      coincideBusqueda(p.titulo, searchQuery) ||
+      coincideBusqueda(p.descripcion, searchQuery)
+  );
 
   useEffect(() => {
     fetchProductos();
@@ -42,7 +62,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         </h2>
         <div className="flex gap-2">
           <span className="font-mono text-xs text-[var(--color-outline)] bg-[var(--color-surface-container-low)] px-3 py-1 rounded-full border border-[var(--color-outline-variant)]/30">
-            {isLoggedIn ? "Catálogo Activo" : "Mostrando vista previa"}
+            {hasAccess ? "Catálogo Activo" : "Mostrando vista previa"}
           </span>
         </div>
       </div>
@@ -66,15 +86,26 @@ export const ProductList: React.FC<ProductListProps> = ({
         </div>
       )}
 
+      {/* Sin resultados de búsqueda */}
+      {!loading && !error && productos.length > 0 && productosFiltrados.length === 0 && (
+        <div className="p-10 text-center text-on-surface-variant">
+          No encontramos modelos que coincidan con "{searchQuery}".
+        </div>
+      )}
+
       {/* Grilla de Productos */}
-      {!loading && !error && (
+      {!loading && !error && productosFiltrados.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productos.map((prod) => (
+          {productosFiltrados.map((prod) => (
             <ProductCard
               key={prod.id || prod.titulo}
               producto={prod}
               isLoggedIn={isLoggedIn}
+              hasAccess={hasAccess}
+              isPurchased={typeof prod.id === "number" && (purchasedIds?.has(prod.id) ?? false)}
               onSelect={onSelectProducto}
+              onAddToCart={onAddToCart}
+              onGoToLibrary={onGoToLibrary}
             />
           ))}
         </div>

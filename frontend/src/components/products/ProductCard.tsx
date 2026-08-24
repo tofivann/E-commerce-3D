@@ -4,22 +4,41 @@ import type { Producto } from "../../api/productos.api";
 interface ProductCardProps {
   producto: Producto;
   isLoggedIn: boolean;
+  // true solo si además de tener sesión, puede ver/comprar el catálogo
+  // (suscripción activa, o administrador).
+  hasAccess: boolean;
+  // true si el usuario ya adquirió este producto (está en su biblioteca digital).
+  isPurchased?: boolean;
   onSelect?: (producto: Producto) => void;
+  onAddToCart?: (producto: Producto) => void;
+  onGoToLibrary?: (producto: Producto) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   producto,
   isLoggedIn,
+  hasAccess,
+  isPurchased = false,
   onSelect,
+  onAddToCart,
+  onGoToLibrary,
 }) => {
   const fallbackImage =
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
+  const handleCardClick = () => {
+    if (isPurchased) {
+      onGoToLibrary && onGoToLibrary(producto);
+      return;
+    }
+    hasAccess && onSelect && onSelect(producto);
+  };
+
   return (
     <article
-      onClick={() => isLoggedIn && onSelect && onSelect(producto)}
+      onClick={handleCardClick}
       className={`bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col relative group card-hover transition-all duration-300 h-80 ${
-        isLoggedIn ? "cursor-pointer" : ""
+        hasAccess || isPurchased ? "cursor-pointer" : ""
       }`}
     >
       {/* Zona de Imagen */}
@@ -34,14 +53,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className="object-cover w-full h-full transition-transform duration-500"
         />
 
-        {/* Overlay de Bloqueo para Invitados */}
-        {!isLoggedIn && (
+        {/* Insignia: ya adquirido, en la biblioteca digital */}
+        {isPurchased && (
+          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-primary-container/95 text-on-primary-fixed text-[10px] font-semibold tracking-wide px-3 py-1 rounded-full shadow-md backdrop-blur-sm">
+            <span className="material-symbols-outlined text-[14px]">folder_special</span>
+            En tu biblioteca
+          </div>
+        )}
+
+        {/* Overlay de Bloqueo: invitados, o logueados sin suscripción activa (no aplica si ya lo compró) */}
+        {!hasAccess && !isPurchased && (
           <div className="absolute inset-0 bg-background/40 backdrop-blur-md flex flex-col items-center justify-center gap-2 opacity-100 group-hover:bg-background/60 transition-all z-10">
             <span className="material-symbols-outlined text-primary-container text-[40px] drop-shadow-lg">
-              lock
+              {isLoggedIn ? "workspace_premium" : "lock"}
             </span>
-            <span className="text-xs text-on-surface tracking-wider bg-surface/80 px-3 py-1 rounded-full backdrop-blur-sm border border-outline-variant/50 font-semibold">
-              Regístrate para descubrir
+            <span className="text-xs text-on-surface tracking-wider bg-surface/80 px-4 py-1 rounded-full backdrop-blur-sm border border-outline-variant/50 font-semibold text-center">
+              {isLoggedIn ? "Activa tu suscripción para desbloquear" : "Regístrate para descubrir"}
             </span>
           </div>
         )}
@@ -62,14 +89,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {producto.descripcion || "Modelo MMD 3D"}
         </p>
 
-        {/* Precio o barra de carga de invitado */}
-        {isLoggedIn ? (
+        {/* Precio + Agregar, acceso a biblioteca, o barra de carga de invitado/sin suscripción */}
+        {isPurchased ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onGoToLibrary && onGoToLibrary(producto);
+            }}
+            className="mt-1 w-full text-xs bg-transparent border border-primary-container text-primary-container px-3 py-1.5 rounded hover:bg-primary-container hover:text-on-primary-fixed transition-colors font-semibold flex items-center justify-center gap-1"
+          >
+            <span className="material-symbols-outlined text-[16px]">folder_special</span>
+            Ir a mi biblioteca
+          </button>
+        ) : hasAccess ? (
           <div className="mt-1 flex items-center justify-between">
             <span className="text-primary-container font-bold font-mono">
               ${Number(producto.precio).toFixed(2)}
             </span>
-            <button className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1 rounded hover:bg-primary-fixed-dim transition-colors font-semibold">
-              Descargar
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCart && onAddToCart(producto);
+              }}
+              className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1 rounded hover:bg-primary-fixed-dim transition-colors font-semibold flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+              Agregar
             </button>
           </div>
         ) : (

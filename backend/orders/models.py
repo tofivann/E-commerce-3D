@@ -33,6 +33,10 @@ class Orden(models.Model):
         default=TipoOrden.CATALOGO
     )
     pasarela_pago = models.CharField(max_length=50, help_text="Ej: Stripe, PayPal")
+    stripe_session_id = models.CharField(
+        max_length=255, blank=True, null=True, unique=True,
+        help_text="ID de la Stripe Checkout Session que respalda esta orden.",
+    )
     fecha_orden = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -59,35 +63,42 @@ class DetalleOrden(models.Model):
     def __str__(self):
         return f"{self.producto.titulo if self.producto else 'Producto Eliminado'} (${self.precio_unitario})"
 
-
 class ComprasDigitales(models.Model):
     usuario = models.ForeignKey(
-        Usuario, 
-        on_delete=models.CASCADE, 
+        Usuario,
+        on_delete=models.CASCADE,
         related_name='compras_digitales'
     )
     producto = models.ForeignKey(
-        Producto, 
-        on_delete=models.CASCADE, 
+        Producto,
+        on_delete=models.PROTECT,
         related_name='comprado_en'
     )
     orden = models.ForeignKey(
-        Orden, 
-        on_delete=models.CASCADE, 
+        Orden,
+        on_delete=models.PROTECT,
         related_name='compras_digitales',
         help_text="Orden de compra que respaldó este permiso de descarga."
     )
     activo = models.BooleanField(
-        default=True, 
+        default=True,
         help_text="Indica si el usuario conserva el permiso para descargar el archivo."
     )
     fecha_adquisicion = models.DateTimeField(auto_now_add=True)
+    fecha_revocacion = models.DateTimeField(null=True, blank=True)# fecha de esa revocaión 
+    motivo_revocacion = models.CharField(max_length=200, blank=True)# reembolso/reverso de pago, etc
 
     class Meta:
         db_table = 'compras_digitales'
         verbose_name = "Compra Digital"
         verbose_name_plural = "Compras Digitales"
-        unique_together = ('usuario', 'producto', 'orden')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['usuario', 'producto', 'orden'],
+                name='uniq_compra_producto'
+            ),
+        ]
+        indexes = [models.Index(fields=['usuario', 'activo'])]
 
     def __str__(self):
         estado_str = "Activo" if self.activo else "Inactivo"

@@ -66,6 +66,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+# Permite que el frontend lea el nombre de archivo al descargar una compra
+# (por defecto los navegadores ocultan este header en peticiones cross-origin).
+CORS_EXPOSE_HEADERS = ['Content-Disposition']
+
+# Origen del frontend, usado para construir las URLs de retorno de Stripe Checkout.
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+
+# Claves de Stripe (modo test). Se definen en el .env local, NUNCA se commitean.
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 
 # 5. Base de datos con Supabase / PostgreSQL
 DATABASE_URL = os.getenv('DATABASE_URL')
