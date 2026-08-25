@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import UsuarioViewSet, CustomTokenObtainPairView ,RegistroView 
+from .views import UsuarioViewSet, CustomTokenObtainPairView ,RegistroView ,StripeWebhookRegistroView, ActivarCuentaPagoView
 
 router = DefaultRouter()
 router.register(r'users', UsuarioViewSet, basename='user')
@@ -14,5 +14,7 @@ urlpatterns = [
     path('auth/register/', RegistroView.as_view(), name='token_register'),
     # 2. Rutas automáticas CRUD de Usuarios (/users/, /users/1/, etc.)
     path('', include(router.urls)),
+    path('webhook-stripe/', StripeWebhookRegistroView.as_view(), name='stripe-webhook-registro'),
 
+    path('activar-cuenta-pago/', ActivarCuentaPagoView.as_view(), name='activar-cuenta-pago'),
 ]

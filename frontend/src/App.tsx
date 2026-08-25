@@ -6,6 +6,8 @@ import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
+import { ActivationSuccessPage } from "./pages/ActivationSuccessPage";
+import { RegisterSuccessPage } from "./pages/RegisterSuccessPage";
 
 /**
  * Componente principal App que configura las rutas de la aplicación.
@@ -154,6 +156,17 @@ function AppRoutes() {
           )
         }
       />
+      {/*  Ruta de éxito de activación de cuenta (Suscripción) */}
+      <Route
+        path="/activacion-exitosa"
+        element={
+          isLoggedIn ? (
+            <ActivationSuccessPage />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
       {/* Ruta de Registro */}
       <Route 
         path="/register" 
@@ -166,14 +179,14 @@ function AppRoutes() {
               <span className="material-symbols-outlined">arrow_back</span> Volver
             </Link>
             
-            <RegisterPage
-              onRegisterSuccess={() => {
-                // Al registrarse con éxito, los mandamos al login para que inicien sesión
-                navigate("/login");
-              }}
-            />
+            <RegisterPage/>
           </div>
         } 
+      />
+
+    <Route 
+        path="/registro-exitoso" 
+        element={<RegisterSuccessPage />} 
       />
     </Routes>
   );

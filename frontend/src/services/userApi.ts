@@ -11,6 +11,7 @@ export interface RegisterResponse {
   mensaje: string;
   email: string;
   estado_suscripcion: string;
+  checkout_url: string
 }
 
 export type Rol = 'CLIENTE' | 'ADMIN';
@@ -61,5 +62,10 @@ export const userApi = {
 
   eliminar: async (id: number): Promise<void> => {
     await axiosClient.delete(`users/users/${id}/`);
+  },
+
+  activarCuenta: async (): Promise<{ checkout_url: string }> => {
+    const response = await axiosClient.post<{ checkout_url: string }>('users/activar-cuenta-pago/');
+    return response.data;
   },
 };

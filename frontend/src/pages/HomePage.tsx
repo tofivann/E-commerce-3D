@@ -5,6 +5,7 @@ import { CartDrawer } from "../components/products/CartDrawer";
 import { Sidebar } from "../components/layout/Sidebar";
 import { carritoApi } from "../api/carrito.api";
 import { bibliotecaApi } from "../api/biblioteca.api";
+import { userApi } from "../services/userApi";
 import type { Producto } from "../api/productos.api";
 import heroImage from "../assets/hero1.webp";
 
@@ -30,6 +31,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [cartCount, setCartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [purchasedIds, setPurchasedIds] = useState<Set<number>>(new Set());
+  const [activandoPago, setActivandoPago] = useState(false);
   const navigate = useNavigate();
 
   // El catálogo (precio, botón de compra, buscador) solo se desbloquea para
@@ -76,6 +78,24 @@ export const HomePage: React.FC<HomePageProps> = ({
     } catch (err) {
       console.error("Error al agregar al carrito:", err);
       window.alert("No se pudo agregar el producto al carrito.");
+    }
+  };
+
+  const handleActivarCuenta = async () => {
+    try {
+      setActivandoPago(true);
+      const data = await userApi.activarCuenta(); // Llama a 'users/activar-cuenta-pago/' con axiosClient
+      
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url; // Redirige a la pasarela de Stripe
+      } else {
+        window.alert("No se pudo obtener el link de pago.");
+        setActivandoPago(false);
+      }
+    } catch (err) {
+      console.error("Error al activar cuenta:", err);
+      window.alert("No se pudo conectar con la pasarela de pagos. Si ya realizaste el cobro, tu cuenta se activará automáticamente en breve.");
+      setActivandoPago(false);
     }
   };
 
@@ -156,6 +176,28 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-16">
+          {/*activar cuenta*/}
+          {/* BANNER CONDICIONAL PARA USUARIOS CON PAGO PENDIENTE */}
+          {isLoggedIn && !isStaff && !isSubscribed && (
+            <div className="bg-amber-500/10 border-l-4 border-amber-500 p-6 rounded-r-xl text-amber-200 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
+              <div>
+                <h3 className="text-xl font-bold text-amber-400">Cuenta pendiente de pago</h3>
+                <p className="text-sm text-amber-200/80 mt-1">
+                  Tu registro está incompleto. Realiza el pago para activar tu cuenta y desbloquear todo el contenido.
+                </p>
+              </div>
+              <button
+                onClick={handleActivarCuenta}
+                disabled={activandoPago}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold rounded-xl transition duration-200 shadow-lg shadow-amber-500/20 disabled:opacity-50 whitespace-nowrap"
+              >
+                {activandoPago ? "Generando pago..." : "Activar cuenta"}
+              </button>
+            </div>
+          )}
+          
+          
+          
           {/* Banner Hero */}
           <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-100 flex items-end justify-center text-center mt-8">
             <img

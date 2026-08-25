@@ -5,10 +5,9 @@ import { InputField } from "../components/ui/InputField";
 import { Button } from "../components/ui/Button";
 
 interface RegisterPageProps {
-  onRegisterSuccess?: () => void;
 }
 
-export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess }) => {
+export const RegisterPage: React.FC<RegisterPageProps> = () => {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,18 +32,18 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onRegisterSuccess })
     }
 
     setLoading(true);
-
-    try {
-      await userApi.register({
+  
+   try {
+      const response = await userApi.register({
         username,
         nombre: fullName,
         email,
         password,
       });
 
-      if (onRegisterSuccess) {
-        onRegisterSuccess();
-      }
+      if (response && response.checkout_url) {
+        window.location.href = response.checkout_url;
+      } 
     } catch (err: any) {
       if (err.response && err.response.status === 400) {
         setError("Verifica tus datos. Es posible que el correo o el usuario ya estén registrados.");
