@@ -1,3 +1,4 @@
+#chat/models
 from django.db import models
 from users.models import Usuario
 
@@ -9,6 +10,10 @@ class Conversacion(models.Model):
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_ultima_actividad = models.DateTimeField(auto_now=True)
+    
+    #  Nuevos campos para control de lectura
+    admin_ultimo_leido = models.DateTimeField(null=True, blank=True)
+    cliente_ultimo_leido = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Conversación"
@@ -16,7 +21,6 @@ class Conversacion(models.Model):
 
     def __str__(self):
         return f"Conversación #{self.id} con {self.usuario.nombre}"
-
 
 class Mensaje(models.Model):
     conversacion = models.ForeignKey(

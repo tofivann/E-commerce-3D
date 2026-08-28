@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-export type AdminView = "catalogo" | "ajustes";
+export type AdminView = "catalogo" | "chat" | "ajustes";
 
 interface AdminSidebarProps {
   activeView: AdminView;
@@ -11,6 +11,7 @@ interface AdminSidebarProps {
 
 const navItems: { view: AdminView; label: string; icon: string }[] = [
   { view: "catalogo", label: "Catálogo", icon: "inventory_2" },
+  { view: "chat", label: "Conversaciones", icon: "chat" },
   { view: "ajustes", label: "Ajustes", icon: "settings" },
 ];
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ProductList } from "../components/products/ProductList";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { Sidebar } from "../components/layout/Sidebar";
+import { ChatPanel } from "../components/chat/ChatPanel";
 import { carritoApi } from "../api/carrito.api";
 import { bibliotecaApi } from "../api/biblioteca.api";
 import { userApi } from "../services/userApi";
@@ -32,14 +33,13 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [purchasedIds, setPurchasedIds] = useState<Set<number>>(new Set());
   const [activandoPago, setActivandoPago] = useState(false);
+  const [clientView, setClientView] = useState<"catalogo" | "chat">("catalogo");
   const navigate = useNavigate();
 
-  // El catálogo (precio, botón de compra, buscador) solo se desbloquea para
-  // administradores o clientes con suscripción activa — no basta con tener sesión.
+  // El catálogo y el chat se desbloquean con esta misma variable de acceso
   const hasAccess = isLoggedIn && (isStaff || isSubscribed);
   const canSearch = isStaff || isSubscribed;
 
-  // Carga el conteo del carrito al iniciar sesión, sin esperar a que se abra el drawer.
   useEffect(() => {
     if (!isLoggedIn) {
       setCartCount(0);
@@ -51,8 +51,6 @@ export const HomePage: React.FC<HomePageProps> = ({
       .catch((err) => console.error("Error al cargar el carrito:", err));
   }, [isLoggedIn]);
 
-  // Carga qué productos ya están en la biblioteca digital del usuario, para
-  // que el catálogo los muestre como "En tu biblioteca" en vez de comprables.
   useEffect(() => {
     if (!isLoggedIn) {
       setPurchasedIds(new Set());
@@ -84,10 +82,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   const handleActivarCuenta = async () => {
     try {
       setActivandoPago(true);
-      const data = await userApi.activarCuenta(); // Llama a 'users/activar-cuenta-pago/' con axiosClient
+      const data = await userApi.activarCuenta();
       
       if (data.checkout_url) {
-        window.location.href = data.checkout_url; // Redirige a la pasarela de Stripe
+        window.location.href = data.checkout_url;
       } else {
         window.alert("No se pudo obtener el link de pago.");
         setActivandoPago(false);
@@ -101,7 +99,15 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="bg-background text-on-surface font-sans min-h-screen flex">
-      {isLoggedIn && <Sidebar isStaff={isStaff} onLogout={onLogoutClick} />}
+      {isLoggedIn && (
+        <Sidebar 
+          isStaff={isStaff} 
+          hasAccess={hasAccess}
+          activeView={clientView} 
+          onSelectView={(view) => setClientView(view as "catalogo" | "chat")} 
+          onLogout={onLogoutClick} 
+        />
+      )}
 
       <div className={`flex-1 flex flex-col min-w-0 ${isLoggedIn ? "md:ml-64" : ""}`}>
         {/* BARRA SUPERIOR */}
@@ -113,8 +119,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="flex justify-between items-center gap-4 px-gutter max-w-container-max mx-auto h-20">
             {isLoggedIn ? (
               <>
-                {/* Buscador: solo admins o suscriptores activos */}
-                {canSearch ? (
+                {canSearch && clientView === "catalogo" ? (
                   <div className="relative w-full max-w-sm">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">
                       search
@@ -176,8 +181,6 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-16">
-          {/*activar cuenta*/}
-          {/* BANNER CONDICIONAL PARA USUARIOS CON PAGO PENDIENTE */}
           {isLoggedIn && !isStaff && !isSubscribed && (
             <div className="bg-amber-500/10 border-l-4 border-amber-500 p-6 rounded-r-xl text-amber-200 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
               <div>
@@ -196,39 +199,45 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           )}
           
-          
-          
-          {/* Banner Hero */}
-          <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-100 flex items-end justify-center text-center mt-8">
-            <img
-              src={heroImage}
-              alt="MimiMMDart — comisiona modelos 3D pulidos y listos para MikuMikuDance"
-              className="absolute inset-0 w-full h-full object-cover object-top"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent"></div>
-            {!isLoggedIn && (
-              <div className="relative z-10 flex flex-col items-center gap-4 max-w-xl p-8">
-                <button
-                  onClick={onRegisterClick}
-                  className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_4px_18px_rgba(232,137,174,0.45)]"
-                >
-                  Crear Cuenta Ahora
-                </button>
-              </div>
-            )}
-          </section>
+          {clientView === "chat" && hasAccess ? (
+            <div className="mt-4 flex-1 w-full">
+              <ChatPanel isAdmin={false} />
+            </div>
+          ) : (
+            <>
+              {/* Banner Hero */}
+              <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-100 flex items-end justify-center text-center mt-8">
+                <img
+                  src={heroImage}
+                  alt="MimiMMDart — comisiona modelos 3D pulidos y listos para MikuMikuDance"
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent"></div>
+                {!isLoggedIn && (
+                  <div className="relative z-10 flex flex-col items-center gap-4 max-w-xl p-8">
+                    <button
+                      onClick={onRegisterClick}
+                      className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_4px_18px_rgba(232,137,174,0.45)]"
+                    >
+                      Crear Cuenta Ahora
+                    </button>
+                  </div>
+                )}
+              </section>
 
-          {/* Lista de productos */}
-          <div className={isLoggedIn ? "mt-8" : "mt-0"}>
-            <ProductList
-              isLoggedIn={isLoggedIn}
-              hasAccess={hasAccess}
-              purchasedIds={purchasedIds}
-              onAddToCart={handleAddToCart}
-              onGoToLibrary={() => navigate("/biblioteca")}
-              searchQuery={canSearch ? searchQuery : ""}
-            />
-          </div>
+              {/* Lista de productos */}
+              <div className={isLoggedIn ? "mt-8" : "mt-0"}>
+                <ProductList
+                  isLoggedIn={isLoggedIn}
+                  hasAccess={hasAccess}
+                  purchasedIds={purchasedIds}
+                  onAddToCart={handleAddToCart}
+                  onGoToLibrary={() => navigate("/biblioteca")}
+                  searchQuery={canSearch ? searchQuery : ""}
+                />
+              </div>
+            </>
+          )}
         </main>
 
         {/* FOOTER */}
