@@ -22,6 +22,7 @@ export interface Mensaje {
     conversacion: number;
     remitente: number;
     remitente_nombre: string;
+    remitente_es_admin: boolean;
     contenido: string;
     fecha_envio: string;
 }

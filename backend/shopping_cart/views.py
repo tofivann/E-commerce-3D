@@ -4,13 +4,12 @@ from decimal import Decimal
 import stripe
 from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from orders.models import Orden, DetalleOrden, ComprasDigitales
+from orders.models import Orden, DetalleOrden
 from orders.serializers import OrdenSerializer
 from products.models import Producto
 from .models import Carrito, CarritoItem
@@ -129,7 +128,7 @@ class CheckoutView(APIView):
                 ),
                 cancel_url=f"{settings.FRONTEND_URL}/",
                 client_reference_id=str(request.user.id),
-                metadata={'orden_id': str(orden.id)},
+                metadata={'tipo': 'compra_carrito', 'orden_id': str(orden.id)},
             )
         except stripe.StripeError as e:
             # @transaction.atomic solo revierte si la excepción se propaga; como la
@@ -145,57 +144,6 @@ class CheckoutView(APIView):
         orden.save(update_fields=['stripe_session_id'])
 
         return Response({"checkout_url": session.url}, status=status.HTTP_201_CREATED)
-
-
-class StripeWebhookView(APIView):
-    """
-    Recibe los eventos de Stripe. Verifica la firma con STRIPE_WEBHOOK_SECRET
-    (nunca se procesa un payload sin verificar: cualquiera podría simular un
-    pago exitoso). Cuando el evento es 'checkout.session.completed', otorga
-    las ComprasDigitales de esa orden y vacía el carrito del comprador.
-    """
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        payload = request.body
-        sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
-
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET,
-            )
-        except (ValueError, stripe.SignatureVerificationError):
-            return HttpResponse(status=400)
-
-        if event['type'] == 'checkout.session.completed':
-            self._marcar_orden_pagada(event['data']['object']['id'])
-
-        return HttpResponse(status=200)
-
-    @transaction.atomic
-    def _marcar_orden_pagada(self, session_id):
-        try:
-            orden = Orden.objects.select_for_update().get(stripe_session_id=session_id)
-        except Orden.DoesNotExist:
-            return
-
-        if orden.estado_pago == Orden.EstadoPago.COMPLETADO:
-            return  # Idempotencia: Stripe puede reenviar el mismo evento varias veces.
-
-        for detalle in orden.detalles.select_related('producto'):
-            if detalle.producto is None:
-                continue  # El producto fue eliminado entre el checkout y el pago.
-            ComprasDigitales.objects.get_or_create(
-                usuario=orden.usuario,
-                producto=detalle.producto,
-                orden=orden,
-            )
-
-        orden.estado_pago = Orden.EstadoPago.COMPLETADO
-        orden.save(update_fields=['estado_pago'])
-
-        CarritoItem.objects.filter(carrito__usuario=orden.usuario).delete()
 
 
 class OrdenPorSesionView(generics.RetrieveAPIView):

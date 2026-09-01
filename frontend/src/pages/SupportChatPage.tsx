@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { DigitalLibrary } from "../components/products/DigitalLibrary";
+import { ChatPanel } from "../components/chat/ChatPanel";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { Sidebar } from "../components/layout/Sidebar";
 
-interface LibraryPageProps {
+interface SupportChatPageProps {
   isStaff?: boolean;
   isSubscribed?: boolean;
   onLogoutClick: () => void;
 }
 
-export const LibraryPage: React.FC<LibraryPageProps> = ({
+export const SupportChatPage: React.FC<SupportChatPageProps> = ({
   isStaff = false,
   isSubscribed = false,
   onLogoutClick,
@@ -39,16 +39,8 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full">
-          <DigitalLibrary />
+          <ChatPanel isAdmin={isStaff} />
         </main>
-
-        {/* FOOTER */}
-        <footer className="bg-background w-full py-16 border-t border-outline-variant/20 mt-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto gap-4">
-            <div className="text-[24px] font-bold text-primary opacity-50">MimiMMDart</div>
-            <div className="text-on-surface-variant text-sm">© 2026 MimiMMDart.</div>
-          </div>
-        </footer>
       </div>
 
       <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />

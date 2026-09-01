@@ -19,6 +19,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from .views import StripeWebhookView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
@@ -28,6 +30,10 @@ urlpatterns = [
     path('api/v1/cart/', include('shopping_cart.urls')),
     path('api/v1/orders/', include('orders.urls')),
     path('api/v1/chat/', include('chat.urls')),
+
+    # Punto de entrada único para todos los webhooks de Stripe (ver
+    # core/views.py: enruta por metadata['tipo'] a cada app correspondiente).
+    path('api/v1/stripe/webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
 ]
 
 if settings.DEBUG:

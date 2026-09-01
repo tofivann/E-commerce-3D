@@ -3,10 +3,10 @@ from django.db import models
 from users.models import Usuario
 
 class Conversacion(models.Model):
-    usuario = models.ForeignKey(
-        Usuario, 
-        on_delete=models.CASCADE, 
-        related_name='conversaciones'
+    usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='conversaciones',
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_ultima_actividad = models.DateTimeField(auto_now=True)

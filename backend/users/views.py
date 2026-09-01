@@ -1,7 +1,6 @@
 import stripe
 from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponse
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -102,63 +101,51 @@ class RegistroView(generics.CreateAPIView):
         )
 
 
-class StripeWebhookRegistroView(generics.GenericAPIView):
-    """Recibe los eventos de Stripe de forma segura y activa la suscripción del usuario."""
+class VerificarPagoUsuarioView(generics.GenericAPIView):
+    """
+    Endpoint público usado por las páginas de éxito post-Stripe (registro y
+    activación de cuenta) para confirmar el estado REAL de la suscripción,
+    en vez de asumir éxito solo porque el navegador volvió del checkout.
+    No requiere sesión iniciada porque tras un registro nuevo el usuario
+    todavía no tiene tokens JWT.
+    """
 
-    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
-    def post(self, request):
-        payload = request.body
-        sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+    def get(self, request):
+        session_id = request.query_params.get("session_id")
+        if not session_id:
+            return Response({"detail": "Falta session_id."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+            session = stripe.checkout.Session.retrieve(session_id)
+        except stripe.StripeError as e:
+            return Response(
+                {"detail": f"No se pudo consultar la sesión de pago: {e.user_message or str(e)}"},
+                status=status.HTTP_404_NOT_FOUND,
             )
-        except (ValueError, stripe.SignatureVerificationError) as e:
-            print(f"Error de firma en Webhook: {e}")
-            return HttpResponse(status=400)
 
-        # Si el pago se completó con éxito en Stripe
-        if event["type"] == "checkout.session.completed":
-            try:
-                session_data = event["data"]["object"]
-                self._activar_suscripcion_usuario(session_data)
-            except Exception as e:
-                # Esto atrapará cualquier error interno y evitará que Stripe reintente infinitamente
-                print(f"Error procesando activación en webhook: {e}")
-                return HttpResponse(status=500)
-
-        return HttpResponse(status=200)
-
-    @transaction.atomic
-    def _activar_suscripcion_usuario(self, session_data):
-        # Soporte universal: funciona tanto si session_data es dict como si es objeto de Stripe
-        if isinstance(session_data, dict):
-            user_id = session_data.get("client_reference_id")
-        else:
-            user_id = getattr(session_data, "client_reference_id", None)
-
+        # Nota SDK v15.5.1: StripeObject bloquea .get() a propósito (no es un
+        # dict real), pero sí soporta 'in' y [] como acceso tipo diccionario.
+        metadata = session.metadata or {}
+        user_id = metadata["user_id"] if "user_id" in metadata else None
+        user_id = user_id or session.client_reference_id
         if not user_id:
-            print("Webhook recibido sin client_reference_id")
-            return
+            return Response({"detail": "La sesión no está asociada a un usuario."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            # Buscamos al usuario de forma segura con bloqueo
-            usuario = Usuario.objects.select_for_update().get(pk=user_id)
+            usuario = Usuario.objects.get(pk=user_id)
         except Usuario.DoesNotExist:
-            print(f"Usuario con ID {user_id} no encontrado en la base de datos.")
-            return
+            return Response({"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Si ya está activo, no hacemos nada (Idempotencia)
-        if usuario.estado_suscripcion == Usuario.EstadoSuscripcion.ACTIVO:
-            return
+        return Response(
+            {
+                "payment_status": session.payment_status,
+                "estado_suscripcion": usuario.estado_suscripcion,
+            },
+            status=status.HTTP_200_OK,
+        )
 
-        # Cambiamos el estado a ACTIVO para que pueda ver los productos
-        usuario.estado_suscripcion = Usuario.EstadoSuscripcion.ACTIVO
-        usuario.save(update_fields=["estado_suscripcion"])
-        print(f"¡Suscripción activada con éxito para el usuario ID: {user_id}!")
 
 class ActivarCuentaPagoView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]

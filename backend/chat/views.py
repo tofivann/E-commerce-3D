@@ -1,4 +1,5 @@
 # chat/views.py corregido para seguridad estricta
+from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -15,25 +16,32 @@ class ConversacionViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return Conversacion.objects.none()
-        if user.is_staff or user.is_superuser:
-            return Conversacion.objects.all().order_by('-fecha_ultima_actividad')
-        return Conversacion.objects.filter(usuario=user)
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        conversacion_existente = Conversacion.objects.filter(usuario=user).first()
-        if conversacion_existente:
-            self.conversacion_existente = conversacion_existente
-            return
-        serializer.save(usuario=user)
+        # Precarga los mensajes de cada conversación en una sola query extra,
+        # para que el serializer no dispare 2 queries más por conversación
+        # (último mensaje + no leídos) al listar (ver ConversacionSerializer).
+        mensajes_prefetch = Prefetch(
+            'mensajes',
+            queryset=Mensaje.objects.order_by('-fecha_envio'),
+            to_attr='mensajes_recientes',
+        )
+        base = Conversacion.objects.prefetch_related(mensajes_prefetch)
+
+        if user.is_staff or user.is_superuser:
+            return base.order_by('-fecha_ultima_actividad')
+        return base.filter(usuario=user)
 
     def create(self, request, *args, **kwargs):
-        self.conversacion_existente = None
-        response = super().create(request, *args, **kwargs)
-        if getattr(self, 'conversacion_existente', None):
-            serializer = self.get_serializer(self.conversacion_existente, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return response
+        # get_or_create es atómico frente a condiciones de carrera gracias al
+        # constraint OneToOne en Conversacion.usuario: si dos peticiones casi
+        # simultáneas del mismo usuario llegan aquí, la BD garantiza que solo
+        # una fila termine creada y la otra reciba esa misma conversación.
+        conversacion, creada = Conversacion.objects.get_or_create(usuario=request.user)
+        serializer = self.get_serializer(conversacion, context={'request': request})
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if creada else status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=['get', 'post'])
     def mensajes(self, request, pk=None):

@@ -36,8 +36,19 @@ class ConversacionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['usuario', 'fecha_creacion', 'fecha_ultima_actividad']
 
+    def _mensajes_precargados(self, obj):
+        # ConversacionViewSet.get_queryset precarga esto vía Prefetch (to_attr=
+        # 'mensajes_recientes') para evitar 2 queries extra por conversación.
+        # Si el serializer se usa fuera de ese queryset (ej. al crear una
+        # conversación nueva), caemos a una consulta normal.
+        mensajes = getattr(obj, 'mensajes_recientes', None)
+        if mensajes is None:
+            mensajes = list(obj.mensajes.order_by('-fecha_envio'))
+        return mensajes
+
     def get_ultimo_mensaje(self, obj):
-        ultimo = obj.mensajes.order_by('-fecha_envio').first()
+        mensajes = self._mensajes_precargados(obj)
+        ultimo = mensajes[0] if mensajes else None
         if ultimo:
             return {
                 "contenido": ultimo.contenido,
@@ -53,14 +64,14 @@ class ConversacionSerializer(serializers.ModelSerializer):
 
         if request.user.is_staff or request.user.is_superuser:
             ultimo_leido = obj.admin_ultimo_leido
-            mensajes = obj.mensajes.exclude(remitente=request.user)
         else:
             ultimo_leido = obj.cliente_ultimo_leido
-            mensajes = obj.mensajes.exclude(remitente=request.user)
+
+        mensajes = [m for m in self._mensajes_precargados(obj) if m.remitente_id != request.user.id]
 
         if ultimo_leido:
-            return mensajes.filter(fecha_envio__gt=ultimo_leido).count()
-        
-        return mensajes.count()
+            return sum(1 for m in mensajes if m.fecha_envio > ultimo_leido)
+
+        return len(mensajes)
 
     

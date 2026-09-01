@@ -5,6 +5,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
+import { SupportChatPage } from "./pages/SupportChatPage";
 import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
 import { ActivationSuccessPage } from "./pages/ActivationSuccessPage";
 import { RegisterSuccessPage } from "./pages/RegisterSuccessPage";
@@ -139,7 +140,18 @@ function AppRoutes() {
         path="/biblioteca"
         element={
           isLoggedIn ? (
-            <LibraryPage isStaff={isStaff} onLogoutClick={handleLogout} />
+            <LibraryPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Chat de Soporte: admins o suscriptores con cuenta activa */}
+      <Route
+        path="/soporte"
+        element={
+          isLoggedIn && (isStaff || isSubscribed) ? (
+            <SupportChatPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )

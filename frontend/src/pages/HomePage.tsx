@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ProductList } from "../components/products/ProductList";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { Sidebar } from "../components/layout/Sidebar";
-import { ChatPanel } from "../components/chat/ChatPanel";
 import { carritoApi } from "../api/carrito.api";
 import { bibliotecaApi } from "../api/biblioteca.api";
 import { userApi } from "../services/userApi";
@@ -33,7 +32,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [purchasedIds, setPurchasedIds] = useState<Set<number>>(new Set());
   const [activandoPago, setActivandoPago] = useState(false);
-  const [clientView, setClientView] = useState<"catalogo" | "chat">("catalogo");
   const navigate = useNavigate();
 
   // El catálogo y el chat se desbloquean con esta misma variable de acceso
@@ -100,13 +98,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="bg-background text-on-surface font-sans min-h-screen flex">
       {isLoggedIn && (
-        <Sidebar 
-          isStaff={isStaff} 
-          hasAccess={hasAccess}
-          activeView={clientView} 
-          onSelectView={(view) => setClientView(view as "catalogo" | "chat")} 
-          onLogout={onLogoutClick} 
-        />
+        <Sidebar isStaff={isStaff} hasAccess={hasAccess} onLogout={onLogoutClick} />
       )}
 
       <div className={`flex-1 flex flex-col min-w-0 ${isLoggedIn ? "md:ml-64" : ""}`}>
@@ -119,7 +111,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           <div className="flex justify-between items-center gap-4 px-gutter max-w-container-max mx-auto h-20">
             {isLoggedIn ? (
               <>
-                {canSearch && clientView === "catalogo" ? (
+                {canSearch ? (
                   <div className="relative w-full max-w-sm">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">
                       search
@@ -199,45 +191,37 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           )}
           
-          {clientView === "chat" && hasAccess ? (
-            <div className="mt-4 flex-1 w-full">
-              <ChatPanel isAdmin={false} />
-            </div>
-          ) : (
-            <>
-              {/* Banner Hero */}
-              <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-100 flex items-end justify-center text-center mt-8">
-                <img
-                  src={heroImage}
-                  alt="MimiMMDart — comisiona modelos 3D pulidos y listos para MikuMikuDance"
-                  className="absolute inset-0 w-full h-full object-cover object-top"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent"></div>
-                {!isLoggedIn && (
-                  <div className="relative z-10 flex flex-col items-center gap-4 max-w-xl p-8">
-                    <button
-                      onClick={onRegisterClick}
-                      className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_4px_18px_rgba(232,137,174,0.45)]"
-                    >
-                      Crear Cuenta Ahora
-                    </button>
-                  </div>
-                )}
-              </section>
-
-              {/* Lista de productos */}
-              <div className={isLoggedIn ? "mt-8" : "mt-0"}>
-                <ProductList
-                  isLoggedIn={isLoggedIn}
-                  hasAccess={hasAccess}
-                  purchasedIds={purchasedIds}
-                  onAddToCart={handleAddToCart}
-                  onGoToLibrary={() => navigate("/biblioteca")}
-                  searchQuery={canSearch ? searchQuery : ""}
-                />
+          {/* Banner Hero */}
+          <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-100 flex items-end justify-center text-center mt-8">
+            <img
+              src={heroImage}
+              alt="MimiMMDart — comisiona modelos 3D pulidos y listos para MikuMikuDance"
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent"></div>
+            {!isLoggedIn && (
+              <div className="relative z-10 flex flex-col items-center gap-4 max-w-xl p-8">
+                <button
+                  onClick={onRegisterClick}
+                  className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded px-8 py-3 text-lg font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 shadow-[0_4px_18px_rgba(232,137,174,0.45)]"
+                >
+                  Crear Cuenta Ahora
+                </button>
               </div>
-            </>
-          )}
+            )}
+          </section>
+
+          {/* Lista de productos */}
+          <div className={isLoggedIn ? "mt-8" : "mt-0"}>
+            <ProductList
+              isLoggedIn={isLoggedIn}
+              hasAccess={hasAccess}
+              purchasedIds={purchasedIds}
+              onAddToCart={handleAddToCart}
+              onGoToLibrary={() => navigate("/biblioteca")}
+              searchQuery={canSearch ? searchQuery : ""}
+            />
+          </div>
         </main>
 
         {/* FOOTER */}

@@ -68,4 +68,15 @@ export const userApi = {
     const response = await axiosClient.post<{ checkout_url: string }>('users/activar-cuenta-pago/');
     return response.data;
   },
+
+  // Consulta el estado real de la suscripción tras volver de Stripe (registro o
+  // activación de cuenta), en vez de asumir éxito solo por haber vuelto del checkout.
+  verificarPago: async (
+    sessionId: string,
+  ): Promise<{ payment_status: string; estado_suscripcion: EstadoSuscripcion }> => {
+    const response = await axiosClient.get('users/verificar-pago/', {
+      params: { session_id: sessionId },
+    });
+    return response.data;
+  },
 };
