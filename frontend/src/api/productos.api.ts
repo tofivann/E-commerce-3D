@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosClient } from "../services/axiosClient";
 
 // 1. Interfaz para mantener el autocompletado y tipado de TypeScript
 export interface Producto {
@@ -14,42 +14,36 @@ export interface Producto {
   fecha_creacion?: string;
 }
 
-// 2. Instancia base de Axios apuntando al endpoint de productos
-const productosApi = axios.create({
-  // Modificamos la URL para que coincida exactamente con tu Django actual
-  baseURL: "http://127.0.0.1:8000/api/v1/products/products/",
-});
+const BASE = "products/products/";
 
-// Interceptor opcional: Adjunta automáticamente el Token JWT si el usuario está autenticado
-productosApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token"); // Ajusta según dónde guardes el JWT
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// 3. Métodos CRUD para Productos
+// 2. Métodos CRUD para Productos (usan la instancia axios compartida — mismo
+// VITE_API_URL/JWT que el resto de la app, sin una baseURL propia aparte)
 
 // Obtener todos los productos (catálogo público: solo activos, sin importar quién esté logueado)
 export function getAllProductos() {
-  return productosApi.get<Producto[]>("/");
+  return axiosClient.get<Producto[]>(BASE);
 }
 
 // Panel admin: incluye también los productos inactivos (solo staff puede pedir esto).
 export function getAllProductosAdmin() {
-  return productosApi.get<Producto[]>("/", { params: { incluir_inactivos: "true" } });
+  return axiosClient.get<Producto[]>(BASE, { params: { incluir_inactivos: "true" } });
 }
 
 // Obtener un solo producto por ID
 export function getProducto(id: string | number) {
-  return productosApi.get<Producto>(`/${id}/`);
+  return axiosClient.get<Producto>(`${BASE}${id}/`);
 }
+
+// axiosClient fija Content-Type: application/json por defecto (bien para el
+// resto de la app); cuando el body es FormData (subida de archivos) hay que
+// pisarlo, mismo patrón que ya usa comisiones.api.ts.
+const formDataConfig = (producto: FormData | unknown) =>
+  producto instanceof FormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined;
 
 // Crear un producto
 // Nota: Si vas a subir archivos reales (archivo_3d), debes pasar un FormData en lugar de un objeto plano
 export function createProducto(producto: FormData | Producto) {
-  return productosApi.post("/", producto);
+  return axiosClient.post(BASE, producto, formDataConfig(producto));
 }
 
 // Actualizar un producto completo (PUT)
@@ -57,7 +51,7 @@ export function updateProducto(
   id: string | number,
   producto: FormData | Producto,
 ) {
-  return productosApi.put(`/${id}/`, producto);
+  return axiosClient.put(`${BASE}${id}/`, producto, formDataConfig(producto));
 }
 
 // Actualizar un producto parcialmente (PATCH - ej: activar/desactivar, o editar sin reenviar los archivos)
@@ -65,10 +59,10 @@ export function patchProducto(
   id: string | number,
   producto: FormData | Partial<Producto>,
 ) {
-  return productosApi.patch(`/${id}/`, producto);
+  return axiosClient.patch(`${BASE}${id}/`, producto, formDataConfig(producto));
 }
 
 // Eliminar un producto
 export function deleteProducto(id: string | number) {
-  return productosApi.delete(`/${id}/`);
+  return axiosClient.delete(`${BASE}${id}/`);
 }
