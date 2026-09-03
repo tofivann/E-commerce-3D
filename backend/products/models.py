@@ -12,6 +12,12 @@ class Producto(models.Model):
         blank=True,
         help_text="Imagen de previsualización del producto."
     )
+    link_youtube = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Link de YouTube con un video de vista previa del modelo (opcional)."
+    )
     activo = models.BooleanField(default=True, db_index=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 

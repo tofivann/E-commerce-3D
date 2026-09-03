@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Producto } from "../../api/productos.api";
-import { getAllProductos } from "../../api/productos.api";
+import { getAllProductosAdmin, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
 
 export const ProductAdminGrid: React.FC = () => {
@@ -9,11 +9,12 @@ export const ProductAdminGrid: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Producto | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const fetchProductos = async () => {
     try {
       setLoading(true);
-      const response = await getAllProductos();
+      const response = await getAllProductosAdmin();
       setProductos(response.data);
       setError(null);
     } catch (err) {
@@ -36,6 +37,22 @@ export const ProductAdminGrid: React.FC = () => {
   const openEdit = (producto: Producto) => {
     setEditing(producto);
     setFormOpen(true);
+  };
+
+  const handleToggleActivo = async (producto: Producto) => {
+    if (!producto.id) return;
+    setTogglingId(producto.id);
+    try {
+      await patchProducto(producto.id, { activo: !producto.activo });
+      setProductos((prev) =>
+        prev.map((p) => (p.id === producto.id ? { ...p, activo: !p.activo } : p))
+      );
+    } catch (err) {
+      console.error("Error al cambiar el estado del producto:", err);
+      window.alert("No se pudo cambiar el estado del producto.");
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   return (
@@ -84,15 +101,22 @@ export const ProductAdminGrid: React.FC = () => {
               key={producto.id}
               className="group bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant/30 relative flex flex-col h-[320px] transition-all hover:-translate-y-1"
             >
-              <div className="absolute top-3 right-3 z-10 flex gap-2">
+              <div className="absolute top-3 right-3 z-20 flex gap-2">
                 <span className="bg-surface/80 backdrop-blur-md text-primary font-mono text-[10px] px-2 py-1 rounded-full border border-primary/30">
                   .{producto.formato_archivo || "3D"}
                 </span>
-                {!producto.activo && (
-                  <span className="bg-surface/80 backdrop-blur-md text-error font-mono text-[10px] px-2 py-1 rounded-full border border-error/30">
-                    Inactivo
-                  </span>
-                )}
+                <button
+                  onClick={() => handleToggleActivo(producto)}
+                  disabled={togglingId === producto.id}
+                  title="Clic para cambiar el estado"
+                  className={`backdrop-blur-md font-mono text-[10px] px-2 py-1 rounded-full border transition-colors disabled:opacity-50 ${
+                    producto.activo
+                      ? "bg-surface/80 text-primary-fixed-dim border-primary/30 hover:bg-surface"
+                      : "bg-surface/80 text-error border-error/30 hover:bg-surface"
+                  }`}
+                >
+                  {producto.activo ? "Activo" : "Inactivo"}
+                </button>
               </div>
 
               <div className="h-48 w-full overflow-hidden bg-surface-container-lowest relative">

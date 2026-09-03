@@ -31,15 +31,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onGoToLibrary && onGoToLibrary(producto);
       return;
     }
-    hasAccess && onSelect && onSelect(producto);
+    // Ver el detalle no requiere acceso: cualquiera puede abrir la ficha del
+    // producto, solo el precio/compra está bloqueado sin suscripción.
+    onSelect && onSelect(producto);
   };
 
   return (
     <article
       onClick={handleCardClick}
-      className={`bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col relative group card-hover transition-all duration-300 h-80 ${
-        hasAccess || isPurchased ? "cursor-pointer" : ""
-      }`}
+      className="bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col relative group card-hover transition-all duration-300 h-80 cursor-pointer"
     >
       {/* Zona de Imagen */}
       <div className="relative grow h-48 overflow-hidden bg-surface-container-lowest">

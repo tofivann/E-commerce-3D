@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { Producto } from "../../api/productos.api";
-import { deleteProducto, getAllProductos } from "../../api/productos.api";
+import { deleteProducto, getAllProductosAdmin, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
 
 export const ProductAdminTable: React.FC = () => {
@@ -10,11 +10,12 @@ export const ProductAdminTable: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Producto | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const fetchProductos = async () => {
     try {
       setLoading(true);
-      const response = await getAllProductos();
+      const response = await getAllProductosAdmin();
       setProductos(response.data);
       setError(null);
     } catch (err) {
@@ -28,6 +29,22 @@ export const ProductAdminTable: React.FC = () => {
   useEffect(() => {
     fetchProductos();
   }, []);
+
+  const handleToggleActivo = async (producto: Producto) => {
+    if (!producto.id) return;
+    setTogglingId(producto.id);
+    try {
+      await patchProducto(producto.id, { activo: !producto.activo });
+      setProductos((prev) =>
+        prev.map((p) => (p.id === producto.id ? { ...p, activo: !p.activo } : p))
+      );
+    } catch (err) {
+      console.error("Error al cambiar el estado del producto:", err);
+      window.alert("No se pudo cambiar el estado del producto.");
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const handleDelete = async (producto: Producto) => {
     if (!producto.id) return;
@@ -128,9 +145,14 @@ export const ProductAdminTable: React.FC = () => {
                       ${Number(producto.precio).toFixed(2)}
                     </td>
                     <td className="py-3 px-6">
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
-                          producto.activo ? "text-primary-fixed-dim" : "text-on-surface-variant"
+                      <button
+                        onClick={() => handleToggleActivo(producto)}
+                        disabled={togglingId === producto.id}
+                        title="Clic para cambiar el estado"
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full transition-colors disabled:opacity-50 ${
+                          producto.activo
+                            ? "bg-primary-container/40 text-primary-fixed-dim hover:bg-primary-container/60"
+                            : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
                         }`}
                       >
                         <span
@@ -139,7 +161,7 @@ export const ProductAdminTable: React.FC = () => {
                           }`}
                         />
                         {producto.activo ? "Activo" : "Inactivo"}
-                      </span>
+                      </button>
                     </td>
                     <td className="py-3 px-6 text-right">
                       <div className="flex justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">

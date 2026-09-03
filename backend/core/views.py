@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from shopping_cart.services import marcar_orden_pagada
 from users.services import activar_suscripcion_usuario
+from custom_orders.services import marcar_comision_pagada
 from .stripe_utils import stripe_dict_get
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -13,6 +14,10 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Tipos de sesión de checkout que representan una activación de cuenta
 # (registro nuevo o pago de una cuenta que había quedado PENDIENTE_PAGO).
 TIPOS_ACTIVACION_USUARIO = {'suscripcion_usuario', 'activacion_cuenta'}
+
+# Tipos de sesión de checkout que representan el pago de una comisión
+# (Motion o Modelo Nuevo) — ver custom_orders.
+TIPOS_COMISION = {'comision_motion', 'comision_modelo'}
 
 
 class StripeWebhookView(APIView):
@@ -49,6 +54,8 @@ class StripeWebhookView(APIView):
                     marcar_orden_pagada(session_data['id'])
                 elif tipo in TIPOS_ACTIVACION_USUARIO:
                     activar_suscripcion_usuario(session_data)
+                elif tipo in TIPOS_COMISION:
+                    marcar_comision_pagada(session_data['id'])
                 else:
                     print(f"Webhook: checkout.session.completed con metadata.tipo desconocido: {tipo!r}")
             except Exception as e:

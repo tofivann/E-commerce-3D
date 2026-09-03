@@ -10,9 +10,10 @@ class ProductoSerializer(serializers.ModelSerializer):
             'descripcion', 
             'precio', 
             'formato_archivo', 
-            'archivo_3d', 
-            'imagen_previa', 
-            'activo', 
+            'archivo_3d',
+            'imagen_previa',
+            'link_youtube',
+            'activo',
             'fecha_creacion'
         ]
         read_only_fields = ['fecha_creacion']

@@ -11,7 +11,8 @@ class Orden(models.Model):
 
     class TipoOrden(models.TextChoices):
         CATALOGO = 'CATALOGO', 'Catálogo'
-        ENCARGO = 'ENCARGO', 'Encargo Personalizado'
+        COMISION_MOTION = 'COMISION_MOTION', 'Comisión de Motion'
+        COMISION_MODELO = 'COMISION_MODELO', 'Comisión de Modelo Nuevo'
 
     codigo_orden = models.CharField(max_length=100, unique=True)
     usuario = models.ForeignKey(

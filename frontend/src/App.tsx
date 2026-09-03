@@ -6,6 +6,7 @@ import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { SupportChatPage } from "./pages/SupportChatPage";
+import { CommissionsPage } from "./pages/CommissionsPage";
 import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
 import { ActivationSuccessPage } from "./pages/ActivationSuccessPage";
 import { RegisterSuccessPage } from "./pages/RegisterSuccessPage";
@@ -152,6 +153,17 @@ function AppRoutes() {
         element={
           isLoggedIn && (isStaff || isSubscribed) ? (
             <SupportChatPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Comisiones (Motion / Modelo Nuevo): solo accesible con sesión iniciada */}
+      <Route
+        path="/comisiones"
+        element={
+          isLoggedIn ? (
+            <CommissionsPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )

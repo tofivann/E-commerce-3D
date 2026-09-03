@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DigitalLibrary } from "../components/products/DigitalLibrary";
+import { ComisionesLibrary } from "../components/comisiones/ComisionesLibrary";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { Sidebar } from "../components/layout/Sidebar";
 
@@ -9,12 +10,15 @@ interface LibraryPageProps {
   onLogoutClick: () => void;
 }
 
+type PestanaBiblioteca = "productos" | "comisiones";
+
 export const LibraryPage: React.FC<LibraryPageProps> = ({
   isStaff = false,
   isSubscribed = false,
   onLogoutClick,
 }) => {
   const [cartOpen, setCartOpen] = useState(false);
+  const [pestana, setPestana] = useState<PestanaBiblioteca>("productos");
 
   // Misma regla de acceso que en HomePage: admins o suscriptores activos.
   const hasAccess = isStaff || isSubscribed;
@@ -39,7 +43,32 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full">
-          <DigitalLibrary />
+          <div className="inline-flex items-center gap-1 p-1 mb-6 rounded-lg bg-surface-container-high/60 border border-outline-variant/30">
+            <button
+              onClick={() => setPestana("productos")}
+              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 ${
+                pestana === "productos"
+                  ? "bg-primary-container text-on-primary-fixed"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+              Productos
+            </button>
+            <button
+              onClick={() => setPestana("comisiones")}
+              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 ${
+                pestana === "comisiones"
+                  ? "bg-primary-container text-on-primary-fixed"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">design_services</span>
+              Comisiones Personalizadas
+            </button>
+          </div>
+
+          {pestana === "productos" ? <DigitalLibrary /> : <ComisionesLibrary />}
         </main>
 
         {/* FOOTER */}

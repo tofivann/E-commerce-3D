@@ -5,6 +5,7 @@ import { ProductAdminGrid } from "../components/products/ProductAdminGrid";
 import { ProductAdminTable } from "../components/products/ProductAdminTable";
 import { UserAdminTable } from "../components/users/UserAdminTable";
 import { ChatPanel } from "../components/chat/ChatPanel";
+import { ComisionesAdmin } from "../components/admin/ComisionesAdmin";
 
 type AjustesEntidad = "productos" | "usuarios";
 
@@ -20,10 +21,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
     <div className="bg-background min-h-screen flex">
       <AdminSidebar activeView={view} onSelectView={setView} onLogout={onLogout} />
 
-      <main className="flex-1 md:ml-64 p-6 md:p-10 max-w-container-max mx-auto w-full">
+      <main className="flex-1 md:ml-64 pt-20 pb-6 px-6 md:pt-10 md:pb-10 md:px-10 max-w-container-max mx-auto w-full">
         {view === "catalogo" && <ProductAdminGrid />}
 
         {view === "chat" && <ChatPanel isAdmin={true} />}
+
+        {view === "comisiones" && <ComisionesAdmin />}
 
         {view === "ajustes" && (
           <div>

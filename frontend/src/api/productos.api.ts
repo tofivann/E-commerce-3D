@@ -9,6 +9,7 @@ export interface Producto {
   formato_archivo: string;
   archivo_3d?: File | string; // File cuando se sube desde un input tipo file, string si es la URL
   imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada
+  link_youtube?: string | null; // Video de vista previa del modelo (opcional)
   activo?: boolean;
   fecha_creacion?: string;
 }
@@ -30,9 +31,14 @@ productosApi.interceptors.request.use((config) => {
 
 // 3. Métodos CRUD para Productos
 
-// Obtener todos los productos
+// Obtener todos los productos (catálogo público: solo activos, sin importar quién esté logueado)
 export function getAllProductos() {
   return productosApi.get<Producto[]>("/");
+}
+
+// Panel admin: incluye también los productos inactivos (solo staff puede pedir esto).
+export function getAllProductosAdmin() {
+  return productosApi.get<Producto[]>("/", { params: { incluir_inactivos: "true" } });
 }
 
 // Obtener un solo producto por ID

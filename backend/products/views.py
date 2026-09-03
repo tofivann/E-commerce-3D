@@ -16,9 +16,24 @@ class ProductoViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        # Para usuarios normales solo muestra productos activos.
-        # Si es un administrador, muestra absolutamente todos los productos.
         user = self.request.user
-        if user.is_staff: #is_staff, is_superuser son propiedades de el usuario de django para indicar si son admin u superuser.
+
+        # El LISTADO (catálogo, público o visto por un admin) siempre muestra
+        # solo productos activos por defecto. Los inactivos solo aparecen ahí
+        # cuando el panel de administración los pide explícitamente con
+        # ?incluir_inactivos=true — así un admin viendo la tienda como
+        # cliente ve lo mismo que cualquier otro usuario, en vez de ver
+        # siempre todo por ser staff.
+        if self.action == 'list':
+            quiere_inactivos = self.request.query_params.get('incluir_inactivos') == 'true'
+            if user.is_authenticated and user.is_staff and quiere_inactivos:
+                return Producto.objects.all()
+            return Producto.objects.filter(activo=True)
+
+        # Para operar sobre un producto puntual por su id (ver detalle,
+        # editar, cambiar activo/inactivo, eliminar) el admin no debería
+        # tener que acordarse de mandar ese mismo parámetro — si ya lo tiene
+        # listado en su panel, debe poder gestionarlo sin importar su estado.
+        if user.is_authenticated and user.is_staff:
             return Producto.objects.all()
         return Producto.objects.filter(activo=True)

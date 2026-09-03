@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProductList } from "../components/products/ProductList";
 import { CartDrawer } from "../components/products/CartDrawer";
+import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
 import { Sidebar } from "../components/layout/Sidebar";
 import { carritoApi } from "../api/carrito.api";
 import { bibliotecaApi } from "../api/biblioteca.api";
@@ -32,6 +33,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [purchasedIds, setPurchasedIds] = useState<Set<number>>(new Set());
   const [activandoPago, setActivandoPago] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const navigate = useNavigate();
 
   // El catálogo y el chat se desbloquean con esta misma variable de acceso
@@ -219,6 +221,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               purchasedIds={purchasedIds}
               onAddToCart={handleAddToCart}
               onGoToLibrary={() => navigate("/biblioteca")}
+              onSelectProducto={setSelectedProduct}
               searchQuery={canSearch ? searchQuery : ""}
             />
           </div>
@@ -241,6 +244,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           onCartChange={(carrito) => setCartCount(carrito?.items.length ?? 0)}
         />
       )}
+
+      <ProductDetailsModal
+        producto={selectedProduct}
+        hasAccess={hasAccess}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={handleAddToCart}
+      />
     </div>
   );
 };

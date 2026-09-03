@@ -14,6 +14,7 @@ const emptyForm = {
   descripcion: "",
   precio: "",
   formato_archivo: "",
+  link_youtube: "",
   activo: true,
 };
 
@@ -40,6 +41,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         descripcion: producto.descripcion || "",
         precio: String(producto.precio ?? ""),
         formato_archivo: producto.formato_archivo || "",
+        link_youtube: producto.link_youtube || "",
         activo: producto.activo ?? true,
       });
       setImagenPreviaUrl(
@@ -78,6 +80,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     data.append("descripcion", form.descripcion);
     data.append("precio", form.precio);
     data.append("formato_archivo", form.formato_archivo);
+    data.append("link_youtube", form.link_youtube);
     data.append("activo", String(form.activo));
     if (archivo3d) {
       data.append("archivo_3d", archivo3d);
@@ -245,6 +248,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 }
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
+              Video de YouTube <span className="normal-case font-normal text-outline">(opcional)</span>
+            </label>
+            <input
+              type="url"
+              className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={form.link_youtube}
+              onChange={(e) => setForm({ ...form, link_youtube: e.target.value })}
+            />
+            <p className="text-on-surface-variant text-xs mt-1">
+              Se muestra como video de vista previa en el detalle del producto.
+            </p>
           </div>
 
           <div>
