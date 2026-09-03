@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.db import transaction
 
+from core.email_utils import enviar_email
 from orders.models import Orden, ComprasDigitales
 from .models import CarritoItem
 
@@ -32,3 +34,15 @@ def marcar_orden_pagada(session_id):
     orden.save(update_fields=['estado_pago'])
 
     CarritoItem.objects.filter(carrito__usuario=orden.usuario).delete()
+
+    enviar_email(
+        to=orden.usuario.email,
+        subject="Recibo de tu compra ✨",
+        template_name='shopping_cart/email_recibo_compra.html',
+        context={
+            'codigo_orden': orden.codigo_orden,
+            'detalles': list(orden.detalles.select_related('producto')),
+            'total': orden.total,
+            'frontend_url': settings.FRONTEND_URL,
+        },
+    )

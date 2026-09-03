@@ -77,6 +77,10 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 
+# Correos transaccionales vía Resend. Se definen en el .env local, NUNCA se commitean.
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+EMAIL_FROM = os.getenv('EMAIL_FROM', 'MimiMMDart <onboarding@resend.dev>')
+
 # 5. Base de datos con Supabase / PostgreSQL
 DATABASE_URL = os.getenv('DATABASE_URL')
 
@@ -110,7 +114,11 @@ REST_FRAMEWORK = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # 'core' es el paquete del proyecto (no está en INSTALLED_APPS), así
+        # que su carpeta templates/ no la descubre APP_DIRS solo — se agrega
+        # a mano acá para que email_base.html (base compartida de correos)
+        # sea visible desde el template de cualquier app.
+        'DIRS': [BASE_DIR / 'core' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

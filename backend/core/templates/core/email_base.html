@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>{% block titulo %}MimiMMDart{% endblock %}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#fdf2f6; font-family: Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf2f6; padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:480px; background-color:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="background-color:#f472a0; padding:24px 32px;">
+              <span style="font-size:22px; font-weight:bold; color:#ffffff;">MimiMMDart</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              {% block contenido %}{% endblock %}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px; background-color:#fdf2f6; text-align:center;">
+              <span style="font-size:12px; color:#9a8a91;">© 2026 MimiMMDart</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

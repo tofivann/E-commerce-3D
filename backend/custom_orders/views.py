@@ -10,10 +10,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.email_utils import enviar_email
 from orders.models import Orden
 from products.models import Producto
 from .models import TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
 from .permissions import EsAdminOSoloLectura
+from .services import datos_comision_para_email
 from .serializers import (
     TramoPersonajesMotionSerializer,
     JuegoComisionSerializer,
@@ -234,6 +236,27 @@ class ComisionAdminViewSetBase(
     acciones extra que declare cada subclase (ej. 'publicar').
     """
     permission_classes = [permissions.IsAdminUser]
+
+    def perform_update(self, serializer):
+        # Detecta el momento exacto en que se sube el archivo de entrega
+        # (pasa de vacío a tener valor en este mismo PATCH) para mandar el
+        # correo de "comisión completada" una sola vez, no en cada cambio de
+        # estado o reemplazo posterior del archivo.
+        tenia_archivo_antes = bool(serializer.instance.archivo_entrega)
+        instance = serializer.save()
+        if not tenia_archivo_antes and instance.archivo_entrega:
+            tipo_label, detalle = datos_comision_para_email(instance.orden)
+            enviar_email(
+                to=instance.usuario.email,
+                subject="¡Tu comisión está lista! 🎉",
+                template_name='custom_orders/email_comision_completada.html',
+                context={
+                    'codigo_orden': instance.orden.codigo_orden,
+                    'tipo_label': tipo_label,
+                    'detalle': detalle,
+                    'frontend_url': settings.FRONTEND_URL,
+                },
+            )
 
 
 class ComisionMotionAdminViewSet(ComisionAdminViewSetBase):

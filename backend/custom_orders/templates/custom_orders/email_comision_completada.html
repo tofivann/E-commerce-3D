@@ -1,0 +1,22 @@
+{% extends "core/email_base.html" %}
+
+{% block titulo %}¡Tu comisión está lista!{% endblock %}
+
+{% block contenido %}
+<h1 style="font-size:20px; color:#3a2e35; margin:0 0 8px;">¡Tu comisión está lista! 🎉</h1>
+<p style="font-size:13px; color:#9a8a91; font-family: monospace; margin:0 0 24px;">Orden: {{ codigo_orden }}</p>
+
+<p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 8px;">
+  <strong>Tipo de comisión:</strong> {{ tipo_label }}
+</p>
+<p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">
+  <strong>Detalle:</strong> {{ detalle }}
+</p>
+
+<p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">
+  Ya terminamos tu comisión y el archivo está disponible para descargar.
+</p>
+<a href="{{ frontend_url }}/biblioteca" style="display:inline-block; background-color:#f472a0; color:#ffffff; text-decoration:none; padding:12px 28px; border-radius:8px; font-weight:bold; font-size:14px;">
+  Descargar mi archivo
+</a>
+{% endblock %}

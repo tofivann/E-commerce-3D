@@ -1,0 +1,13 @@
+{% extends "core/email_base.html" %}
+
+{% block titulo %}¡Tu cuenta ya está activa!{% endblock %}
+
+{% block contenido %}
+<h1 style="font-size:20px; color:#3a2e35; margin:0 0 16px;">¡Hola{% if nombre %}, {{ nombre }}{% endif %}! 🎉</h1>
+<p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">
+  Tu pago se confirmó y tu cuenta ya está <strong>activa</strong>. Ya puedes iniciar sesión y desbloquear el catálogo completo, pedir comisiones personalizadas, y más.
+</p>
+<a href="{{ frontend_url }}/login" style="display:inline-block; background-color:#f472a0; color:#ffffff; text-decoration:none; padding:12px 28px; border-radius:8px; font-weight:bold; font-size:14px;">
+  Iniciar sesión
+</a>
+{% endblock %}
