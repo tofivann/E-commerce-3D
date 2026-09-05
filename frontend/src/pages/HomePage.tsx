@@ -256,17 +256,17 @@ export const HomePage: React.FC<HomePageProps> = ({
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-16">
           {isLoggedIn && !isStaff && !isSubscribed && (
-            <div className="bg-amber-500/10 border-l-4 border-amber-500 p-6 rounded-r-xl text-amber-200 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
+            <div className="bg-error/10 border-l-4 border-error p-6 rounded-r-xl text-on-error-container flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
               <div>
-                <h3 className="text-xl font-bold text-amber-400">{t("home.pendingTitle")}</h3>
-                <p className="text-sm text-amber-200/80 mt-1">
+                <h3 className="text-xl font-bold text-error">{t("home.pendingTitle")}</h3>
+                <p className="text-sm text-on-error-container/80 mt-1">
                   {t("home.pendingBody")}
                 </p>
               </div>
               <button
                 onClick={handleActivarCuenta}
                 disabled={activandoPago}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold rounded-xl transition duration-200 shadow-lg shadow-amber-500/20 disabled:opacity-50 whitespace-nowrap"
+                className="px-6 py-3 bg-error hover:bg-error/90 text-on-error font-bold rounded-xl transition duration-200 shadow-lg shadow-error/20 disabled:opacity-50 whitespace-nowrap"
               >
                 {activandoPago ? t("home.pendingLoading") : t("home.pendingCta")}
               </button>
