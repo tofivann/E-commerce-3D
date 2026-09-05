@@ -17,7 +17,7 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.getenv('SECRET_KEY', 'clave_secreta_desarrollo_12345')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']  # <-- CORREGIDO: Permite conexiones en desarrollo local
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # 1. Modelo de usuario personalizado
 AUTH_USER_MODEL = 'users.Usuario'
@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -61,11 +62,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'core.urls'
 
-# 4. Configuración de CORS (Frontend Vite)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# 4. Configuración de CORS (Frontend Vite en desarrollo; dominio real en producción vía env)
+CORS_ALLOWED_ORIGINS = os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173',
+).split(',')
 # Permite que el frontend lea el nombre de archivo al descargar una compra
 # (por defecto los navegadores ocultan este header en peticiones cross-origin).
 CORS_EXPOSE_HEADERS = ['Content-Disposition']
@@ -137,6 +138,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 7. Archivos subidos por el usuario (archivo_3d, imagen_previa, etc.)
@@ -155,6 +157,6 @@ STORAGES = {
     # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_STORAGE_BUCKET_NAME / AWS_S3_ENDPOINT_URL
     # apuntando al endpoint S3 del proyecto de Supabase).
     'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }

@@ -15,9 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.static import serve as serve_static
 
 from .views import StripeWebhookView
 
@@ -37,7 +37,10 @@ urlpatterns = [
     path('api/v1/stripe/webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
 ]
 
-if settings.DEBUG:
-    # Sirve los archivos subidos (archivo_3d, imagen_previa) durante desarrollo local.
-    # En producción con Supabase Storage/S3 esto no hace falta.
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Sirve los archivos subidos (archivo_3d, imagen_previa, archivo_entrega) tanto en
+# desarrollo como en producción — el proyecto usa almacenamiento local (FileSystemStorage)
+# en ambos casos, no un bucket S3/Supabase Storage externo. El helper static() de Django
+# se auto-desactiva si DEBUG=False, así que se sirve a mano con la vista serve().
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve_static, {'document_root': settings.MEDIA_ROOT}),
+]

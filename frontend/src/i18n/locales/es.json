@@ -1,0 +1,59 @@
+{
+  "common": {
+    "appName": "MimiMMDart",
+    "cart": "Carrito",
+    "search": "Buscar modelos...",
+    "language": "Idioma"
+  },
+  "sidebar": {
+    "home": "Inicio",
+    "library": "Mi Biblioteca",
+    "commissions": "Comisiones",
+    "support": "Chat de Soporte",
+    "admin": "Panel Admin",
+    "logout": "Cerrar Sesión"
+  },
+  "home": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "menu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "pendingTitle": "Cuenta pendiente de pago",
+    "pendingBody": "Tu registro está incompleto. Realiza el pago para activar tu cuenta y desbloquear todo el contenido.",
+    "pendingCta": "Activar cuenta",
+    "pendingLoading": "Generando pago...",
+    "heroAlt": "MimiMMDart — comisiona modelos 3D pulidos y listos para MikuMikuDance",
+    "heroCta": "Crear Cuenta Ahora",
+    "footerRights": "© 2026 MimiMMDart."
+  },
+  "login": {
+    "subtitle": "Bienvenido de nuevo",
+    "description": "Ingresa tus credenciales para acceder al mercado.",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "submit": "Iniciar Sesión",
+    "orContinueWith": "O CONTINÚA CON",
+    "error": "El correo electrónico o la contraseña son incorrectos."
+  },
+  "register": {
+    "tagline": "Únete a la comunidad de creadores.",
+    "badge": "Mercado de nueva generación",
+    "title": "Crear Cuenta",
+    "description": "Ingresa tus datos para empezar a comisionar y vender modelos 3D de alta calidad.",
+    "username": "Usuario",
+    "fullName": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "passwordConfirm": "Confirmar Contraseña",
+    "termsPrefix": "Acepto los",
+    "termsLink": "Términos y Condiciones",
+    "submit": "Registrarse",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "login": "Inicia sesión",
+    "errorPasswordMismatch": "Las contraseñas no coinciden.",
+    "errorTerms": "Debes aceptar los Términos y Condiciones.",
+    "errorDuplicate": "Verifica tus datos. Es posible que el correo o el usuario ya estén registrados.",
+    "errorGeneric": "Ocurrió un error al registrarse. Inténtalo de nuevo más tarde."
+  }
+}

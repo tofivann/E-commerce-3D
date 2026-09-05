@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { userApi } from "../services/userApi";
 import { InputField } from "../components/ui/InputField";
 import { Button } from "../components/ui/Button";
@@ -8,6 +9,7 @@ interface RegisterPageProps {
 }
 
 export const RegisterPage: React.FC<RegisterPageProps> = () => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,12 +24,12 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
     setError("");
 
     if (password !== passwordConfirm) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("register.errorPasswordMismatch"));
       return;
     }
 
     if (!terms) {
-      setError("Debes aceptar los Términos y Condiciones.");
+      setError(t("register.errorTerms"));
       return;
     }
 
@@ -46,9 +48,9 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
       } 
     } catch (err: any) {
       if (err.response && err.response.status === 400) {
-        setError("Verifica tus datos. Es posible que el correo o el usuario ya estén registrados.");
+        setError(t("register.errorDuplicate"));
       } else {
-        setError("Ocurrió un error al registrarse. Inténtalo de nuevo más tarde.");
+        setError(t("register.errorGeneric"));
       }
     } finally {
       setLoading(false);
@@ -63,35 +65,35 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
         {/* Columna Izquierda: Bloque de marca alineado hacia abajo (justify-end) */}
         <div className="hidden md:flex md:col-span-5 flex-col justify-end min-h-[450px] px-4 pb-4">
           <h2 className="text-4xl lg:text-5xl font-extrabold text-primary tracking-tight mb-3 drop-shadow-lg font-display-lg">
-            MimiMMDart
+            {t("common.appName")}
           </h2>
           <p className="text-lg lg:text-xl font-semibold text-on-surface-variant drop-shadow-md">
-            Join the Creator Community.
+            {t("register.tagline")}
           </p>
           <div className="mt-6 flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
               architecture
             </span>
             <span className="text-xs font-mono tracking-widest uppercase text-primary-fixed-dim border border-primary-fixed-dim/30 px-3 py-1 rounded-full bg-primary-fixed-dim/10">
-              Next-Gen Marketplace
+              {t("register.badge")}
             </span>
           </div>
         </div>
 
         {/* Columna Derecha: Tarjeta de Contenedor exclusiva para el formulario de Registro */}
         <div className="col-span-1 md:col-span-7 glass-panel rounded-2xl p-6 md:p-8 lg:p-10 shadow-2xl border border-outline-variant/20 bg-surface-container-low/60">
-          
+
           {/* Mobile Brand (Visible only on mobile) */}
           <div className="md:hidden mb-6 text-center">
-            <h2 className="text-3xl font-bold text-primary tracking-tight">MimiMMDart</h2>
+            <h2 className="text-3xl font-bold text-primary tracking-tight">{t("common.appName")}</h2>
           </div>
 
           <div className="mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-on-surface mb-1 tracking-tight">
-              Create Account
+              {t("register.title")}
             </h1>
             <p className="text-sm md:text-base text-on-surface-variant">
-              Enter your details to start commissioning and selling high-fidelity 3D assets.
+              {t("register.description")}
             </p>
           </div>
 
@@ -105,7 +107,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
           <form onSubmit={handleRegister} className="flex flex-col gap-3">
             <InputField
               id="username"
-              label="Username"
+              label={t("register.username")}
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -116,7 +118,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
 
             <InputField
               id="fullName"
-              label="Full Name"
+              label={t("register.fullName")}
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -127,7 +129,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
 
             <InputField
               id="email"
-              label="Email Address"
+              label={t("register.email")}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -138,7 +140,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
 
             <InputField
               id="password"
-              label="Password"
+              label={t("register.password")}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -150,7 +152,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
 
             <InputField
               id="passwordConfirm"
-              label="Confirm Password"
+              label={t("register.passwordConfirm")}
               type="password"
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
@@ -175,19 +177,19 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
               </div>
               <div className="ml-3 text-sm">
                 <label className="text-on-surface-variant cursor-pointer" htmlFor="terms">
-                  I agree to the <a className="text-primary hover:underline underline-offset-4 decoration-primary/50 transition-colors font-medium" href="#">Terms and Conditions</a>
+                  {t("register.termsPrefix")} <a className="text-primary hover:underline underline-offset-4 decoration-primary/50 transition-colors font-medium" href="#">{t("register.termsLink")}</a>
                 </label>
               </div>
             </div>
 
             {/* Submit Button */}
             <Button type="submit" loading={loading} icon="arrow_forward" className="w-full">
-              Register
+              {t("register.submit")}
             </Button>
           </form>
 
           <p className="mt-5 text-center text-sm text-on-surface-variant">
-            Already have an account? <Link className="text-primary hover:text-primary-fixed-dim hover:underline underline-offset-4 transition-colors font-bold ml-1" to="/login">Log in</Link>
+            {t("register.alreadyHaveAccount")} <Link className="text-primary hover:text-primary-fixed-dim hover:underline underline-offset-4 transition-colors font-bold ml-1" to="/login">{t("register.login")}</Link>
           </p>
 
         </div>

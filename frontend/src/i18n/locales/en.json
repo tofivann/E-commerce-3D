@@ -1,0 +1,59 @@
+{
+  "common": {
+    "appName": "MimiMMDart",
+    "cart": "Cart",
+    "search": "Search models...",
+    "language": "Language"
+  },
+  "sidebar": {
+    "home": "Home",
+    "library": "My Library",
+    "commissions": "Commissions",
+    "support": "Support Chat",
+    "admin": "Admin Panel",
+    "logout": "Log Out"
+  },
+  "home": {
+    "login": "Log In",
+    "register": "Sign Up",
+    "menu": "Open menu",
+    "closeMenu": "Close menu",
+    "pendingTitle": "Account pending payment",
+    "pendingBody": "Your registration is incomplete. Complete the payment to activate your account and unlock all content.",
+    "pendingCta": "Activate account",
+    "pendingLoading": "Generating payment...",
+    "heroAlt": "MimiMMDart — commission polished 3D models ready for MikuMikuDance",
+    "heroCta": "Create Account Now",
+    "footerRights": "© 2026 MimiMMDart."
+  },
+  "login": {
+    "subtitle": "Welcome Back",
+    "description": "Enter your credentials to access the marketplace.",
+    "email": "Email Address",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "submit": "Login",
+    "orContinueWith": "OR CONTINUE WITH",
+    "error": "The email or password is incorrect."
+  },
+  "register": {
+    "tagline": "Join the Creator Community.",
+    "badge": "Next-Gen Marketplace",
+    "title": "Create Account",
+    "description": "Enter your details to start commissioning and selling high-fidelity 3D assets.",
+    "username": "Username",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "password": "Password",
+    "passwordConfirm": "Confirm Password",
+    "termsPrefix": "I agree to the",
+    "termsLink": "Terms and Conditions",
+    "submit": "Register",
+    "alreadyHaveAccount": "Already have an account?",
+    "login": "Log in",
+    "errorPasswordMismatch": "Passwords do not match.",
+    "errorTerms": "You must accept the Terms and Conditions.",
+    "errorDuplicate": "Check your details. The email or username may already be registered.",
+    "errorGeneric": "An error occurred while registering. Please try again later."
+  }
+}

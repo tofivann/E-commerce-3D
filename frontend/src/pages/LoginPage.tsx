@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { authApi } from "../services/authApi";
 import { InputField } from "../components/ui/InputField";
 import { Button } from "../components/ui/Button";
@@ -11,6 +12,7 @@ interface LoginPageProps {
 
 // 2. MODIFICAMOS ESTA LÍNEA: Agregamos <LoginPageProps> y recibimos { onLoginSuccess }
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -41,7 +43,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         onLoginSuccess(isStaff, estadoSuscripcion);
       }
     } catch (err: any) {
-      setError("El correo electrónico o la contraseña son incorrectos.");
+      setError(t("login.error"));
     } finally {
       setLoading(false);
     }
@@ -51,9 +53,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   return (
     <AuthCard
-      title="MimiMMDart"
-      subtitle="Welcome Back"
-      description="Enter your credentials to access the marketplace."
+      title={t("common.appName")}
+      subtitle={t("login.subtitle")}
+      description={t("login.description")}
     >
       {error && (
         <div className="bg-error/20 border border-error text-on-error-container p-3 rounded-md text-sm text-center">
@@ -64,7 +66,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       <form onSubmit={handleLogin} className="flex flex-col gap-6">
         <InputField
           id="email"
-          label="Email Address"
+          label={t("login.email")}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -75,7 +77,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
         <InputField
           id="password"
-          label="Password"
+          label={t("login.password")}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -88,20 +90,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               className="text-xs font-mono text-primary hover:text-primary-fixed transition-colors"
               href="#"
             >
-              Forgot Password?
+              {t("login.forgotPassword")}
             </a>
           }
         />
 
         <Button type="submit" loading={loading} icon="login" className="mt-2">
-          Login
+          {t("login.submit")}
         </Button>
       </form>
 
       <div className="relative flex py-2 items-center">
         <div className="flex-grow border-t border-outline-variant/50"></div>
         <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
-          OR CONTINUE WITH
+          {t("login.orContinueWith")}
         </span>
         <div className="flex-grow border-t border-outline-variant/50"></div>
       </div>
