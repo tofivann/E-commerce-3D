@@ -4,7 +4,7 @@ from rest_framework import serializers
 from products.serializers import ProductoSerializer
 from .models import Carrito, CarritoItem
 
-TASA_IMPUESTO = Decimal('0.08')  # 8%, igual que en el mockup del carrito
+TASA_IMPUESTO = Decimal('0')  # 0%, sin impuesto por ahora
 
 
 class CarritoItemSerializer(serializers.ModelSerializer):

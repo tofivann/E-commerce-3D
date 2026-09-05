@@ -54,7 +54,7 @@ class RegistroView(generics.CreateAPIView):
             {
                 "price_data": {
                     "currency": "usd",
-                    "unit_amount": 2000,  # $20.00 USD en centavos (ajusta si es necesario)
+                    "unit_amount": 500,  # $5.00 USD en centavos
                     "product_data": {
                         "name": "Suscripción / Registro a la Plataforma"
                     },
@@ -167,7 +167,7 @@ class ActivarCuentaPagoView(generics.GenericAPIView):
                 line_items=[{
                     "price_data": {
                         "currency": "usd",
-                        "unit_amount": 2000, # Ajusta el monto según tu modelo de negocio
+                        "unit_amount": 500, # $5.00 USD en centavos
                         "product_data": {"name": "Activación de Cuenta / Suscripción"},
                     },
                     "quantity": 1,
