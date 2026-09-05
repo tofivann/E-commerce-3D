@@ -114,11 +114,15 @@ export const HomePage: React.FC<HomePageProps> = ({
             isLoggedIn ? "md:left-64" : ""
           } z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300`}
         >
-          <div className="flex justify-between items-center gap-4 px-gutter max-w-container-max mx-auto h-20">
+          <div
+            className={`flex justify-between items-center gap-4 pr-gutter md:px-gutter max-w-container-max mx-auto h-20 ${
+              isLoggedIn ? "pl-16 md:pl-gutter" : "pl-gutter"
+            }`}
+          >
             {isLoggedIn ? (
               <>
                 {canSearch ? (
-                  <div className="relative w-full max-w-sm">
+                  <div className="relative w-full max-w-40 sm:max-w-xs md:max-w-sm">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">
                       search
                     </span>

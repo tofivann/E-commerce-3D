@@ -13,7 +13,7 @@ export const LanguageSwitcher: React.FC = () => {
     <div
       role="group"
       aria-label="Idioma / Language"
-      className="flex items-center bg-surface-variant rounded-full p-0.5 text-xs font-semibold shrink-0"
+      className="flex items-center w-fit bg-surface-variant rounded-full p-0.5 text-xs font-semibold shrink-0"
     >
       <button
         type="button"
