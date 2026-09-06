@@ -1,10 +1,16 @@
 import stripe
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+import resend
 from django.conf import settings
 from django.db import transaction
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer,
@@ -187,3 +193,129 @@ class ActivarCuentaPagoView(generics.GenericAPIView):
             )
 
         return Response({"checkout_url": session.url}, status=status.HTTP_200_OK)
+    
+class GoogleLoginView(generics.GenericAPIView):
+    """
+    Permite el inicio de sesión exclusivo con Google para usuarios ya registrados,
+    empaquetando la misma estructura de usuario que el login tradicional por JWT.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        token = request.data.get("token")
+        if not token:
+            return Response({"detail": "Falta el token de Google."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
+            email = idinfo.get("email")
+
+            if not email:
+                return Response({"detail": "El token de Google no contiene un correo válido."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                usuario = Usuario.objects.get(email=email)
+            except Usuario.DoesNotExist:
+                return Response(
+                    {"detail": "No existe una cuenta registrada con este correo. Por favor, regístrate primero."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Validación de estado (si no es admin, exige que esté activo)
+            if usuario.rol != Usuario.Rol.ADMIN and usuario.estado_suscripcion != Usuario.EstadoSuscripcion.ACTIVO:
+                return Response(
+                    {"detail": "Tu cuenta se encuentra pendiente de pago o inactiva."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            refresh = RefreshToken.for_user(usuario)
+
+            # Estructura idéntica a la que inyecta tu CustomTokenObtainPairSerializer
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user": {
+                    'id': usuario.id,
+                    'username': usuario.username,
+                    'email': usuario.email,
+                    'first_name': getattr(usuario, 'first_name', ''),
+                    'last_name': getattr(usuario, 'last_name', ''),
+                    'is_staff': usuario.is_staff,
+                    'rol': usuario.rol,
+                    'estado_suscripcion': usuario.estado_suscripcion,
+                },
+                "mensaje": "Inicio de sesión exitoso con Google."
+            }, status=status.HTTP_200_OK)
+
+        except ValueError:
+            return Response({"detail": "Token de Google inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+resend.api_key = getattr(settings, 'RESEND_API_KEY', '')
+
+class SolicitarResetPasswordView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"detail": "El correo es obligatorio."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            usuario = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            return Response({"mensaje": "Si el correo existe, se ha enviado un enlace de recuperación."}, status=status.HTTP_200_OK)
+
+        token_generator = PasswordResetTokenGenerator()
+        token = token_generator.make_token(usuario)
+        uid = urlsafe_base64_encode(force_bytes(usuario.pk))
+
+        enlace = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
+
+        try:
+            resend.Emails.send({
+                "from": "MimiMMDart <onboarding@resend.dev>",
+                "to": [email],
+                "subject": "Restablece tu contraseña",
+                "html": f"""
+                    <p>Has solicitado restablecer tu contraseña.</p>
+                    <p>Haz clic en el siguiente enlace para continuar:</p>
+                    <a href='{enlace}' target='_blank'>Restablecer Contraseña</a>
+                    <p>Si no solicitaste esto, puedes ignorar este mensaje.</p>
+                """
+            })
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            return Response(
+                        {"detail": "No se pudo procesar la solicitud en este momento. Inténtalo más tarde."},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+
+        return Response({"mensaje": "Correo enviado con éxito."}, status=status.HTTP_200_OK)
+
+
+class ConfirmarResetPasswordView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        uid = request.data.get("uid")
+        token = request.data.get("token")
+        nueva_password = request.data.get("nueva_password")
+
+        if not all([uid, token, nueva_password]):
+            return Response({"detail": "Faltan datos obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            usuario = Usuario.objects.get(pk=user_id)
+        except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist):
+            return Response({"detail": "Enlace inválido o corrupto."}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_generator = PasswordResetTokenGenerator()
+        if not token_generator.check_token(usuario, token):
+            return Response({"detail": "El enlace ha expirado o ya fue utilizado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        usuario.set_password(nueva_password)
+        usuario.save()
+
+        return Response({"mensaje": "Contraseña actualizada exitosamente."}, status=status.HTTP_200_OK)

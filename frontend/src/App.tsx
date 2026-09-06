@@ -10,6 +10,8 @@ import { CommissionsPage } from "./pages/CommissionsPage";
 import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
 import { ActivationSuccessPage } from "./pages/ActivationSuccessPage";
 import { RegisterSuccessPage } from "./pages/RegisterSuccessPage";
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 /**
  * Componente principal App que configura las rutas de la aplicación.
@@ -212,6 +214,9 @@ function AppRoutes() {
         path="/registro-exitoso" 
         element={<RegisterSuccessPage />} 
       />
+
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
     </Routes>
   );
 }

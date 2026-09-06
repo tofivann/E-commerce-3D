@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { GoogleLogin } from "@react-oauth/google"; // 1. Importar componente de Google
 import { authApi } from "../services/authApi";
 import { InputField } from "../components/ui/InputField";
 import { Button } from "../components/ui/Button";
 import { AuthCard } from "../components/ui/AuthCard";
+import { Link } from "react-router-dom";
 
-// 1. AGREGAMOS ESTO: Le decimos a TypeScript que este componente acepta una función llamada "onLoginSuccess"
 interface LoginPageProps {
   onLoginSuccess?: (isStaff: boolean, estadoSuscripcion: string) => void;
 }
 
-// 2. MODIFICAMOS ESTA LÍNEA: Agregamos <LoginPageProps> y recibimos { onLoginSuccess }
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
@@ -23,13 +23,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setError("");
     setLoading(true);
 
-    //REVISARRR ESTO IVAN PARA EL INICIO DE SESION-------------------------------------
-
     try {
-      // Intentamos loguear con el backend
       const data = await authApi.login({ email, password });
 
-      // Guardamos tokens en localStorage
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
 
@@ -38,7 +34,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       localStorage.setItem("is_staff", String(isStaff));
       localStorage.setItem("estado_suscripcion", estadoSuscripcion);
 
-      // 3. AGREGAMOS ESTO: Si el login es exitoso, ejecutamos la función que nos mandó App.tsx
       if (onLoginSuccess) {
         onLoginSuccess(isStaff, estadoSuscripcion);
       }
@@ -49,7 +44,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  //REVISARRR ESTO IVAN PARA EL INICIO DE SESION-------------------------------------
+  // 2. NUEVA FUNCIÓN: Maneja la respuesta exitosa de Google
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError("");
+    setLoading(true);
+    try {
+      const data = await authApi.googleLogin({
+        token: credentialResponse.credential,
+      });
+
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+
+      const isStaff = Boolean(data.user?.is_staff);
+      const estadoSuscripcion = data.user?.estado_suscripcion || "INACTIVO";
+      localStorage.setItem("is_staff", String(isStaff));
+      localStorage.setItem("estado_suscripcion", estadoSuscripcion);
+
+      if (onLoginSuccess) {
+        onLoginSuccess(isStaff, estadoSuscripcion);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || t("login.error"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <AuthCard
@@ -76,24 +96,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         />
 
         <InputField
-          id="password"
-          label={t("login.password")}
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          icon="lock"
-          required
-          isMono
-          extraRightContent={
-            <a
-              className="text-xs font-mono text-primary hover:text-primary-fixed transition-colors"
-              href="#"
-            >
-              {t("login.forgotPassword")}
-            </a>
-          }
-        />
+            id="password"
+            label={t("login.password")}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            icon="lock"
+            required
+            isMono
+            extraRightContent={
+              <Link
+                to="/forgot-password"
+                className="text-xs font-mono text-primary hover:text-primary-fixed transition-colors"
+              >
+                {t("login.forgotPassword")}
+              </Link>
+            }
+          />
 
         <Button type="submit" loading={loading} icon="login" className="mt-2">
           {t("login.submit")}
@@ -108,19 +128,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         <div className="flex-grow border-t border-outline-variant/50"></div>
       </div>
 
-      <div className="flex gap-4">
-        <Button variant="outline" type="button">
-          <span className="material-symbols-outlined text-on-surface-variant">
-            account_circle
-          </span>
-          Google
-        </Button>
-        <Button variant="outline" type="button">
-          <span className="material-symbols-outlined text-secondary">
-            forum
-          </span>
-          Discord
-        </Button>
+      {/* 3. Reemplazamos el botón estático de Google por el componente real */}
+      <div className="flex flex-col gap-3 items-center w-full">
+        <div className="w-full flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError(t("login.error"))}
+            useOneTap={false}
+            theme="outline"
+            size="large"
+            width="100%"
+          />
+        </div>
       </div>
     </AuthCard>
   );

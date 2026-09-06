@@ -160,3 +160,5 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
+
+GOOGLE_CLIENT_ID = "804949758257-anogkl9md01dgghuiqlmlqvmtf39mdbh.apps.googleusercontent.com"
