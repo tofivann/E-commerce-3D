@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ChatInputProps {
     nuevoMensaje: string;
@@ -7,13 +8,14 @@ interface ChatInputProps {
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({ nuevoMensaje, setNuevoMensaje, onEnviar }) => {
+    const { t } = useTranslation();
     return (
         <form onSubmit={onEnviar} className="p-4 border-t border-outline-variant/30 bg-surface flex gap-2">
             <input
                 type="text"
                 value={nuevoMensaje}
                 onChange={(e) => setNuevoMensaje(e.target.value)}
-                placeholder="Escribe un mensaje..."
+                placeholder={t('chat.inputPlaceholder')}
                 className="flex-1 bg-surface-container-high border border-outline-variant/40 rounded-lg px-4 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
             />
             <button
@@ -21,7 +23,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ nuevoMensaje, setNuevoMens
                 disabled={!nuevoMensaje.trim()}
                 className="bg-primary text-on-primary px-5 py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-                Enviar
+                {t('chat.send')}
             </button>
         </form>
     );

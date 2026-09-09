@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 
 interface ProductCardProps {
@@ -23,6 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onGoToLibrary,
 }) => {
+  const { t } = useTranslation();
   const fallbackImage =
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
@@ -59,7 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {isPurchased && (
           <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-primary-container/95 text-on-primary-fixed text-[10px] font-semibold tracking-wide px-3 py-1 rounded-full shadow-md backdrop-blur-sm">
             <span className="material-symbols-outlined text-[14px]">folder_special</span>
-            En tu biblioteca
+            {t("catalog.inLibrary")}
           </div>
         )}
 
@@ -70,7 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {isLoggedIn ? "workspace_premium" : "lock"}
             </span>
             <span className="text-xs text-on-surface tracking-wider bg-surface/80 px-4 py-1 rounded-full backdrop-blur-sm border border-outline-variant/50 font-semibold text-center">
-              {isLoggedIn ? "Activa tu suscripción para desbloquear" : "Regístrate para descubrir"}
+              {isLoggedIn ? t("catalog.unlockSubscribed") : t("catalog.unlockGuest")}
             </span>
           </div>
         )}
@@ -88,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         <p className="font-mono text-on-surface-variant text-sm truncate">
-          {producto.descripcion || "Modelo MMD 3D"}
+          {producto.descripcion || t("catalog.defaultDescription")}
         </p>
 
         {/* Precio + Agregar, acceso a biblioteca, o barra de carga de invitado/sin suscripción */}
@@ -101,7 +103,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="mt-1 w-full text-xs bg-transparent border border-primary-container text-primary-container px-3 py-1.5 rounded hover:bg-primary-container hover:text-on-primary-fixed transition-colors font-semibold flex items-center justify-center gap-1"
           >
             <span className="material-symbols-outlined text-[16px]">folder_special</span>
-            Ir a mi biblioteca
+            {t("catalog.goToLibrary")}
           </button>
         ) : hasAccess ? (
           <div className="mt-1 flex items-center justify-between">
@@ -116,7 +118,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1 rounded hover:bg-primary-fixed-dim transition-colors font-semibold flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
-              Agregar
+              {t("catalog.add")}
             </button>
           </div>
         ) : (

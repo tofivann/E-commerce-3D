@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { JuegoComision } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
 
 export const ComisionModeloForm: React.FC = () => {
+  const { t } = useTranslation();
   const [juegos, setJuegos] = useState<JuegoComision[]>([]);
   const [juegoId, setJuegoId] = useState<number | null>(null);
   const [nombrePersonaje, setNombrePersonaje] = useState("");
@@ -23,11 +25,11 @@ export const ComisionModeloForm: React.FC = () => {
     setError(null);
 
     if (!juegoId) {
-      setError("Selecciona el juego del personaje.");
+      setError(t("modeloForm.errorNoJuego"));
       return;
     }
     if (!foto1) {
-      setError("Sube al menos una foto de referencia del outfit.");
+      setError(t("modeloForm.errorNoFoto"));
       return;
     }
 
@@ -44,9 +46,7 @@ export const ComisionModeloForm: React.FC = () => {
       window.location.href = checkout_url;
     } catch (err) {
       console.error("Error al solicitar la comisión de modelo:", err);
-      setError(
-        "No se pudo procesar la solicitud. Revisa los datos e inténtalo de nuevo.",
-      );
+      setError(t("modeloForm.errorGeneric"));
       setEnviando(false);
     }
   };
@@ -61,7 +61,7 @@ export const ComisionModeloForm: React.FC = () => {
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Juego
+          {t("modeloForm.game")}
         </label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-72 overflow-y-auto pr-1">
           {juegos.map((juego) => (
@@ -86,19 +86,19 @@ export const ComisionModeloForm: React.FC = () => {
         </div>
         {juegos.length === 0 && (
           <p className="text-on-surface-variant text-sm mt-2">
-            No hay juegos disponibles por ahora.
+            {t("modeloForm.noGames")}
           </p>
         )}
       </div>
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Nombre del personaje
+          {t("modeloForm.characterName")}
         </label>
         <input
           required
           className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-          placeholder="Enter the character's name"
+          placeholder={t("modeloForm.characterNamePlaceholder")}
           value={nombrePersonaje}
           onChange={(e) => setNombrePersonaje(e.target.value)}
         />
@@ -107,7 +107,7 @@ export const ComisionModeloForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-            Foto de referencia 1
+            {t("modeloForm.referencePhoto1")}
           </label>
           <input
             required
@@ -119,9 +119,9 @@ export const ComisionModeloForm: React.FC = () => {
         </div>
         <div>
           <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-            Foto de referencia 2{" "}
+            {t("modeloForm.referencePhoto2")}{" "}
             <span className="normal-case font-normal text-outline">
-              (opcional)
+              {t("motionForm.optional")}
             </span>
           </label>
           <input
@@ -133,7 +133,7 @@ export const ComisionModeloForm: React.FC = () => {
         </div>
       </div>
       <p className="text-on-surface-variant text-xs -mt-4">
-        Sube una imagen clara del outfit/personaje que quieres que se modele.
+        {t("modeloForm.uploadHelp")}
       </p>
 
       <button
@@ -142,7 +142,7 @@ export const ComisionModeloForm: React.FC = () => {
         className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-3 px-8 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
       >
         <span className="material-symbols-outlined text-[18px]">payments</span>
-        {enviando ? "Redirigiendo a Stripe..." : "Solicitar y Pagar"}
+        {enviando ? t("motionForm.redirecting") : t("motionForm.submit")}
       </button>
     </form>
   );

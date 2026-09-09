@@ -1,4 +1,5 @@
 import React, { type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type Mensaje, type Conversacion } from '../../services/chatApi';
 
 interface MensajesListaProps {
@@ -8,14 +9,15 @@ interface MensajesListaProps {
 }
 
 export const MensajesLista: React.FC<MensajesListaProps> = ({ mensajes, conversacionActiva, messagesEndRef }) => {
+    const { t } = useTranslation();
     return (
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {mensajes.map((msg) => {
                 const esAdmin = msg.remitente_es_admin;
 
-                const nombreRemitente = esAdmin 
-                    ? 'Administrador' 
-                    : (msg.remitente_nombre || conversacionActiva.usuario_info?.nombre || 'Cliente');
+                const nombreRemitente = esAdmin
+                    ? t('chat.admin')
+                    : (msg.remitente_nombre || conversacionActiva.usuario_info?.nombre || t('chat.client'));
 
                 const colorNombre = esAdmin ? 'text-[#DAA520]' : 'text-black';
 

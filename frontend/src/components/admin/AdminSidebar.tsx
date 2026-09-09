@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export type AdminView = "catalogo" | "chat" | "comisiones" | "ajustes";
 
@@ -9,20 +10,21 @@ interface AdminSidebarProps {
   onLogout: () => void;
 }
 
-const navItems: { view: AdminView; label: string; icon: string }[] = [
-  { view: "catalogo", label: "Catálogo", icon: "inventory_2" },
-  { view: "chat", label: "Conversaciones", icon: "chat" },
-  { view: "comisiones", label: "Comisiones", icon: "design_services" },
-  { view: "ajustes", label: "Ajustes", icon: "settings" },
-];
-
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   activeView,
   onSelectView,
   onLogout,
 }) => {
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
+
+  const navItems: { view: AdminView; label: string; icon: string }[] = [
+    { view: "catalogo", label: t("adminSidebar.catalog"), icon: "inventory_2" },
+    { view: "chat", label: t("adminSidebar.conversations"), icon: "chat" },
+    { view: "comisiones", label: t("adminSidebar.commissions"), icon: "design_services" },
+    { view: "ajustes", label: t("adminSidebar.settings"), icon: "settings" },
+  ];
 
   const navLinks = (
     <nav className="flex-1 px-3 space-y-1">
@@ -57,14 +59,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-primary-container/10 transition-colors no-underline"
       >
         <span className="material-symbols-outlined text-[20px]">storefront</span>
-        Volver a la tienda
+        {t("adminSidebar.backToShop")}
       </Link>
       <button
         onClick={onLogout}
         className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-error transition-colors text-left"
       >
         <span className="material-symbols-outlined text-[20px]">logout</span>
-        Cerrar sesión
+        {t("adminSidebar.logout")}
       </button>
     </div>
   );
@@ -74,7 +76,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       {/* Botón de menú, solo visible en móvil */}
       <button
         onClick={() => setMobileOpen(true)}
-        aria-label="Abrir menú"
+        aria-label={t("home.menu")}
         className="md:hidden fixed top-4 left-4 z-60 w-10 h-10 rounded-full bg-surface-container-low/90 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface shadow-md"
       >
         <span className="material-symbols-outlined">menu</span>
@@ -122,7 +124,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             </Link>
             <button
               onClick={closeMobile}
-              aria-label="Cerrar menú"
+              aria-label={t("home.closeMenu")}
               className="text-on-surface-variant hover:text-primary transition-colors w-9 h-9 rounded-full hover:bg-surface-variant/50 flex items-center justify-center shrink-0"
             >
               <span className="material-symbols-outlined">close</span>

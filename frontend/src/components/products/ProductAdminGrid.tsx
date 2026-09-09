@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { getAllProductosAdmin, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
 
 export const ProductAdminGrid: React.FC = () => {
+  const { t } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export const ProductAdminGrid: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error("Error al cargar productos:", err);
-      setError("No se pudieron cargar los productos del servidor.");
+      setError(t("adminProducts.loadError"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export const ProductAdminGrid: React.FC = () => {
       );
     } catch (err) {
       console.error("Error al cambiar el estado del producto:", err);
-      window.alert("No se pudo cambiar el estado del producto.");
+      window.alert(t("adminProducts.toggleError"));
     } finally {
       setTogglingId(null);
     }
@@ -59,15 +61,15 @@ export const ProductAdminGrid: React.FC = () => {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-on-surface mb-1">Catálogo de Productos</h1>
-          <p className="text-on-surface-variant">Gestiona los modelos 3D disponibles en la tienda.</p>
+          <h1 className="text-3xl font-bold text-on-surface mb-1">{t("adminProducts.gridTitle")}</h1>
+          <p className="text-on-surface-variant">{t("adminProducts.gridSubtitle")}</p>
         </div>
         <button
           onClick={openCreate}
           className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2.5 px-5 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2 whitespace-nowrap"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
-          Añadir producto
+          {t("adminProducts.addProduct")}
         </button>
       </div>
 
@@ -90,7 +92,7 @@ export const ProductAdminGrid: React.FC = () => {
 
       {!loading && !error && productos.length === 0 && (
         <div className="p-10 text-center text-on-surface-variant glass-panel rounded-xl">
-          Aún no has agregado ningún producto.
+          {t("adminProducts.emptyGrid")}
         </div>
       )}
 
@@ -108,14 +110,14 @@ export const ProductAdminGrid: React.FC = () => {
                 <button
                   onClick={() => handleToggleActivo(producto)}
                   disabled={togglingId === producto.id}
-                  title="Clic para cambiar el estado"
+                  title={t("adminProducts.toggleTitle")}
                   className={`backdrop-blur-md font-mono text-[10px] px-2 py-1 rounded-full border transition-colors disabled:opacity-50 ${
                     producto.activo
                       ? "bg-surface/80 text-primary-fixed-dim border-primary/30 hover:bg-surface"
                       : "bg-surface/80 text-error border-error/30 hover:bg-surface"
                   }`}
                 >
-                  {producto.activo ? "Activo" : "Inactivo"}
+                  {producto.activo ? t("adminProducts.active") : t("adminProducts.inactive")}
                 </button>
               </div>
 
@@ -137,14 +139,14 @@ export const ProductAdminGrid: React.FC = () => {
                   {producto.titulo}
                 </h3>
                 <p className="text-on-surface-variant text-sm mb-3 truncate">
-                  {producto.descripcion || "Modelo 3D"}
+                  {producto.descripcion || t("adminProducts.defaultDescription")}
                 </p>
                 <div className="mt-auto flex justify-between items-center">
                   <span className="font-mono text-primary-fixed-dim font-bold">
                     ${Number(producto.precio).toFixed(2)}
                   </span>
                   <button
-                    aria-label="Editar producto"
+                    aria-label={t("adminProducts.editProduct")}
                     onClick={() => openEdit(producto)}
                     className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors"
                   >

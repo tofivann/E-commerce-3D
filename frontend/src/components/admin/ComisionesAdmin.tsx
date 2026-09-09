@@ -1,18 +1,20 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SolicitudesComisionesTable } from "./SolicitudesComisionesTable";
 import { PreciosComisionesTable } from "./PreciosComisionesTable";
 
 type SubVista = "solicitudes" | "precios";
 
 export const ComisionesAdmin: React.FC = () => {
+  const { t } = useTranslation();
   const [subVista, setSubVista] = useState<SubVista>("solicitudes");
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-on-surface mb-1">Comisiones</h1>
+        <h1 className="text-3xl font-bold text-on-surface mb-1">{t("comisionesAdmin.title")}</h1>
         <p className="text-on-surface-variant">
-          Gestiona las solicitudes de Motion y Modelo Nuevo, y los precios de cada tabla.
+          {t("comisionesAdmin.subtitle")}
         </p>
       </div>
 
@@ -26,7 +28,7 @@ export const ComisionesAdmin: React.FC = () => {
           }`}
         >
           <span className="material-symbols-outlined text-[18px]">inbox</span>
-          Solicitudes
+          {t("comisionesAdmin.requests")}
         </button>
         <button
           onClick={() => setSubVista("precios")}
@@ -37,7 +39,7 @@ export const ComisionesAdmin: React.FC = () => {
           }`}
         >
           <span className="material-symbols-outlined text-[18px]">sell</span>
-          Precios
+          {t("comisionesAdmin.prices")}
         </button>
       </div>
 

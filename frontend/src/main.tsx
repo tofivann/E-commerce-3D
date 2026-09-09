@@ -6,7 +6,7 @@ import './i18n/config'
 import App from './App.tsx'
 
 // 2. Coloca aquí el Client ID real que generaste en Google Cloud
-const GOOGLE_CLIENT_ID = "804949758257-anogkl9md01dgghuiqlmlqvmtf39mdbh.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "257526057158-5ld1epn18ov5fc4gi6s74g2d9mmukidn.apps.googleusercontent.com";
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

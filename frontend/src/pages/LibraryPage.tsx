@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { DigitalLibrary } from "../components/products/DigitalLibrary";
 import { ComisionesLibrary } from "../components/comisiones/ComisionesLibrary";
 import { CartDrawer } from "../components/products/CartDrawer";
@@ -17,6 +18,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
   isSubscribed = false,
   onLogoutClick,
 }) => {
+  const { t } = useTranslation();
   const [cartOpen, setCartOpen] = useState(false);
   const [pestana, setPestana] = useState<PestanaBiblioteca>("productos");
 
@@ -33,7 +35,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           <div className="flex justify-end items-center px-gutter max-w-container-max mx-auto h-20">
             <button
               onClick={() => setCartOpen(true)}
-              aria-label="Carrito"
+              aria-label={t("common.cart")}
               className="text-on-surface-variant hover:text-primary transition-colors p-2"
             >
               <span className="material-symbols-outlined">shopping_cart</span>
@@ -53,7 +55,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-              Productos
+              {t("library.products")}
             </button>
             <button
               onClick={() => setPestana("comisiones")}
@@ -64,7 +66,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">design_services</span>
-              Comisiones Personalizadas
+              {t("library.commissions")}
             </button>
           </div>
 
@@ -74,8 +76,8 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
         {/* FOOTER */}
         <footer className="bg-background w-full py-16 border-t border-outline-variant/20 mt-auto">
           <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto gap-4">
-            <div className="text-[24px] font-bold text-primary opacity-50">MimiMMDart</div>
-            <div className="text-on-surface-variant text-sm">© 2026 MimiMMDart.</div>
+            <div className="text-[24px] font-bold text-primary opacity-50">{t("common.appName")}</div>
+            <div className="text-on-surface-variant text-sm">{t("home.footerRights")}</div>
           </div>
         </footer>
       </div>

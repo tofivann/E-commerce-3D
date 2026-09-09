@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { AdminView } from "../components/admin/AdminSidebar";
 import { AdminSidebar } from "../components/admin/AdminSidebar";
 import { ProductAdminGrid } from "../components/products/ProductAdminGrid";
@@ -14,6 +15,7 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
+  const { t } = useTranslation();
   const [view, setView] = useState<AdminView>("catalogo");
   const [entidad, setEntidad] = useState<AjustesEntidad>("productos");
 
@@ -31,9 +33,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
         {view === "ajustes" && (
           <div>
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-on-surface mb-1">Ajustes</h1>
+              <h1 className="text-3xl font-bold text-on-surface mb-1">{t("adminPage.settingsTitle")}</h1>
               <p className="text-on-surface-variant">
-                Elige qué quieres administrar: los productos del catálogo o las cuentas de usuario.
+                {t("adminPage.settingsSubtitle")}
               </p>
             </div>
 
@@ -47,7 +49,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                Productos
+                {t("adminPage.products")}
               </button>
               <button
                 onClick={() => setEntidad("usuarios")}
@@ -58,7 +60,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">group</span>
-                Usuarios
+                {t("adminPage.users")}
               </button>
             </div>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { Orden } from "../api/carrito.api";
 import { carritoApi } from "../api/carrito.api";
 import { descargarCompra } from "../api/biblioteca.api";
@@ -9,6 +10,7 @@ const MAX_INTENTOS = 10; // ~15s de espera al webhook antes de rendirnos
 const INTERVALO_MS = 1500;
 
 export const PaymentSuccessPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
@@ -60,7 +62,7 @@ export const PaymentSuccessPage: React.FC = () => {
       await descargarCompra(compra);
     } catch (err) {
       console.error("Error al descargar el archivo:", err);
-      window.alert("No se pudo descargar el archivo. Inténtalo de nuevo.");
+      window.alert(t("paymentSuccess.downloadError"));
     } finally {
       setDescargandoId(null);
     }
@@ -76,10 +78,10 @@ export const PaymentSuccessPage: React.FC = () => {
         {!sessionId && (
           <div className="glass-panel rounded-xl p-10 text-center">
             <p className="text-on-surface-variant mb-4">
-              No encontramos ninguna sesión de pago para mostrar.
+              {t("paymentSuccess.noSession")}
             </p>
             <Link to="/" className="text-primary-fixed-dim font-semibold hover:underline no-underline">
-              Volver al catálogo →
+              {t("paymentSuccess.backToCatalog")}
             </Link>
           </div>
         )}
@@ -87,7 +89,7 @@ export const PaymentSuccessPage: React.FC = () => {
         {sessionId && estado === "cargando" && (
           <div className="text-center flex flex-col items-center gap-4 py-16">
             <div className="w-16 h-16 rounded-full border-4 border-outline-variant/40 border-t-primary-container animate-spin" />
-            <p className="text-on-surface-variant">Confirmando tu pago con Stripe...</p>
+            <p className="text-on-surface-variant">{t("paymentSuccess.confirming")}</p>
           </div>
         )}
 
@@ -95,22 +97,21 @@ export const PaymentSuccessPage: React.FC = () => {
           <div className="glass-panel rounded-xl p-10 text-center flex flex-col items-center gap-3">
             <span className="material-symbols-outlined text-[48px] text-tertiary-container">hourglass_top</span>
             <p className="text-on-surface">
-              El pago está tardando más de lo normal en confirmarse.
+              {t("paymentSuccess.expiredTitle")}
             </p>
             <p className="text-on-surface-variant text-sm max-w-md">
-              Esto puede pasar si el webhook de Stripe todavía no llega. Revisa tu{" "}
+              {t("paymentSuccess.expiredBodyBefore")}{" "}
               <Link to="/biblioteca" className="text-primary-fixed-dim hover:underline no-underline">
-                biblioteca digital
+                {t("paymentSuccess.digitalLibrary")}
               </Link>{" "}
-              en unos segundos.
+              {t("paymentSuccess.expiredBodyAfter")}
             </p>
           </div>
         )}
 
         {sessionId && estado === "error" && (
           <div className="glass-panel rounded-xl p-10 text-center text-on-error-container">
-            No se pudo consultar el estado de tu compra. Si el cobro se realizó, el modelo
-            aparecerá en tu biblioteca digital en breve.
+            {t("paymentSuccess.errorMessage")}
           </div>
         )}
 
@@ -124,23 +125,22 @@ export const PaymentSuccessPage: React.FC = () => {
                 </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-on-surface mb-2">
-                ¡Pago Completado!
+                {t("paymentSuccess.completedTitle")}
               </h1>
               <p className="font-mono text-on-surface-variant flex items-center justify-center gap-2 text-sm">
                 <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                Orden: <span className="text-primary-fixed-dim">{orden.codigo_orden}</span>
+                {t("paymentSuccess.order")} <span className="text-primary-fixed-dim">{orden.codigo_orden}</span>
               </p>
             </div>
 
             {/* Tarjeta de descargas */}
             <div className="glass-panel rounded-xl p-6 md:p-8 mb-6">
               <div className="mb-6 pb-6 border-b border-outline-variant/30 text-center">
-                <h2 className="text-xl font-bold text-on-surface mb-1">Gracias por tu compra</h2>
+                <h2 className="text-xl font-bold text-on-surface mb-1">{t("paymentSuccess.thankYouTitle")}</h2>
                 <p className="text-on-surface-variant">
-                  Tus modelos 3D ya están disponibles. Este archivo fue añadido permanentemente a
-                  tu{" "}
+                  {t("paymentSuccess.thankYouBodyBefore")}{" "}
                   <Link to="/biblioteca" className="text-primary-fixed-dim hover:underline no-underline">
-                    biblioteca digital
+                    {t("paymentSuccess.digitalLibrary")}
                   </Link>
                   .
                 </p>
@@ -176,7 +176,7 @@ export const PaymentSuccessPage: React.FC = () => {
                         className="w-full md:w-auto px-6 py-2.5 rounded-lg bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <span className="material-symbols-outlined text-[20px]">cloud_download</span>
-                        {descargandoId === compra.id ? "Descargando..." : "Descargar Archivo"}
+                        {descargandoId === compra.id ? t("paymentSuccess.downloading") : t("paymentSuccess.downloadFile")}
                       </button>
                     </div>
                   </div>
@@ -191,14 +191,14 @@ export const PaymentSuccessPage: React.FC = () => {
                 className="px-6 py-3 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2 no-underline font-semibold"
               >
                 <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                Volver al Marketplace
+                {t("paymentSuccess.backToMarketplace")}
               </Link>
               <Link
                 to="/biblioteca"
                 className="px-6 py-3 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2 no-underline font-semibold"
               >
                 <span className="material-symbols-outlined text-[20px]">inventory_2</span>
-                Ver Mi Biblioteca
+                {t("paymentSuccess.viewMyLibrary")}
               </Link>
             </div>
           </>

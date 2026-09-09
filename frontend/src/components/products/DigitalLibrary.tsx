@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { CompraDigital } from "../../api/biblioteca.api";
 import { bibliotecaApi, descargarCompra } from "../../api/biblioteca.api";
 
@@ -7,6 +8,7 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
 export const DigitalLibrary: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [compras, setCompras] = useState<CompraDigital[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export const DigitalLibrary: React.FC = () => {
       setCompras(data);
     } catch (err) {
       console.error("Error al cargar la biblioteca digital:", err);
-      setError("No se pudo cargar tu biblioteca digital.");
+      setError(t("library.loadError"));
     } finally {
       setLoading(false);
     }
@@ -36,7 +38,7 @@ export const DigitalLibrary: React.FC = () => {
       await descargarCompra(compra);
     } catch (err) {
       console.error("Error al descargar el archivo:", err);
-      window.alert("No se pudo descargar el archivo. Inténtalo de nuevo.");
+      window.alert(t("library.downloadError"));
     } finally {
       setDescargandoId(null);
     }
@@ -45,9 +47,9 @@ export const DigitalLibrary: React.FC = () => {
   return (
     <div>
       <header className="mb-lg flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold text-on-surface">Mi Biblioteca Digital</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-on-surface">{t("library.title")}</h1>
         <p className="text-on-surface-variant max-w-2xl">
-          Tu colección permanente de modelos 3D adquiridos, listos para descargar.
+          {t("library.subtitle")}
         </p>
       </header>
 
@@ -71,12 +73,12 @@ export const DigitalLibrary: React.FC = () => {
       {!loading && !error && compras.length === 0 && (
         <div className="glass-panel rounded-xl p-12 flex flex-col items-center gap-3 text-center">
           <span className="material-symbols-outlined text-[48px] text-outline">inventory_2</span>
-          <p className="text-on-surface-variant">Aún no has adquirido ningún modelo.</p>
+          <p className="text-on-surface-variant">{t("library.emptyMessage")}</p>
           <Link
             to="/"
             className="text-primary-fixed-dim font-semibold hover:underline no-underline"
           >
-            Explorar el catálogo →
+            {t("library.exploreCatalog")}
           </Link>
         </div>
       )}
@@ -106,10 +108,12 @@ export const DigitalLibrary: React.FC = () => {
               <div className="p-4 flex flex-col flex-1 gap-1">
                 <h3 className="font-semibold text-on-surface truncate">{compra.producto.titulo}</h3>
                 <p className="text-on-surface-variant text-xs font-mono">
-                  Adquirido: {new Date(compra.fecha_adquisicion).toLocaleDateString("es-ES", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
+                  {t("library.acquired", {
+                    date: new Date(compra.fecha_adquisicion).toLocaleDateString(i18n.language, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    }),
                   })}
                 </p>
 
@@ -120,7 +124,7 @@ export const DigitalLibrary: React.FC = () => {
                     className="w-full py-2 px-4 rounded bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                   >
                     <span className="material-symbols-outlined text-[18px]">download</span>
-                    {descargandoId === compra.id ? "Descargando..." : "Descargar"}
+                    {descargandoId === compra.id ? t("library.downloading") : t("library.download")}
                   </button>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { chatApi, type Conversacion, type Mensaje } from '../../services/chatApi';
 import { ConversacionLista } from './ConversacionLista';
 import { ChatHeader } from './ChatHeader';
@@ -10,6 +11,7 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ isAdmin }) => {
+    const { t } = useTranslation();
     const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
     const [conversacionActiva, setConversacionActiva] = useState<Conversacion | null>(null);
     const [mensajes, setMensajes] = useState<Mensaje[]>([]);
@@ -118,28 +120,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ isAdmin }) => {
     return (
         <div className="flex h-[calc(100vh-120px)] bg-surface border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
             {isAdmin && (
-                <ConversacionLista 
+                <ConversacionLista
                     conversaciones={conversaciones}
                     conversacionActiva={conversacionActiva}
                     onSeleccionarConversacion={setConversacionActiva}
+                    hiddenOnMobile={Boolean(conversacionActiva)}
                 />
             )}
 
-            <div className="flex-1 flex flex-col bg-background">
+            <div className={`${isAdmin && !conversacionActiva ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-background`}>
                 {conversacionActiva ? (
                     <>
-                        <ChatHeader 
-                            isAdmin={isAdmin} 
-                            conversacionActiva={conversacionActiva} 
+                        <ChatHeader
+                            isAdmin={isAdmin}
+                            conversacionActiva={conversacionActiva}
+                            onBack={() => setConversacionActiva(null)}
                         />
-                        
-                        <MensajesLista 
-                            mensajes={mensajes} 
-                            conversacionActiva={conversacionActiva} 
+
+                        <MensajesLista
+                            mensajes={mensajes}
+                            conversacionActiva={conversacionActiva}
                             messagesEndRef={messagesEndRef}
                         />
-                        
-                        <ChatInput 
+
+                        <ChatInput
                             nuevoMensaje={nuevoMensaje}
                             setNuevoMensaje={setNuevoMensaje}
                             onEnviar={handleEnviar}
@@ -147,7 +151,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ isAdmin }) => {
                     </>
                 ) : (
                     <div className="flex-1 flex items-center justify-center text-on-surface-variant text-sm">
-                        Selecciona una conversación para comenzar a chatear.
+                        {t('chat.selectConversation')}
                     </div>
                 )}
             </div>

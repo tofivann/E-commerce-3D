@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getAllProductos } from "../../api/productos.api";
 import type { Producto } from "../../api/productos.api";
 import { ProductCard } from "./ProductCard";
@@ -26,6 +27,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   onGoToLibrary,
   searchQuery = "",
 }) => {
+  const { t } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export const ProductList: React.FC<ProductListProps> = ({
       setProductos(response.data);
     } catch (err) {
       console.error("Error al cargar productos:", err);
-      setError("No se pudieron cargar los productos del servidor.");
+      setError(t("catalog.loadError"));
     } finally {
       setLoading(false);
     }
@@ -58,11 +60,11 @@ export const ProductList: React.FC<ProductListProps> = ({
       {/* Encabezado del Catálogo */}
       <div className="flex justify-between items-end border-b border-[var(--color-outline-variant)]/20 pb-4">
         <h2 className="text-2xl font-bold text-[var(--color-on-surface)]">
-          Explorar Modelos Destacados
+          {t("catalog.title")}
         </h2>
         <div className="flex gap-2">
           <span className="font-mono text-xs text-[var(--color-outline)] bg-[var(--color-surface-container-low)] px-3 py-1 rounded-full border border-[var(--color-outline-variant)]/30">
-            {hasAccess ? "Catálogo Activo" : "Mostrando vista previa"}
+            {hasAccess ? t("catalog.active") : t("catalog.preview")}
           </span>
         </div>
       </div>
@@ -89,7 +91,7 @@ export const ProductList: React.FC<ProductListProps> = ({
       {/* Sin resultados de búsqueda */}
       {!loading && !error && productos.length > 0 && productosFiltrados.length === 0 && (
         <div className="p-10 text-center text-on-surface-variant">
-          No encontramos modelos que coincidan con "{searchQuery}".
+          {t("catalog.noResults", { query: searchQuery })}
         </div>
       )}
 
@@ -113,7 +115,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       <div className="flex justify-center mt-6">
         <button className="bg-transparent border border-[var(--color-outline-variant)]/50 text-[var(--color-on-surface)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary-container)]/50 btn-glow-inner rounded px-6 py-2 transition-all active:scale-95 glass-panel">
-          Ver Catálogo Completo
+          {t("catalog.viewFull")}
         </button>
       </div>
     </section>

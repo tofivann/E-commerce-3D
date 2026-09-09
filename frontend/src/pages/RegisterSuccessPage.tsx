@@ -1,9 +1,11 @@
 import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "../components/ui/Button";
 import { useVerificacionPago } from "../hooks/useVerificacionPago";
 
 export const RegisterSuccessPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
@@ -20,10 +22,10 @@ export const RegisterSuccessPage: React.FC = () => {
               <div className="w-14 h-14 rounded-full border-4 border-outline-variant/40 border-t-primary animate-spin" />
             </div>
             <h1 className="text-2xl font-bold text-on-surface mb-2 tracking-tight">
-              Confirmando tu pago...
+              {t("registerSuccess.confirmingTitle")}
             </h1>
             <p className="text-sm md:text-base text-on-surface-variant">
-              Estamos confirmando tu pago con Stripe de forma segura. Esto tomará solo un segundo.
+              {t("registerSuccess.confirmingBody")}
             </p>
           </>
         )}
@@ -38,16 +40,16 @@ export const RegisterSuccessPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl font-bold text-on-surface mb-2 tracking-tight">
-              ¡Pago y Registro Exitosos!
+              {t("registerSuccess.successTitle")}
             </h1>
 
             <p className="text-sm md:text-base text-on-surface-variant mb-8">
-              Tu cuenta ha sido activada correctamente. Ya puedes iniciar sesión en la plataforma para comenzar a disfrutar de todos los beneficios.
+              {t("registerSuccess.successBody")}
             </p>
 
             <Link to="/login">
               <Button className="w-full" icon="login">
-                Ir a Iniciar Sesión
+                {t("registerSuccess.goToLogin")}
               </Button>
             </Link>
           </>
@@ -59,14 +61,14 @@ export const RegisterSuccessPage: React.FC = () => {
               <span className="material-symbols-outlined text-3xl">hourglass_top</span>
             </div>
             <h1 className="text-2xl font-bold text-on-surface mb-2 tracking-tight">
-              Tu pago está tardando en confirmarse
+              {t("registerSuccess.expiredTitle")}
             </h1>
             <p className="text-sm md:text-base text-on-surface-variant mb-8">
-              Si ya realizaste el pago, tu cuenta se activará automáticamente en breve. Intenta iniciar sesión en unos minutos.
+              {t("registerSuccess.expiredBody")}
             </p>
             <Link to="/login">
               <Button className="w-full" icon="login">
-                Ir a Iniciar Sesión
+                {t("registerSuccess.goToLogin")}
               </Button>
             </Link>
           </>
@@ -78,14 +80,14 @@ export const RegisterSuccessPage: React.FC = () => {
               <span className="material-symbols-outlined text-3xl">warning</span>
             </div>
             <h1 className="text-2xl font-bold text-on-surface mb-2 tracking-tight">
-              No pudimos confirmar tu pago
+              {t("registerSuccess.errorTitle")}
             </h1>
             <p className="text-sm md:text-base text-on-surface-variant mb-8">
-              Si realizaste el pago correctamente, tu cuenta se activará automáticamente en unos minutos.
+              {t("registerSuccess.errorBody")}
             </p>
             <Link to="/login">
               <Button className="w-full" icon="login">
-                Ir a Iniciar Sesión
+                {t("registerSuccess.goToLogin")}
               </Button>
             </Link>
           </>

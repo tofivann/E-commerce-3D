@@ -161,4 +161,4 @@ STORAGES = {
     },
 }
 
-GOOGLE_CLIENT_ID = "804949758257-anogkl9md01dgghuiqlmlqvmtf39mdbh.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "257526057158-5ld1epn18ov5fc4gi6s74g2d9mmukidn.apps.googleusercontent.com"

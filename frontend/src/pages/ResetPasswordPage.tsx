@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../services/authApi';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
 import { AuthCard } from '../components/ui/AuthCard';
 
 export const ResetPasswordPage: React.FC = () => {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
@@ -16,23 +18,25 @@ export const ResetPasswordPage: React.FC = () => {
     const [confirmarPassword, setConfirmarPassword] = useState('');
     const [mensaje, setMensaje] = useState('');
     const [error, setError] = useState('');
+    const [linkInvalido, setLinkInvalido] = useState(false);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!uid || !token) {
-            setError('El enlace de recuperación es inválido o está incompleto.');
+            setError(t('resetPassword.invalidLink'));
+            setLinkInvalido(true);
         }
-    }, [uid, token]);
+    }, [uid, token, t]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (nuevaPassword !== confirmarPassword) {
-            setError('Las contraseñas no coinciden.');
+            setError(t('resetPassword.passwordMismatch'));
             return;
         }
 
         if (!uid || !token) {
-            setError('Faltan parámetros de seguridad en el enlace.');
+            setError(t('resetPassword.missingParams'));
             return;
         }
 
@@ -41,13 +45,15 @@ export const ResetPasswordPage: React.FC = () => {
         setMensaje('');
 
         try {
-            const data = await authApi.confirmarResetPassword({ uid, token, nueva_password: nuevaPassword });
-            setMensaje(data.mensaje || '¡Contraseña actualizada con éxito!');
+            await authApi.confirmarResetPassword({ uid, token, nueva_password: nuevaPassword });
+            // El backend siempre responde en español; usamos el texto ya
+            // traducido del frontend en vez de mostrar el mensaje del servidor.
+            setMensaje(t('resetPassword.successMessage'));
             setTimeout(() => {
                 navigate('/login');
             }, 3000);
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'El enlace ha expirado o ya fue utilizado.');
+            setError(err.response?.data?.detail || t('resetPassword.genericError'));
         } finally {
             setLoading(false);
         }
@@ -55,9 +61,9 @@ export const ResetPasswordPage: React.FC = () => {
 
     return (
         <AuthCard
-            title="Nueva Contraseña"
-            subtitle="Seguridad de la cuenta"
-            description="Introduce tu nueva contraseña segura para acceder a la plataforma."
+            title={t('resetPassword.title')}
+            subtitle={t('resetPassword.subtitle')}
+            description={t('resetPassword.description')}
         >
             {error && (
                 <div className="bg-error/20 border border-error text-on-error-container p-3 rounded-md text-sm text-center">
@@ -67,15 +73,15 @@ export const ResetPasswordPage: React.FC = () => {
 
             {mensaje && (
                 <div className="bg-emerald-500/20 border border-emerald-500 text-emerald-900 p-3 rounded-md text-sm text-center">
-                    {mensaje} Redirigiendo al login...
+                    {mensaje} {t('resetPassword.redirecting')}
                 </div>
             )}
 
-            {!error.includes('inválido') && (
+            {!linkInvalido && (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                     <InputField
                         id="nuevaPassword"
-                        label="Nueva contraseña"
+                        label={t('resetPassword.newPassword')}
                         type="password"
                         value={nuevaPassword}
                         onChange={(e) => setNuevaPassword(e.target.value)}
@@ -87,7 +93,7 @@ export const ResetPasswordPage: React.FC = () => {
 
                     <InputField
                         id="confirmarPassword"
-                        label="Confirmar nueva contraseña"
+                        label={t('resetPassword.confirmNewPassword')}
                         type="password"
                         value={confirmarPassword}
                         onChange={(e) => setConfirmarPassword(e.target.value)}
@@ -98,14 +104,14 @@ export const ResetPasswordPage: React.FC = () => {
                     />
 
                     <Button type="submit" loading={loading} className="mt-2" disabled={!!mensaje}>
-                        Guardar nueva contraseña
+                        {t('resetPassword.submit')}
                     </Button>
                 </form>
             )}
 
             <div className="text-sm text-center mt-4">
                 <Link to="/login" className="text-xs font-mono text-primary hover:text-primary-fixed transition-colors">
-                    ← Volver al inicio de sesión
+                    {t('forgotPassword.backToLogin')}
                 </Link>
             </div>
         </AuthCard>

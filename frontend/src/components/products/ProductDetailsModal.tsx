@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 
 interface ProductDetailsModalProps {
@@ -27,6 +28,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
+  const { t } = useTranslation();
   if (!producto) return null;
 
   const videoId = extraerIdYoutube(producto.link_youtube);
@@ -43,7 +45,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           type="button"
           className="absolute top-6 right-6 text-on-surface-variant hover:text-primary transition-colors"
           onClick={onClose}
-          aria-label="Cerrar"
+          aria-label={t("common.close")}
         >
           <span className="material-symbols-outlined">close</span>
         </button>
@@ -52,7 +54,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           <div className="w-full aspect-video rounded-xl overflow-hidden mb-6 bg-surface-container-lowest">
             <iframe
               src={`https://www.youtube.com/embed/${videoId}`}
-              title={`Vista previa de ${producto.titulo}`}
+              title={t("productDetails.previewOf", { title: producto.titulo })}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -72,7 +74,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
         </div>
 
         <p className="text-on-surface-variant mb-6 whitespace-pre-line">
-          {producto.descripcion || "Modelo MMD 3D."}
+          {producto.descripcion || t("catalog.defaultDescription")}
         </p>
 
         {videoId && (
@@ -83,7 +85,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
             className="text-primary-fixed-dim text-sm hover:underline no-underline inline-flex items-center gap-1 mb-6 self-start"
           >
             <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-            Ver en YouTube
+            {t("productDetails.watchOnYoutube")}
           </a>
         )}
 
@@ -101,12 +103,12 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2.5 px-6 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                Agregar al carrito
+                {t("productDetails.addToCart")}
               </button>
             </>
           ) : (
             <p className="text-on-surface-variant text-sm">
-              Regístrate o activa tu suscripción para desbloquear el precio y la descarga.
+              {t("productDetails.unlockMessage")}
             </p>
           )}
         </div>

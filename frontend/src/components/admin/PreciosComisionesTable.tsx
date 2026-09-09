@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { JuegoComision, TramoPersonajesMotion } from "../../api/comisiones.api";
 import { comisionesApi, comisionesAdminApi } from "../../api/comisiones.api";
 
@@ -15,6 +16,7 @@ const addCellClass = "block w-full md:table-cell md:w-auto py-0 md:py-2 px-0 md:
 // ---------------------------------------------------------------------------
 
 const JuegosTable: React.FC = () => {
+  const { t } = useTranslation();
   const [juegos, setJuegos] = useState<JuegoComision[]>([]);
   const [loading, setLoading] = useState(true);
   const [nuevoNombre, setNuevoNombre] = useState("");
@@ -43,7 +45,7 @@ const JuegosTable: React.FC = () => {
       cargar();
     } catch (err) {
       console.error("Error al crear el juego:", err);
-      window.alert("No se pudo crear el juego. ¿El nombre ya existe?");
+      window.alert(t("preciosComisiones.createGameError"));
     } finally {
       setGuardando(false);
     }
@@ -55,28 +57,28 @@ const JuegosTable: React.FC = () => {
       cargar();
     } catch (err) {
       console.error("Error al actualizar el juego:", err);
-      window.alert("No se pudo guardar el cambio.");
+      window.alert(t("preciosComisiones.updateError"));
     }
   };
 
   return (
     <div className="glass-panel rounded-xl overflow-hidden">
       <div className="p-4 border-b border-outline-variant/30">
-        <h3 className="font-bold text-on-surface">Juegos (Comisión de Modelo Nuevo)</h3>
-        <p className="text-on-surface-variant text-xs">Cada juego define el precio fijo de esa comisión.</p>
+        <h3 className="font-bold text-on-surface">{t("preciosComisiones.gamesTitle")}</h3>
+        <p className="text-on-surface-variant text-xs">{t("preciosComisiones.gamesSubtitle")}</p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse md:table-fixed">
           <thead className="hidden md:table-header-group">
             <tr className="bg-surface-container-high/60 border-b border-outline-variant/30">
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Juego</th>
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-32">Precio</th>
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-44">Activo</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("preciosComisiones.colGame")}</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-32">{t("preciosComisiones.colPrice")}</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-44">{t("preciosComisiones.colActive")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20 flex flex-col md:table-row-group">
             {loading && (
-              <tr><td colSpan={3} className="py-6 text-center text-on-surface-variant">Cargando...</td></tr>
+              <tr><td colSpan={3} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
             )}
             {!loading && juegos.map((juego) => (
               <tr key={juego.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0">
@@ -101,7 +103,7 @@ const JuegosTable: React.FC = () => {
                       juego.activo ? "bg-primary-container/40 text-primary-fixed-dim" : "bg-surface-container-high text-on-surface-variant"
                     }`}
                   >
-                    {juego.activo ? "Activo" : "Inactivo"}
+                    {juego.activo ? t("preciosComisiones.active") : t("preciosComisiones.inactive")}
                   </button>
                 </td>
               </tr>
@@ -109,7 +111,7 @@ const JuegosTable: React.FC = () => {
             <tr className={addRowClass}>
               <td className={addCellClass}>
                 <input
-                  className={inputClass} placeholder="Nombre del juego"
+                  className={inputClass} placeholder={t("preciosComisiones.gameNamePlaceholder")}
                   value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)}
                 />
               </td>
@@ -126,7 +128,7 @@ const JuegosTable: React.FC = () => {
                   className="w-full md:w-auto text-xs bg-primary-container text-on-primary-fixed px-3 py-2 md:py-1.5 rounded font-semibold flex items-center justify-center gap-1 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[16px]">add</span>
-                  Agregar
+                  {t("preciosComisiones.add")}
                 </button>
               </td>
             </tr>
@@ -144,6 +146,7 @@ const JuegosTable: React.FC = () => {
 const emptyTramo = { nombre: "", min_personajes: "", max_personajes: "", precio: "" };
 
 const TramosTable: React.FC = () => {
+  const { t } = useTranslation();
   const [tramos, setTramos] = useState<TramoPersonajesMotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [nuevo, setNuevo] = useState(emptyTramo);
@@ -177,7 +180,7 @@ const TramosTable: React.FC = () => {
       cargar();
     } catch (err) {
       console.error("Error al crear el tramo:", err);
-      window.alert("No se pudo crear el tramo.");
+      window.alert(t("preciosComisiones.createTramoError"));
     } finally {
       setGuardando(false);
     }
@@ -189,30 +192,30 @@ const TramosTable: React.FC = () => {
       cargar();
     } catch (err) {
       console.error("Error al actualizar el tramo:", err);
-      window.alert("No se pudo guardar el cambio.");
+      window.alert(t("preciosComisiones.updateError"));
     }
   };
 
   return (
     <div className="glass-panel rounded-xl overflow-hidden">
       <div className="p-4 border-b border-outline-variant/30">
-        <h3 className="font-bold text-on-surface">Tramos de Personajes (Comisión de Motion)</h3>
-        <p className="text-on-surface-variant text-xs">El precio depende de cuántos personajes tiene la coreografía.</p>
+        <h3 className="font-bold text-on-surface">{t("preciosComisiones.tramosTitle")}</h3>
+        <p className="text-on-surface-variant text-xs">{t("preciosComisiones.tramosSubtitle")}</p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse md:table-fixed">
           <thead className="hidden md:table-header-group">
             <tr className="bg-surface-container-high/60 border-b border-outline-variant/30">
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Nombre</th>
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-24">Min</th>
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-24">Max</th>
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-32">Precio</th>
-              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-44">Activo</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("preciosComisiones.colName")}</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-24">{t("preciosComisiones.colMin")}</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-24">{t("preciosComisiones.colMax")}</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-32">{t("preciosComisiones.colPrice")}</th>
+              <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-44">{t("preciosComisiones.colActive")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20 flex flex-col md:table-row-group">
             {loading && (
-              <tr><td colSpan={5} className="py-6 text-center text-on-surface-variant">Cargando...</td></tr>
+              <tr><td colSpan={5} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
             )}
             {!loading && tramos.map((tramo) => (
               <tr key={tramo.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0">
@@ -225,14 +228,14 @@ const TramosTable: React.FC = () => {
                 </td>
                 <td className={addCellClass}>
                   <input
-                    type="number" min="1" defaultValue={tramo.min_personajes} placeholder="Mín. personajes"
+                    type="number" min="1" defaultValue={tramo.min_personajes} placeholder={t("preciosComisiones.minCharacters")}
                     onBlur={(e) => Number(e.target.value) !== tramo.min_personajes && handleUpdate(tramo, { min_personajes: Number(e.target.value) })}
                     className={`${inputClass} md:max-w-[70px] font-mono`}
                   />
                 </td>
                 <td className={addCellClass}>
                   <input
-                    type="number" min="1" defaultValue={tramo.max_personajes} placeholder="Máx. personajes"
+                    type="number" min="1" defaultValue={tramo.max_personajes} placeholder={t("preciosComisiones.maxCharacters")}
                     onBlur={(e) => Number(e.target.value) !== tramo.max_personajes && handleUpdate(tramo, { max_personajes: Number(e.target.value) })}
                     className={`${inputClass} md:max-w-[70px] font-mono`}
                   />
@@ -251,22 +254,22 @@ const TramosTable: React.FC = () => {
                       tramo.activo ? "bg-primary-container/40 text-primary-fixed-dim" : "bg-surface-container-high text-on-surface-variant"
                     }`}
                   >
-                    {tramo.activo ? "Activo" : "Inactivo"}
+                    {tramo.activo ? t("preciosComisiones.active") : t("preciosComisiones.inactive")}
                   </button>
                 </td>
               </tr>
             ))}
             <tr className={addRowClass}>
               <td className={addCellClass}>
-                <input className={inputClass} placeholder="Ej: 1-3 Characters" value={nuevo.nombre}
+                <input className={inputClass} placeholder={t("preciosComisiones.tramoNamePlaceholder")} value={nuevo.nombre}
                   onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
               </td>
               <td className={addCellClass}>
-                <input type="number" min="1" className={`${inputClass} md:max-w-[70px]`} placeholder="Mín. personajes" value={nuevo.min_personajes}
+                <input type="number" min="1" className={`${inputClass} md:max-w-[70px]`} placeholder={t("preciosComisiones.minCharacters")} value={nuevo.min_personajes}
                   onChange={(e) => setNuevo({ ...nuevo, min_personajes: e.target.value })} />
               </td>
               <td className={addCellClass}>
-                <input type="number" min="1" className={`${inputClass} md:max-w-[70px]`} placeholder="Máx. personajes" value={nuevo.max_personajes}
+                <input type="number" min="1" className={`${inputClass} md:max-w-[70px]`} placeholder={t("preciosComisiones.maxCharacters")} value={nuevo.max_personajes}
                   onChange={(e) => setNuevo({ ...nuevo, max_personajes: e.target.value })} />
               </td>
               <td className={addCellClass}>
@@ -280,7 +283,7 @@ const TramosTable: React.FC = () => {
                   className="w-full md:w-auto text-xs bg-primary-container text-on-primary-fixed px-3 py-2 md:py-1.5 rounded font-semibold flex items-center justify-center gap-1 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[16px]">add</span>
-                  Agregar
+                  {t("preciosComisiones.add")}
                 </button>
               </td>
             </tr>

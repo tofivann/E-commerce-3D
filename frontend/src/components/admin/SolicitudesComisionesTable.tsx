@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   ComisionMotionAdmin,
   ComisionModeloAdmin,
@@ -15,6 +16,7 @@ export type Item =
 const ESTADOS: EstadoComision[] = ["SOLICITADO", "EN_PROCESO", "COMPLETADO", "CANCELADO"];
 
 export const SolicitudesComisionesTable: React.FC = () => {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [guardandoId, setGuardandoId] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
       cargar();
     } catch (err) {
       console.error("Error al actualizar el estado:", err);
-      window.alert("No se pudo actualizar el estado.");
+      window.alert(t("comisionesAdmin.statusError"));
     } finally {
       setGuardandoId(null);
     }
@@ -74,20 +76,20 @@ export const SolicitudesComisionesTable: React.FC = () => {
       cargar();
     } catch (err) {
       console.error("Error al subir el archivo:", err);
-      window.alert("No se pudo subir el archivo de entrega.");
+      window.alert(t("comisionesAdmin.fileError"));
     } finally {
       setGuardandoId(null);
     }
   };
 
   if (loading) {
-    return <div className="py-8 text-center text-on-surface-variant">Cargando solicitudes...</div>;
+    return <div className="py-8 text-center text-on-surface-variant">{t("comisionesAdmin.loading")}</div>;
   }
 
   if (items.length === 0) {
     return (
       <div className="glass-panel rounded-xl p-10 text-center text-on-surface-variant">
-        No hay solicitudes de comisiones todavía.
+        {t("comisionesAdmin.empty")}
       </div>
     );
   }
@@ -113,15 +115,15 @@ export const SolicitudesComisionesTable: React.FC = () => {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-container/40 text-primary-fixed-dim">
-                  {item.tipo === "motion" ? "Motion" : "Modelo Nuevo"}
+                  {item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
                 </span>
                 <h3 className="font-semibold text-on-surface">{titulo}</h3>
               </div>
               <p className="text-on-surface-variant text-xs font-mono mt-1">
-                {item.data.usuario_nombre || "—"} · {subtitulo} · ${Number(item.data.orden.total).toFixed(2)}
+                {item.data.usuario_nombre || t("comisionesAdmin.unknownUser")} · {subtitulo} · ${Number(item.data.orden.total).toFixed(2)}
               </p>
               <p className="text-on-surface-variant text-xs font-mono">
-                Orden: {item.data.orden.codigo_orden} · Pago: {item.data.orden.estado_pago}
+                {t("comisionesAdmin.orderCode", { code: item.data.orden.codigo_orden, estado: item.data.orden.estado_pago })}
               </p>
               {item.tipo === "motion" && (
                 <a
@@ -132,7 +134,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
                   className="text-primary-fixed-dim text-xs hover:underline inline-flex items-center gap-1 mt-1"
                 >
                   <span className="material-symbols-outlined text-[14px]">play_circle</span>
-                  Ver referencia
+                  {t("comisionesAdmin.watchReference")}
                 </a>
               )}
             </div>
@@ -148,13 +150,13 @@ export const SolicitudesComisionesTable: React.FC = () => {
                 className="bg-surface-variant border border-outline-variant rounded-md py-1.5 px-2 text-sm text-on-surface outline-none focus:border-primary"
               >
                 {ESTADOS.map((estado) => (
-                  <option key={estado} value={estado}>{estado}</option>
+                  <option key={estado} value={estado}>{t(`estado.${estado}`)}</option>
                 ))}
               </select>
 
               <label className="text-xs bg-surface-container-low border border-outline-variant/50 px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:border-primary/50 transition-colors flex items-center gap-1">
                 <span className="material-symbols-outlined text-[16px]">upload_file</span>
-                {item.data.archivo_entrega ? "Reemplazar archivo" : "Subir entrega"}
+                {item.data.archivo_entrega ? t("comisionesAdmin.replaceFile") : t("comisionesAdmin.uploadDelivery")}
                 <input
                   type="file"
                   className="hidden"
@@ -171,13 +173,13 @@ export const SolicitudesComisionesTable: React.FC = () => {
                   className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1.5 rounded-md font-semibold flex items-center gap-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">storefront</span>
-                  Publicar a la tienda
+                  {t("comisionesAdmin.publishToShop")}
                 </button>
               )}
               {item.tipo === "modelo" && item.data.producto_publicado && (
                 <span className="text-xs text-primary-fixed-dim font-semibold flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                  Publicado
+                  {t("comisionesAdmin.published")}
                 </span>
               )}
             </div>

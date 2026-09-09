@@ -1,8 +1,10 @@
 import React from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useVerificacionPago } from "../hooks/useVerificacionPago";
 
 export const ActivationSuccessPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
@@ -32,10 +34,10 @@ export const ActivationSuccessPage: React.FC = () => {
         {!sessionId && (
           <div>
             <p className="text-on-surface-variant mb-4">
-              No encontramos ninguna sesión de pago activa.
+              {t("activationSuccess.noSession")}
             </p>
             <a href="/" className="text-primary-fixed-dim font-semibold hover:underline no-underline">
-              Volver al inicio →
+              {t("activationSuccess.backHome")}
             </a>
           </div>
         )}
@@ -43,9 +45,9 @@ export const ActivationSuccessPage: React.FC = () => {
         {sessionId && estado === "cargando" && (
           <div className="flex flex-col items-center gap-4 py-8">
             <div className="w-16 h-16 rounded-full border-4 border-outline-variant/40 border-t-primary-container animate-spin" />
-            <h2 className="text-xl font-bold text-on-surface">Activando tu cuenta...</h2>
+            <h2 className="text-xl font-bold text-on-surface">{t("activationSuccess.activatingTitle")}</h2>
             <p className="text-on-surface-variant text-sm">
-              Estamos confirmando tu pago con Stripe de forma segura. Esto tomará solo un segundo.
+              {t("activationSuccess.activatingBody")}
             </p>
           </div>
         )}
@@ -59,18 +61,18 @@ export const ActivationSuccessPage: React.FC = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-on-surface mb-2">
-                ¡Pago Exitoso y Cuenta Activada! 🎉
+                {t("activationSuccess.successTitle")}
               </h1>
               <p className="text-on-surface-variant">
-                Tu transacción se ha completado correctamente y tu suscripción ya está activa. Por favor, inicia sesión para ingresar a la plataforma con acceso total.
+                {t("activationSuccess.successBody")}
               </p>
             </div>
-            
+
             <button
               onClick={handleContinuarAlLogin}
               className="w-full py-3 px-6 rounded-lg bg-primary-container text-on-primary-fixed font-semibold hover:bg-primary-fixed-dim transition-all no-underline shadow-lg cursor-pointer"
             >
-              Iniciar Sesión en la Plataforma
+              {t("activationSuccess.loginCta")}
             </button>
           </div>
         )}
@@ -79,17 +81,16 @@ export const ActivationSuccessPage: React.FC = () => {
           <div className="flex flex-col items-center gap-4">
             <span className="material-symbols-outlined text-[48px] text-amber-500">hourglass_top</span>
             <p className="text-on-surface">
-              La activación está tardando más de lo normal en confirmarse.
+              {t("activationSuccess.expiredTitle")}
             </p>
             <p className="text-on-surface-variant text-sm">
-              Esto puede pasar si el webhook de Stripe todavía no llega. Si ya realizaste el pago,
-              tu cuenta se activará automáticamente en breve — intenta iniciar sesión en unos minutos.
+              {t("activationSuccess.expiredBody")}
             </p>
             <a
               href="/login"
               className="mt-4 px-6 py-2 rounded-lg bg-surface-container-low border border-outline-variant text-on-surface font-semibold no-underline hover:bg-surface-container inline-block"
             >
-              Ir al inicio de sesión
+              {t("activationSuccess.goToLogin")}
             </a>
           </div>
         )}
@@ -98,13 +99,13 @@ export const ActivationSuccessPage: React.FC = () => {
           <div className="flex flex-col items-center gap-4">
             <span className="material-symbols-outlined text-[48px] text-amber-500">warning</span>
             <p className="text-on-surface">
-              No pudimos confirmar los detalles de la sesión. Si realizaste el pago correctamente, tu cuenta se activará automáticamente en unos minutos.
+              {t("activationSuccess.errorBody")}
             </p>
             <a
               href="/login"
               className="mt-4 px-6 py-2 rounded-lg bg-surface-container-low border border-outline-variant text-on-surface font-semibold no-underline hover:bg-surface-container inline-block"
             >
-              Ir al inicio de sesión
+              {t("activationSuccess.goToLogin")}
             </a>
           </div>
         )}

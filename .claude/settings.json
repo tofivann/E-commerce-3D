@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source venv/bin/activate)",
+      "Bash(source ../venv/bin/activate)",
+      "Bash(source /Users/infraestructuratecnologica/Desktop/MMD-3D-PROJECT/E-commerce-3D/venv/bin/activate)",
+      "Bash(lsof *)"
+    ]
+  }
+}

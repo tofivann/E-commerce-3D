@@ -2,7 +2,6 @@ import stripe
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-import resend
 from django.conf import settings
 from django.db import transaction
 from rest_framework import generics, permissions, status, viewsets
@@ -11,6 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework_simplejwt.tokens import RefreshToken
+from core.email_utils import enviar_email
 from .models import Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer,
@@ -250,8 +250,6 @@ class GoogleLoginView(generics.GenericAPIView):
         except ValueError:
             return Response({"detail": "Token de Google inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
-resend.api_key = getattr(settings, 'RESEND_API_KEY', '')
-
 class SolicitarResetPasswordView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
@@ -271,27 +269,14 @@ class SolicitarResetPasswordView(generics.GenericAPIView):
 
         enlace = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
-        try:
-            resend.Emails.send({
-                "from": "MimiMMDart <onboarding@resend.dev>",
-                "to": [email],
-                "subject": "Restablece tu contraseña",
-                "html": f"""
-                    <p>Has solicitado restablecer tu contraseña.</p>
-                    <p>Haz clic en el siguiente enlace para continuar:</p>
-                    <a href='{enlace}' target='_blank'>Restablecer Contraseña</a>
-                    <p>Si no solicitaste esto, puedes ignorar este mensaje.</p>
-                """
-            })
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            return Response(
-                        {"detail": "No se pudo procesar la solicitud en este momento. Inténtalo más tarde."},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                    )
+        enviar_email(
+            to=usuario.email,
+            subject="Restablece tu contraseña",
+            template_name='users/email_reset_password.html',
+            context={'nombre': usuario.nombre, 'enlace': enlace},
+        )
 
-        return Response({"mensaje": "Correo enviado con éxito."}, status=status.HTTP_200_OK)
+        return Response({"mensaje": "Si el correo existe, se ha enviado un enlace de recuperación."}, status=status.HTTP_200_OK)
 
 
 class ConfirmarResetPasswordView(generics.GenericAPIView):

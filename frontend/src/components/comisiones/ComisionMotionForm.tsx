@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { TramoPersonajesMotion } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
 
 export const ComisionMotionForm: React.FC = () => {
+  const { t } = useTranslation();
   const [tramos, setTramos] = useState<TramoPersonajesMotion[]>([]);
   const [tramoId, setTramoId] = useState<number | null>(null);
   const [nombreJuego, setNombreJuego] = useState("");
@@ -24,7 +26,7 @@ export const ComisionMotionForm: React.FC = () => {
     setError(null);
 
     if (!tramoId) {
-      setError("Selecciona la cantidad de personajes.");
+      setError(t("motionForm.errorNoTramo"));
       return;
     }
 
@@ -40,7 +42,7 @@ export const ComisionMotionForm: React.FC = () => {
       window.location.href = checkout_url;
     } catch (err) {
       console.error("Error al solicitar la comisión de motion:", err);
-      setError("No se pudo procesar la solicitud. Revisa los datos e inténtalo de nuevo.");
+      setError(t("motionForm.errorGeneric"));
       setEnviando(false);
     }
   };
@@ -55,7 +57,7 @@ export const ComisionMotionForm: React.FC = () => {
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Cantidad de personajes
+          {t("motionForm.characterCount")}
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {tramos.map((tramo) => (
@@ -75,18 +77,18 @@ export const ComisionMotionForm: React.FC = () => {
           ))}
         </div>
         {tramos.length === 0 && (
-          <p className="text-on-surface-variant text-sm mt-2">No hay tramos de precio disponibles por ahora.</p>
+          <p className="text-on-surface-variant text-sm mt-2">{t("motionForm.noTramos")}</p>
         )}
       </div>
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Nombre del juego
+          {t("motionForm.gameName")}
         </label>
         <input
           required
           className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-          placeholder="Enter the game name"
+          placeholder={t("motionForm.gameNamePlaceholder")}
           value={nombreJuego}
           onChange={(e) => setNombreJuego(e.target.value)}
         />
@@ -94,12 +96,12 @@ export const ComisionMotionForm: React.FC = () => {
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Nombre de la canción
+          {t("motionForm.songName")}
         </label>
         <input
           required
           className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-          placeholder="Enter the song name"
+          placeholder={t("motionForm.songNamePlaceholder")}
           value={nombreCancion}
           onChange={(e) => setNombreCancion(e.target.value)}
         />
@@ -107,7 +109,7 @@ export const ComisionMotionForm: React.FC = () => {
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Link del video de la canción
+          {t("motionForm.videoLink")}
         </label>
         <input
           required
@@ -118,18 +120,18 @@ export const ComisionMotionForm: React.FC = () => {
           onChange={(e) => setLinkVideo(e.target.value)}
         />
         <p className="text-on-surface-variant text-xs mt-1">
-          Pega el link a la coreografía o video exacto que quieres que use de referencia.
+          {t("motionForm.videoLinkHelp")}
         </p>
       </div>
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-          Información adicional <span className="normal-case font-normal text-outline">(opcional)</span>
+          {t("motionForm.additionalInfo")} <span className="normal-case font-normal text-outline">{t("motionForm.optional")}</span>
         </label>
         <textarea
           rows={3}
           className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner resize-y"
-          placeholder="Agrega cualquier detalle sobre el movimiento, los personajes, la cámara o la actuación."
+          placeholder={t("motionForm.additionalInfoPlaceholder")}
           value={informacionAdicional}
           onChange={(e) => setInformacionAdicional(e.target.value)}
         />
@@ -141,7 +143,7 @@ export const ComisionMotionForm: React.FC = () => {
         className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-3 px-8 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
       >
         <span className="material-symbols-outlined text-[18px]">payments</span>
-        {enviando ? "Redirigiendo a Stripe..." : "Solicitar y Pagar"}
+        {enviando ? t("motionForm.redirecting") : t("motionForm.submit")}
       </button>
     </form>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { createProducto, patchProducto } from "../../api/productos.api";
 
@@ -24,6 +25,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   onClose,
   onSaved,
 }) => {
+  const { t } = useTranslation();
   const isEdit = Boolean(producto?.id);
   const [form, setForm] = useState(emptyForm);
   const [archivo3d, setArchivo3d] = useState<File | null>(null);
@@ -96,7 +98,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     setError(null);
 
     if (!isEdit && !archivo3d) {
-      setError("Debes adjuntar el archivo 3D del modelo.");
+      setError(t("productForm.errorNoFile"));
       return;
     }
 
@@ -112,7 +114,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       onClose();
     } catch (err) {
       console.error("Error al guardar el producto:", err);
-      setError("No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.");
+      setError(t("productForm.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -129,18 +131,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           type="button"
           className="absolute top-6 right-6 text-on-surface-variant hover:text-primary transition-colors"
           onClick={onClose}
-          aria-label="Cerrar"
+          aria-label={t("common.close")}
         >
           <span className="material-symbols-outlined">close</span>
         </button>
 
         <h2 className="text-2xl font-bold text-on-surface mb-2">
-          {isEdit ? "Editar Producto" : "Nuevo Producto"}
+          {isEdit ? t("productForm.editTitle") : t("productForm.newTitle")}
         </h2>
         <p className="text-on-surface-variant mb-6">
-          {isEdit
-            ? "Actualiza los datos del modelo 3D."
-            : "Sube el archivo y define los datos del modelo para el catálogo."}
+          {isEdit ? t("productForm.editSubtitle") : t("productForm.newSubtitle")}
         </p>
 
         {error && (
@@ -176,11 +176,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               {archivo3d
                 ? archivo3d.name
                 : isEdit
-                ? "Arrastra un archivo para reemplazar el actual"
-                : "Arrastra y suelta el archivo 3D aquí"}
+                ? t("productForm.dropReplace")
+                : t("productForm.dropNew")}
             </p>
             <p className="text-on-surface-variant text-xs font-mono">
-              Formatos soportados: STL, OBJ, FBX...
+              {t("productForm.supportedFormats")}
             </p>
             <input
               id="archivo3dInput"
@@ -192,12 +192,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Título
+              {t("productForm.titleLabel")}
             </label>
             <input
               required
               className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-              placeholder="Ej. Kit Modular Cyberpunk"
+              placeholder={t("productForm.titlePlaceholder")}
               value={form.titulo}
               onChange={(e) => setForm({ ...form, titulo: e.target.value })}
             />
@@ -205,13 +205,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Descripción
+              {t("productForm.descriptionLabel")}
             </label>
             <textarea
               required
               rows={4}
               className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner resize-y"
-              placeholder="Describe la geometría, el nivel de detalle y el uso previsto..."
+              placeholder={t("productForm.descriptionPlaceholder")}
               value={form.descripcion}
               onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
             />
@@ -220,7 +220,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-                Precio (USD)
+                {t("productForm.priceLabel")}
               </label>
               <input
                 required
@@ -236,12 +236,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-                Formato de archivo
+                {t("productForm.formatLabel")}
               </label>
               <input
                 required
                 className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-                placeholder="STL, OBJ, FBX..."
+                placeholder={t("productForm.formatPlaceholder")}
                 value={form.formato_archivo}
                 onChange={(e) =>
                   setForm({ ...form, formato_archivo: e.target.value })
@@ -252,7 +252,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Video de YouTube <span className="normal-case font-normal text-outline">(opcional)</span>
+              {t("productForm.youtubeLabel")} <span className="normal-case font-normal text-outline">{t("motionForm.optional")}</span>
             </label>
             <input
               type="url"
@@ -262,13 +262,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               onChange={(e) => setForm({ ...form, link_youtube: e.target.value })}
             />
             <p className="text-on-surface-variant text-xs mt-1">
-              Se muestra como video de vista previa en el detalle del producto.
+              {t("productForm.youtubeHelp")}
             </p>
           </div>
 
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Imagen de previsualización
+              {t("productForm.previewImageLabel")}
             </label>
             <div
               onDragOver={(e) => {
@@ -292,7 +292,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 {imagenPreviaUrl ? (
                   <img
                     src={imagenPreviaUrl}
-                    alt="Vista previa"
+                    alt={t("productForm.previewAlt")}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -304,11 +304,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   {imagenPrevia
                     ? imagenPrevia.name
                     : imagenPreviaUrl
-                    ? "Haz clic o arrastra para reemplazar la imagen"
-                    : "Haz clic o arrastra una imagen aquí"}
+                    ? t("productForm.imageReplace")
+                    : t("productForm.imageNew")}
                 </p>
                 <p className="text-on-surface-variant text-xs font-mono">
-                  PNG, JPG o WebP
+                  {t("productForm.imageFormats")}
                 </p>
               </div>
               <input
@@ -328,7 +328,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               checked={form.activo}
               onChange={(e) => setForm({ ...form, activo: e.target.checked })}
             />
-            <span className="text-on-surface">Producto activo (visible en el catálogo)</span>
+            <span className="text-on-surface">{t("productForm.activeCheckbox")}</span>
           </label>
 
           <div className="flex justify-end gap-4 pt-4 border-t border-outline-variant/30">
@@ -337,7 +337,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               onClick={onClose}
               className="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors font-semibold"
             >
-              Cancelar
+              {t("productForm.cancel")}
             </button>
             <button
               type="submit"
@@ -347,7 +347,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <span className="material-symbols-outlined text-[18px]">
                 {isEdit ? "save" : "rocket_launch"}
               </span>
-              {saving ? "Guardando..." : isEdit ? "Guardar cambios" : "Publicar producto"}
+              {saving ? t("productForm.saving") : isEdit ? t("productForm.saveChanges") : t("productForm.publish")}
             </button>
           </div>
         </form>

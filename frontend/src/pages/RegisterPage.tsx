@@ -58,7 +58,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
   };
 
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen flex items-center justify-center p-4 md:p-8 w-full">
+    <div className="bg-background text-on-surface font-body-md min-h-screen flex items-center justify-center p-4 md:p-8 w-full pt-20 md:pt-8">
       {/* Contenedor principal general */}
       <div className="w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
         

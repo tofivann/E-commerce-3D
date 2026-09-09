@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
 
@@ -8,6 +9,7 @@ type Item =
   | { tipo: "modelo"; data: ComisionModelo };
 
 export const ComisionesLibrary: React.FC = () => {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export const ComisionesLibrary: React.FC = () => {
       setItems(completadas);
     } catch (err) {
       console.error("Error al cargar las comisiones completadas:", err);
-      setError("No se pudieron cargar tus comisiones.");
+      setError(t("comisionesLibrary.loadError"));
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,7 @@ export const ComisionesLibrary: React.FC = () => {
       else await descargarComisionModelo(item.data);
     } catch (err) {
       console.error("Error al descargar el archivo:", err);
-      window.alert("No se pudo descargar el archivo. Inténtalo de nuevo.");
+      window.alert(t("misComisiones.downloadError"));
     } finally {
       setDescargandoId(null);
     }
@@ -74,9 +76,9 @@ export const ComisionesLibrary: React.FC = () => {
     return (
       <div className="glass-panel rounded-xl p-12 flex flex-col items-center gap-3 text-center">
         <span className="material-symbols-outlined text-[48px] text-outline">design_services</span>
-        <p className="text-on-surface-variant">Aún no tienes comisiones completadas.</p>
+        <p className="text-on-surface-variant">{t("comisionesLibrary.empty")}</p>
         <Link to="/comisiones" className="text-primary-fixed-dim font-semibold hover:underline no-underline">
-          Solicitar una comisión →
+          {t("comisionesLibrary.requestCta")}
         </Link>
       </div>
     );
@@ -96,12 +98,12 @@ export const ComisionesLibrary: React.FC = () => {
           >
             <div className="p-4 flex flex-col flex-1 gap-1">
               <span className="self-start text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-container/40 text-primary-fixed-dim mb-1">
-                {item.tipo === "motion" ? "Motion" : "Modelo Nuevo"}
+                {item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
               </span>
               <h3 className="font-semibold text-on-surface truncate">{titulo}</h3>
               <p className="text-on-surface-variant text-xs font-mono">{subtitulo}</p>
               <p className="text-on-surface-variant text-xs font-mono">
-                Código: {item.data.orden.codigo_orden}
+                {t("comisionesLibrary.code", { code: item.data.orden.codigo_orden })}
               </p>
 
               <div className="mt-auto pt-3">
@@ -111,7 +113,7 @@ export const ComisionesLibrary: React.FC = () => {
                   className="w-full py-2 px-4 rounded bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   <span className="material-symbols-outlined text-[18px]">download</span>
-                  {descargandoId === key ? "Descargando..." : "Descargar"}
+                  {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
                 </button>
               </div>
             </div>

@@ -9,7 +9,7 @@ interface AuthCardProps {
 
 export const AuthCard: React.FC<AuthCardProps> = ({ title, subtitle, description, children }) => {
   return (
-    <div className="bg-background text-on-surface min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
+    <div className="bg-background text-on-surface min-h-screen flex items-center justify-center relative overflow-hidden font-sans pt-16 md:pt-0">
       {/* Background Wireframe Elements */}
       <div className="absolute inset-0 z-0 opacity-40 pointer-events-none" style={{
         backgroundImage: 'linear-gradient(to right, rgba(201, 184, 232, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(201, 184, 232, 0.15) 1px, transparent 1px)',

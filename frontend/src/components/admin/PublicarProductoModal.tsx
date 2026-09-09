@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ComisionModeloAdmin } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
 
@@ -15,6 +16,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
   onClose,
   onPublicado,
 }) => {
+  const { t } = useTranslation();
   const [form, setForm] = useState(emptyForm);
   const [imagenPrevia, setImagenPrevia] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -50,7 +52,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
       onPublicado();
     } catch (err) {
       console.error("Error al publicar el producto:", err);
-      setError("No se pudo publicar el producto. Revisa los datos e inténtalo de nuevo.");
+      setError(t("publicarModal.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -64,15 +66,14 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
           type="button"
           className="absolute top-6 right-6 text-on-surface-variant hover:text-primary transition-colors"
           onClick={onClose}
-          aria-label="Cerrar"
+          aria-label={t("common.close")}
         >
           <span className="material-symbols-outlined">close</span>
         </button>
 
-        <h2 className="text-2xl font-bold text-on-surface mb-2">Publicar a la Tienda</h2>
+        <h2 className="text-2xl font-bold text-on-surface mb-2">{t("publicarModal.title")}</h2>
         <p className="text-on-surface-variant mb-6 text-sm">
-          Se creará un producto nuevo en el catálogo usando el archivo de entrega ya subido para "
-          {comision.nombre_personaje}".
+          {t("publicarModal.description", { name: comision.nombre_personaje })}
         </p>
 
         {error && (
@@ -84,7 +85,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Título
+              {t("productForm.titleLabel")}
             </label>
             <input
               required
@@ -96,7 +97,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Descripción
+              {t("productForm.descriptionLabel")}
             </label>
             <textarea
               required
@@ -110,7 +111,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-                Precio de reventa (USD)
+                {t("publicarModal.resalePrice")}
               </label>
               <input
                 required
@@ -124,7 +125,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
             </div>
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-                Formato
+                {t("publicarModal.format")}
               </label>
               <input
                 required
@@ -138,7 +139,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              Imagen de portada <span className="normal-case font-normal text-outline">(opcional, usa la foto de referencia si se omite)</span>
+              {t("publicarModal.coverImage")} <span className="normal-case font-normal text-outline">{t("publicarModal.coverImageOptional")}</span>
             </label>
             <input
               type="file"
@@ -154,7 +155,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
               onClick={onClose}
               className="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors font-semibold"
             >
-              Cancelar
+              {t("productForm.cancel")}
             </button>
             <button
               type="submit"
@@ -162,7 +163,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
               className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2.5 px-8 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
-              {saving ? "Publicando..." : "Publicar Producto"}
+              {saving ? t("publicarModal.publishing") : t("publicarModal.publishProduct")}
             </button>
           </div>
         </form>

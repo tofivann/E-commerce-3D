@@ -98,7 +98,7 @@ function AppRoutes() {
           <div className="bg-background min-h-screen relative">
             <Link
               to="/"
-              className="absolute top-4 left-4 z-50 text-on-surface-variant hover:text-primary flex items-center gap-1 bg-surface/50 px-4 py-2 rounded-full border border-outline-variant/30 no-underline"
+              className="fixed top-4 left-4 z-50 text-on-surface-variant hover:text-primary flex items-center gap-1 bg-surface/50 px-4 py-2 rounded-full border border-outline-variant/30 no-underline"
             >
               <span className="material-symbols-outlined">arrow_back</span> Volver
             </Link>
@@ -200,7 +200,7 @@ function AppRoutes() {
           <div className="bg-background min-h-screen relative">
             <Link
               to="/"
-              className="absolute top-4 left-4 z-50 text-on-surface-variant hover:text-primary flex items-center gap-1 bg-surface/50 px-4 py-2 rounded-full border border-outline-variant/30 no-underline"
+              className="fixed top-4 left-4 z-50 text-on-surface-variant hover:text-primary flex items-center gap-1 bg-surface/50 px-4 py-2 rounded-full border border-outline-variant/30 no-underline"
             >
               <span className="material-symbols-outlined">arrow_back</span> Volver
             </Link>

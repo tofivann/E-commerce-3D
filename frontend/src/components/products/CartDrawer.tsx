@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Carrito } from "../../api/carrito.api";
 import { carritoApi } from "../../api/carrito.api";
 
@@ -15,6 +16,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   refreshKey = 0,
   onCartChange,
 }) => {
+  const { t } = useTranslation();
   const [carrito, setCarrito] = useState<Carrito | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       onCartChange?.(data);
     } catch (err) {
       console.error("Error al cargar el carrito:", err);
-      setError("No se pudo cargar el carrito.");
+      setError(t("cart.loadError"));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       window.location.href = checkout_url;
     } catch (err) {
       console.error("Error al iniciar el pago:", err);
-      setCheckoutError("No se pudo iniciar el pago. Inténtalo de nuevo.");
+      setCheckoutError(t("cart.checkoutError"));
       setCheckingOut(false);
     }
   };
@@ -86,10 +88,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       <div className="glass-panel relative w-full max-w-md h-full bg-surface-container-lowest/95 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/30">
-          <h2 className="text-xl font-bold text-on-surface">Tu Carrito</h2>
+          <h2 className="text-xl font-bold text-on-surface">{t("cart.title")}</h2>
           <button
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={t("common.close")}
             className="text-on-surface-variant hover:text-primary transition-colors w-10 h-10 rounded-full hover:bg-surface-variant/50 flex items-center justify-center"
           >
             <span className="material-symbols-outlined">close</span>
@@ -107,7 +109,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
           {loading && (
             <div className="flex items-center justify-center py-10 text-on-surface-variant">
-              Cargando carrito...
+              {t("cart.loading")}
             </div>
           )}
 
@@ -122,7 +124,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <span className="material-symbols-outlined text-[40px] text-outline">
                 shopping_cart
               </span>
-              <p>Tu carrito está vacío.</p>
+              <p>{t("cart.empty")}</p>
             </div>
           )}
 
@@ -153,7 +155,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </p>
                 </div>
                 <button
-                  aria-label="Quitar"
+                  aria-label={t("cart.remove")}
                   disabled={removingId === item.id}
                   onClick={() => handleRemove(item.id)}
                   className="text-on-surface-variant hover:text-error transition-colors p-2 rounded-full hover:bg-error/10 disabled:opacity-50"
@@ -169,15 +171,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           <div className="border-t border-outline-variant/30 px-6 py-5 bg-surface-container-low/60">
             <div className="space-y-1 mb-4 text-sm">
               <div className="flex justify-between text-on-surface-variant">
-                <span>Subtotal</span>
+                <span>{t("cart.subtotal")}</span>
                 <span className="font-mono">${Number(carrito?.subtotal).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-on-surface-variant">
-                <span>Impuestos (8%)</span>
+                <span>{t("cart.taxes")}</span>
                 <span className="font-mono">${Number(carrito?.impuestos).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold text-on-surface mt-2 pt-2 border-t border-outline-variant/30">
-                <span>Total</span>
+                <span>{t("cart.total")}</span>
                 <span className="font-mono text-primary-fixed-dim">
                   ${Number(carrito?.total).toFixed(2)}
                 </span>
@@ -189,7 +191,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               className="w-full bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-3 font-bold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined">shopping_cart_checkout</span>
-              {checkingOut ? "Redirigiendo a Stripe..." : "Proceder al Pago"}
+              {checkingOut ? t("cart.checkoutRedirecting") : t("cart.checkoutCta")}
             </button>
           </div>
         )}

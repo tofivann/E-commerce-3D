@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../services/authApi';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
 import { AuthCard } from '../components/ui/AuthCard';
 
 export const ForgotPasswordPage: React.FC = () => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [mensaje, setMensaje] = useState('');
     const [error, setError] = useState('');
@@ -18,10 +20,12 @@ export const ForgotPasswordPage: React.FC = () => {
         setMensaje('');
 
         try {
-            const data = await authApi.solicitarResetPassword(email);
-            setMensaje(data.mensaje || 'Si el correo existe, se ha enviado un enlace de recuperación.');
+            await authApi.solicitarResetPassword(email);
+            // El backend siempre responde en español; usamos el texto ya
+            // traducido del frontend en vez de mostrar el mensaje del servidor.
+            setMensaje(t('forgotPassword.successMessage'));
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Ocurrió un error al procesar la solicitud.');
+            setError(err.response?.data?.detail || t('forgotPassword.genericError'));
         } finally {
             setLoading(false);
         }
@@ -29,9 +33,9 @@ export const ForgotPasswordPage: React.FC = () => {
 
     return (
         <AuthCard
-            title="Recuperar Contraseña"
-            subtitle="Acceso al sistema"
-            description="Ingresa tu correo electrónico registrado para recibir las instrucciones."
+            title={t('forgotPassword.title')}
+            subtitle={t('forgotPassword.subtitle')}
+            description={t('forgotPassword.description')}
         >
             {error && (
                 <div className="bg-error/20 border border-error text-on-error-container p-3 rounded-md text-sm text-center">
@@ -48,7 +52,7 @@ export const ForgotPasswordPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <InputField
                     id="email"
-                    label="Correo electrónico"
+                    label={t('forgotPassword.email')}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -58,13 +62,13 @@ export const ForgotPasswordPage: React.FC = () => {
                 />
 
                 <Button type="submit" loading={loading} className="mt-2">
-                    Enviar enlace de recuperación
+                    {t('forgotPassword.submit')}
                 </Button>
             </form>
 
             <div className="text-sm text-center mt-4">
                 <Link to="/login" className="text-xs font-mono text-primary hover:text-primary-fixed transition-colors">
-                    ← Volver al inicio de sesión
+                    {t('forgotPassword.backToLogin')}
                 </Link>
             </div>
         </AuthCard>

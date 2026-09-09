@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChatPanel } from "../components/chat/ChatPanel";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { Sidebar } from "../components/layout/Sidebar";
@@ -14,6 +15,7 @@ export const SupportChatPage: React.FC<SupportChatPageProps> = ({
   isSubscribed = false,
   onLogoutClick,
 }) => {
+  const { t } = useTranslation();
   const [cartOpen, setCartOpen] = useState(false);
 
   // Misma regla de acceso que en HomePage: admins o suscriptores activos.
@@ -29,7 +31,7 @@ export const SupportChatPage: React.FC<SupportChatPageProps> = ({
           <div className="flex justify-end items-center px-gutter max-w-container-max mx-auto h-20">
             <button
               onClick={() => setCartOpen(true)}
-              aria-label="Carrito"
+              aria-label={t("common.cart")}
               className="text-on-surface-variant hover:text-primary transition-colors p-2"
             >
               <span className="material-symbols-outlined">shopping_cart</span>

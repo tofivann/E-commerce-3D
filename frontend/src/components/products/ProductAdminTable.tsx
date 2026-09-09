@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { deleteProducto, getAllProductosAdmin, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
 
 export const ProductAdminTable: React.FC = () => {
+  const { t } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export const ProductAdminTable: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error("Error al cargar productos:", err);
-      setError("No se pudieron cargar los productos del servidor.");
+      setError(t("adminProducts.loadError"));
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,7 @@ export const ProductAdminTable: React.FC = () => {
       );
     } catch (err) {
       console.error("Error al cambiar el estado del producto:", err);
-      window.alert("No se pudo cambiar el estado del producto.");
+      window.alert(t("adminProducts.toggleError"));
     } finally {
       setTogglingId(null);
     }
@@ -48,7 +50,7 @@ export const ProductAdminTable: React.FC = () => {
 
   const handleDelete = async (producto: Producto) => {
     if (!producto.id) return;
-    if (!window.confirm(`¿Eliminar "${producto.titulo}"? Esta acción no se puede deshacer.`)) {
+    if (!window.confirm(t("adminProducts.deleteConfirm", { title: producto.titulo }))) {
       return;
     }
     setDeletingId(producto.id);
@@ -57,7 +59,7 @@ export const ProductAdminTable: React.FC = () => {
       setProductos((prev) => prev.filter((p) => p.id !== producto.id));
     } catch (err) {
       console.error("Error al eliminar el producto:", err);
-      window.alert("No se pudo eliminar el producto.");
+      window.alert(t("adminProducts.deleteError"));
     } finally {
       setDeletingId(null);
     }
@@ -67,8 +69,8 @@ export const ProductAdminTable: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-on-surface mb-1">Productos</h2>
-          <p className="text-on-surface-variant text-sm">Edita o elimina los modelos publicados en el catálogo.</p>
+          <h2 className="text-2xl font-bold text-on-surface mb-1">{t("adminProducts.title")}</h2>
+          <p className="text-on-surface-variant text-sm">{t("adminProducts.subtitle")}</p>
         </div>
         <button
           onClick={() => {
@@ -78,7 +80,7 @@ export const ProductAdminTable: React.FC = () => {
           className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2 px-4 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2 whitespace-nowrap"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
-          Nuevo
+          {t("adminProducts.new")}
         </button>
       </div>
 
@@ -93,18 +95,18 @@ export const ProductAdminTable: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-high/60 border-b border-outline-variant/30">
-                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Producto</th>
-                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Formato</th>
-                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Precio</th>
-                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">Estado</th>
-                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold text-right">Acciones</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colProduct")}</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colFormat")}</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colPrice")}</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colStatus")}</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold text-right">{t("adminProducts.colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {loading && (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-on-surface-variant">
-                    Cargando productos...
+                    {t("adminProducts.loading")}
                   </td>
                 </tr>
               )}
@@ -112,7 +114,7 @@ export const ProductAdminTable: React.FC = () => {
               {!loading && productos.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-on-surface-variant">
-                    No hay productos registrados.
+                    {t("adminProducts.empty")}
                   </td>
                 </tr>
               )}
@@ -148,7 +150,7 @@ export const ProductAdminTable: React.FC = () => {
                       <button
                         onClick={() => handleToggleActivo(producto)}
                         disabled={togglingId === producto.id}
-                        title="Clic para cambiar el estado"
+                        title={t("adminProducts.toggleTitle")}
                         className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full transition-colors disabled:opacity-50 ${
                           producto.activo
                             ? "bg-primary-container/40 text-primary-fixed-dim hover:bg-primary-container/60"
@@ -160,13 +162,13 @@ export const ProductAdminTable: React.FC = () => {
                             producto.activo ? "bg-primary-fixed-dim" : "bg-outline-variant"
                           }`}
                         />
-                        {producto.activo ? "Activo" : "Inactivo"}
+                        {producto.activo ? t("adminProducts.active") : t("adminProducts.inactive")}
                       </button>
                     </td>
                     <td className="py-3 px-6 text-right">
                       <div className="flex justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                         <button
-                          aria-label="Editar"
+                          aria-label={t("adminProducts.edit")}
                           onClick={() => {
                             setEditing(producto);
                             setFormOpen(true);
@@ -176,7 +178,7 @@ export const ProductAdminTable: React.FC = () => {
                           <span className="material-symbols-outlined text-[18px]">edit</span>
                         </button>
                         <button
-                          aria-label="Eliminar"
+                          aria-label={t("adminProducts.delete")}
                           disabled={deletingId === producto.id}
                           onClick={() => handleDelete(producto)}
                           className="p-1.5 rounded border border-outline-variant/40 text-on-surface-variant hover:text-error hover:border-error/50 transition-colors disabled:opacity-50"

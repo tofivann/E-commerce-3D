@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Sidebar } from "../components/layout/Sidebar";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { ComisionMotionForm } from "../components/comisiones/ComisionMotionForm";
@@ -20,6 +21,7 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
   isSubscribed = false,
   onLogoutClick,
 }) => {
+  const { t } = useTranslation();
   const [cartOpen, setCartOpen] = useState(false);
   const [tipo, setTipo] = useState<TipoComision>("motion");
   const [formularioAbierto, setFormularioAbierto] = useState(false);
@@ -69,7 +71,7 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
           <div className="flex justify-end items-center px-gutter max-w-container-max mx-auto h-20">
             <button
               onClick={() => setCartOpen(true)}
-              aria-label="Carrito"
+              aria-label={t("common.cart")}
               className="text-on-surface-variant hover:text-primary transition-colors p-2"
             >
               <span className="material-symbols-outlined">shopping_cart</span>
@@ -80,16 +82,16 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-8">
           <header className="flex flex-col gap-2">
-            <h1 className="text-3xl md:text-4xl font-bold text-on-surface">Comisiones</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-on-surface">{t("commissionsPage.title")}</h1>
             <p className="text-on-surface-variant max-w-2xl">
-              Pide una coreografía de motion para tu personaje, o un modelo 3D nuevo que aún no está en la tienda.
+              {t("commissionsPage.subtitle")}
             </p>
           </header>
 
           {confirmandoPago && (
             <div className="bg-primary-container/15 border border-primary-container/40 text-on-surface p-4 rounded-lg flex items-center gap-3">
               <div className="w-5 h-5 rounded-full border-2 border-outline-variant/40 border-t-primary-container animate-spin shrink-0" />
-              Confirmando tu pago con Stripe...
+              {t("commissionsPage.confirmingPayment")}
             </div>
           )}
 
@@ -99,7 +101,7 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
               className="self-start bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-3 px-6 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-[20px]">add_circle</span>
-              Solicitar Comisión
+              {t("commissionsPage.requestCta")}
             </button>
           )}
 
@@ -116,7 +118,7 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
                     }`}
                   >
                     <span className="material-symbols-outlined text-[18px]">music_note</span>
-                    Motion
+                    {t("commissionsPage.motion")}
                   </button>
                   <button
                     onClick={() => setTipo("modelo")}
@@ -127,14 +129,14 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
                     }`}
                   >
                     <span className="material-symbols-outlined text-[18px]">deployed_code</span>
-                    Modelo Nuevo
+                    {t("commissionsPage.newModel")}
                   </button>
                 </div>
                 <button
                   type="button"
                   onClick={() => setFormularioAbierto(false)}
                   className="text-on-surface-variant hover:text-primary transition-colors"
-                  aria-label="Cerrar"
+                  aria-label={t("common.close")}
                 >
                   <span className="material-symbols-outlined">close</span>
                 </button>
@@ -145,7 +147,7 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
           )}
 
           <section className="flex flex-col gap-4">
-            <h2 className="text-xl font-bold text-on-surface">Mis Comisiones</h2>
+            <h2 className="text-xl font-bold text-on-surface">{t("commissionsPage.myCommissions")}</h2>
             <MisComisionesList refreshKey={refreshKey} />
           </section>
         </main>
