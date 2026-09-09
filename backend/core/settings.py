@@ -82,6 +82,14 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 EMAIL_FROM = os.getenv('EMAIL_FROM', 'MimiMMDart <onboarding@resend.dev>')
 
+# Credenciales de PayPal (modo sandbox por defecto). Se definen en el .env local, NUNCA se commitean.
+PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID', '')
+PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET', '')
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')  # 'sandbox' o 'live'
+PAYPAL_API_BASE = (
+    'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
+)
+
 # 5. Base de datos con Supabase / PostgreSQL
 DATABASE_URL = os.getenv('DATABASE_URL')
 

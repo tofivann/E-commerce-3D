@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.static import serve as serve_static
 
-from .views import StripeWebhookView
+from .views import StripeWebhookView, PayPalCapturarOrdenView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,6 +35,11 @@ urlpatterns = [
     # Punto de entrada único para todos los webhooks de Stripe (ver
     # core/views.py: enruta por metadata['tipo'] a cada app correspondiente).
     path('api/v1/stripe/webhook/', StripeWebhookView.as_view(), name='stripe-webhook'),
+
+    # Punto de entrada para capturar órdenes de PayPal (ver core/views.py:
+    # PayPalCapturarOrdenView — equivalente al webhook de Stripe de arriba,
+    # pero llamado por el frontend en vez de por PayPal).
+    path('api/v1/paypal/capturar-orden/', PayPalCapturarOrdenView.as_view(), name='paypal-capturar-orden'),
 ]
 
 # Sirve los archivos subidos (archivo_3d, imagen_previa, archivo_entrega) tanto en

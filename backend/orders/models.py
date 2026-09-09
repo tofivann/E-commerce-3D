@@ -38,6 +38,10 @@ class Orden(models.Model):
         max_length=255, blank=True, null=True, unique=True,
         help_text="ID de la Stripe Checkout Session que respalda esta orden.",
     )
+    paypal_order_id = models.CharField(
+        max_length=255, blank=True, null=True, unique=True,
+        help_text="ID de la orden de PayPal que respalda esta orden.",
+    )
     fecha_orden = models.DateTimeField(auto_now_add=True)
 
     class Meta:

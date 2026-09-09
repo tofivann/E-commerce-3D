@@ -1,3 +1,4 @@
+import json
 import uuid
 from decimal import Decimal
 
@@ -9,6 +10,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core import paypal_utils
 from orders.models import Orden, DetalleOrden
 from orders.serializers import OrdenSerializer
 from products.models import Producto
@@ -144,6 +146,59 @@ class CheckoutView(APIView):
         orden.save(update_fields=['stripe_session_id'])
 
         return Response({"checkout_url": session.url}, status=status.HTTP_201_CREATED)
+
+
+class CheckoutPayPalCrearView(APIView):
+    """Igual que CheckoutView, pero crea una orden de PayPal en vez de una
+    Stripe Checkout Session."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        carrito = _obtener_carrito(request.user)
+        items = list(carrito.items.select_related('producto'))
+        if not items:
+            return Response(
+                {"detail": "El carrito está vacío."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        subtotal = sum((item.producto.precio for item in items))
+        impuestos = (subtotal * TASA_IMPUESTO).quantize(Decimal('0.01'))
+        total = subtotal + impuestos
+
+        orden = Orden.objects.create(
+            codigo_orden=f"ORD-{uuid.uuid4().hex[:10].upper()}",
+            usuario=request.user,
+            total=total,
+            estado_pago=Orden.EstadoPago.PENDIENTE,
+            tipo_orden=Orden.TipoOrden.CATALOGO,
+            pasarela_pago="PayPal",
+        )
+        for item in items:
+            DetalleOrden.objects.create(
+                orden=orden,
+                producto=item.producto,
+                precio_unitario=item.producto.precio,
+            )
+
+        try:
+            orden_paypal = paypal_utils.crear_orden(
+                total=total,
+                descripcion="Compra en MimiMMDart",
+                custom_id=json.dumps({"tipo": "compra_carrito", "orden_id": str(orden.id)}),
+            )
+        except paypal_utils.PayPalError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"detail": f"No se pudo iniciar el pago con PayPal: {e}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        orden.paypal_order_id = orden_paypal["id"]
+        orden.save(update_fields=['paypal_order_id'])
+
+        return Response({"paypal_order_id": orden_paypal["id"]}, status=status.HTTP_201_CREATED)
 
 
 class OrdenPorSesionView(generics.RetrieveAPIView):

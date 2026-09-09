@@ -4,7 +4,9 @@
     "cart": "Carrito",
     "search": "Buscar modelos...",
     "language": "Idioma",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "orPayWith": "O paga con",
+    "paypalError": "No se pudo procesar el pago con PayPal. Inténtalo de nuevo."
   },
   "sidebar": {
     "home": "Inicio",
@@ -38,6 +40,7 @@
     "error": "El correo electrónico o la contraseña son incorrectos."
   },
   "register": {
+    "paypalSuccess": "¡Pago con PayPal recibido! Tu cuenta ya está activa.",
     "tagline": "Únete a la comunidad de creadores.",
     "badge": "Mercado de nueva generación",
     "title": "Crear Cuenta",
@@ -115,6 +118,7 @@
   "motionForm": {
     "errorNoTramo": "Selecciona la cantidad de personajes.",
     "errorGeneric": "No se pudo procesar la solicitud. Revisa los datos e inténtalo de nuevo.",
+    "paypalSuccess": "¡Pago con PayPal recibido! Tu comisión de Motion ya quedó registrada.",
     "characterCount": "Cantidad de personajes",
     "noTramos": "No hay tramos de precio disponibles por ahora.",
     "gameName": "Nombre del juego",
@@ -132,6 +136,7 @@
   "modeloForm": {
     "errorNoJuego": "Selecciona el juego del personaje.",
     "errorNoFoto": "Sube al menos una foto de referencia del outfit.",
+    "paypalSuccess": "¡Pago con PayPal recibido! Tu comisión de Modelo Nuevo ya quedó registrada.",
     "errorGeneric": "No se pudo procesar la solicitud. Revisa los datos e inténtalo de nuevo.",
     "game": "Juego",
     "noGames": "No hay juegos disponibles por ahora.",

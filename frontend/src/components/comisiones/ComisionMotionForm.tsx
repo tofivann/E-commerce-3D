@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { TramoPersonajesMotion } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
+import { capturarOrdenPayPal } from "../../api/paypal.api";
 
 export const ComisionMotionForm: React.FC = () => {
   const { t } = useTranslation();
@@ -13,6 +15,9 @@ export const ComisionMotionForm: React.FC = () => {
   const [informacionAdicional, setInformacionAdicional] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagadoPayPal, setPagadoPayPal] = useState(false);
+
+  const formularioValido = Boolean(tramoId && nombreJuego && nombreCancion && linkVideo);
 
   useEffect(() => {
     comisionesApi
@@ -46,6 +51,15 @@ export const ComisionMotionForm: React.FC = () => {
       setEnviando(false);
     }
   };
+
+  if (pagadoPayPal) {
+    return (
+      <div className="flex flex-col items-center gap-3 text-center py-10">
+        <span className="material-symbols-outlined text-primary text-4xl">check_circle</span>
+        <p className="text-on-surface font-semibold">{t("motionForm.paypalSuccess")}</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -145,6 +159,35 @@ export const ComisionMotionForm: React.FC = () => {
         <span className="material-symbols-outlined text-[18px]">payments</span>
         {enviando ? t("motionForm.redirecting") : t("motionForm.submit")}
       </button>
+
+      <div className="relative flex py-1 items-center">
+        <div className="flex-grow border-t border-outline-variant/50"></div>
+        <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
+          {t("common.orPayWith")}
+        </span>
+        <div className="flex-grow border-t border-outline-variant/50"></div>
+      </div>
+
+      <PayPalButtons
+        style={{ layout: "horizontal", height: 45 }}
+        disabled={!formularioValido || enviando}
+        forceReRender={[tramoId, nombreJuego, nombreCancion, linkVideo]}
+        createOrder={async () => {
+          const { paypal_order_id } = await comisionesApi.solicitarComisionMotionPayPal({
+            tramo_personajes: tramoId as number,
+            nombre_juego: nombreJuego,
+            nombre_cancion: nombreCancion,
+            link_video: linkVideo,
+            informacion_adicional: informacionAdicional,
+          });
+          return paypal_order_id;
+        }}
+        onApprove={async (data) => {
+          await capturarOrdenPayPal(data.orderID);
+          setPagadoPayPal(true);
+        }}
+        onError={() => setError(t("common.paypalError"))}
+      />
     </form>
   );
 };

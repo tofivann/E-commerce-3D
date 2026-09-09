@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import { userApi } from "../services/userApi";
+import { capturarOrdenPayPal } from "../api/paypal.api";
 import { InputField } from "../components/ui/InputField";
 import { Button } from "../components/ui/Button";
 
@@ -18,6 +20,11 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pagadoPayPal, setPagadoPayPal] = useState(false);
+
+  const formularioValido = Boolean(
+    username && fullName && email && password && password === passwordConfirm && terms
+  );
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +111,16 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
             </div>
           )}
 
+          {pagadoPayPal && (
+            <div className="bg-primary/10 border border-primary text-on-surface p-4 rounded-md text-sm text-center mb-4">
+              <p className="font-semibold mb-2">{t("register.paypalSuccess")}</p>
+              <Link className="text-primary hover:underline font-bold" to="/login">
+                {t("register.login")}
+              </Link>
+            </div>
+          )}
+
+          {!pagadoPayPal && (
           <form onSubmit={handleRegister} className="flex flex-col gap-3">
             <InputField
               id="username"
@@ -186,7 +203,36 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
             <Button type="submit" loading={loading} icon="arrow_forward" className="w-full">
               {t("register.submit")}
             </Button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-outline-variant/50"></div>
+              <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
+                {t("common.orPayWith")}
+              </span>
+              <div className="flex-grow border-t border-outline-variant/50"></div>
+            </div>
+
+            <PayPalButtons
+              style={{ layout: "horizontal", height: 45 }}
+              disabled={!formularioValido}
+              forceReRender={[username, fullName, email, password, passwordConfirm, terms]}
+              createOrder={async () => {
+                const { paypal_order_id } = await userApi.registerPayPal({
+                  username,
+                  nombre: fullName,
+                  email,
+                  password,
+                });
+                return paypal_order_id;
+              }}
+              onApprove={async (data) => {
+                await capturarOrdenPayPal(data.orderID);
+                setPagadoPayPal(true);
+              }}
+              onError={() => setError(t("common.paypalError"))}
+            />
           </form>
+          )}
 
           <p className="mt-5 text-center text-sm text-on-surface-variant">
             {t("register.alreadyHaveAccount")} <Link className="text-primary hover:text-primary-fixed-dim hover:underline underline-offset-4 transition-colors font-bold ml-1" to="/login">{t("register.login")}</Link>

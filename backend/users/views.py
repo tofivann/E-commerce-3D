@@ -1,3 +1,5 @@
+import json
+
 import stripe
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -11,6 +13,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework_simplejwt.tokens import RefreshToken
 from core.email_utils import enviar_email
+from core import paypal_utils
 from .models import Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer,
@@ -107,6 +110,45 @@ class RegistroView(generics.CreateAPIView):
         )
 
 
+class RegistroPayPalView(generics.CreateAPIView):
+    """
+    Igual que RegistroView, pero crea una orden de PayPal en vez de una
+    Stripe Checkout Session — el frontend la captura con
+    core.views.PayPalCapturarOrdenView cuando el usuario aprueba el pago.
+    """
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegistroSerializer
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = serializer.save()
+
+        try:
+            orden_paypal = paypal_utils.crear_orden(
+                total=5,
+                descripcion="Suscripción / Registro a la Plataforma",
+                custom_id=json.dumps({"tipo": "suscripcion_usuario", "user_id": str(usuario.id)}),
+            )
+        except paypal_utils.PayPalError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"detail": f"No se pudo iniciar el pago con PayPal: {e}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response(
+            {
+                "mensaje": "¡Registro exitoso! Por favor proceda al pago para activar su cuenta.",
+                "email": usuario.email,
+                "estado_suscripcion": usuario.estado_suscripcion,
+                "paypal_order_id": orden_paypal["id"],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class VerificarPagoUsuarioView(generics.GenericAPIView):
     """
     Endpoint público usado por las páginas de éxito post-Stripe (registro y
@@ -193,7 +235,36 @@ class ActivarCuentaPagoView(generics.GenericAPIView):
             )
 
         return Response({"checkout_url": session.url}, status=status.HTTP_200_OK)
-    
+
+
+class ActivarCuentaPagoPayPalView(generics.GenericAPIView):
+    """Igual que ActivarCuentaPagoView, pero crea una orden de PayPal."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        usuario = request.user
+
+        if usuario.estado_suscripcion != Usuario.EstadoSuscripcion.PENDIENTE_PAGO:
+            return Response(
+                {"detail": "Esta cuenta ya se encuentra activa o no requiere pago."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            orden_paypal = paypal_utils.crear_orden(
+                total=5,
+                descripcion="Activación de Cuenta / Suscripción",
+                custom_id=json.dumps({"tipo": "activacion_cuenta", "user_id": str(usuario.id)}),
+            )
+        except paypal_utils.PayPalError as e:
+            return Response(
+                {"detail": f"Error al conectar con la pasarela de pagos: {e}"},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        return Response({"paypal_order_id": orden_paypal["id"]}, status=status.HTTP_200_OK)
+
+
 class GoogleLoginView(generics.GenericAPIView):
     """
     Permite el inicio de sesión exclusivo con Google para usuarios ya registrados,

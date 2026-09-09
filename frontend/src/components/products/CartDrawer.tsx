@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { Carrito } from "../../api/carrito.api";
 import { carritoApi } from "../../api/carrito.api";
+import { capturarOrdenPayPal } from "../../api/paypal.api";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -17,6 +20,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onCartChange,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [carrito, setCarrito] = useState<Carrito | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -193,6 +197,30 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <span className="material-symbols-outlined">shopping_cart_checkout</span>
               {checkingOut ? t("cart.checkoutRedirecting") : t("cart.checkoutCta")}
             </button>
+
+            <div className="relative flex py-3 items-center">
+              <div className="flex-grow border-t border-outline-variant/50"></div>
+              <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
+                {t("common.orPayWith")}
+              </span>
+              <div className="flex-grow border-t border-outline-variant/50"></div>
+            </div>
+
+            <PayPalButtons
+              style={{ layout: "horizontal", height: 45 }}
+              disabled={checkingOut}
+              forceReRender={[items.length]}
+              createOrder={async () => {
+                const { paypal_order_id } = await carritoApi.checkoutPayPal();
+                return paypal_order_id;
+              }}
+              onApprove={async (data) => {
+                await capturarOrdenPayPal(data.orderID);
+                onClose();
+                navigate("/biblioteca");
+              }}
+              onError={() => setCheckoutError(t("common.paypalError"))}
+            />
           </div>
         )}
       </div>

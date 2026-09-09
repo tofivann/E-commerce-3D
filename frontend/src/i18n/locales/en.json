@@ -4,7 +4,9 @@
     "cart": "Cart",
     "search": "Search models...",
     "language": "Language",
-    "close": "Close"
+    "close": "Close",
+    "orPayWith": "Or pay with",
+    "paypalError": "Could not process the PayPal payment. Please try again."
   },
   "sidebar": {
     "home": "Home",
@@ -38,6 +40,7 @@
     "error": "The email or password is incorrect."
   },
   "register": {
+    "paypalSuccess": "PayPal payment received! Your account is now active.",
     "tagline": "Join the Creator Community.",
     "badge": "Next-Gen Marketplace",
     "title": "Create Account",
@@ -115,6 +118,7 @@
   "motionForm": {
     "errorNoTramo": "Select the number of characters.",
     "errorGeneric": "Could not process the request. Check the details and try again.",
+    "paypalSuccess": "PayPal payment received! Your Motion commission has been registered.",
     "characterCount": "Number of characters",
     "noTramos": "No pricing tiers available right now.",
     "gameName": "Game name",
@@ -132,6 +136,7 @@
   "modeloForm": {
     "errorNoJuego": "Select the character's game.",
     "errorNoFoto": "Upload at least one outfit reference photo.",
+    "paypalSuccess": "PayPal payment received! Your New Model commission has been registered.",
     "errorGeneric": "Could not process the request. Check the details and try again.",
     "game": "Game",
     "noGames": "No games available right now.",

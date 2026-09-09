@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 
@@ -10,6 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core import paypal_utils
 from core.email_utils import enviar_email
 from orders.models import Orden
 from products.models import Producto
@@ -64,6 +66,16 @@ def _crear_sesion_pago_comision(request, orden, tipo, nombre_producto_stripe):
         cancel_url=f"{settings.FRONTEND_URL}/comisiones",
         client_reference_id=str(request.user.id),
         metadata={'tipo': tipo, 'orden_id': str(orden.id)},
+    )
+
+
+def _crear_orden_pago_paypal_comision(orden, tipo, descripcion):
+    """Equivalente PayPal de _crear_sesion_pago_comision: crea la orden de
+    PayPal ya con el total definido por el tramo/juego elegido."""
+    return paypal_utils.crear_orden(
+        total=orden.total,
+        descripcion=descripcion,
+        custom_id=json.dumps({'tipo': tipo, 'orden_id': str(orden.id)}),
     )
 
 
@@ -131,6 +143,56 @@ class SolicitarComisionMotionView(generics.ListCreateAPIView):
         )
 
 
+class SolicitarComisionMotionPayPalView(generics.CreateAPIView):
+    """Igual que SolicitarComisionMotionView.create, pero crea una orden de PayPal."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SolicitudComisionMotionSerializer
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        entrada = SolicitudComisionMotionSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        datos = entrada.validated_data
+        tramo = datos['tramo_personajes']
+
+        orden = Orden.objects.create(
+            codigo_orden=f"MOT-{uuid.uuid4().hex[:10].upper()}",
+            usuario=request.user,
+            total=tramo.precio,
+            estado_pago=Orden.EstadoPago.PENDIENTE,
+            tipo_orden=Orden.TipoOrden.COMISION_MOTION,
+            pasarela_pago='PayPal',
+        )
+        comision = ComisionMotion.objects.create(
+            orden=orden,
+            usuario=request.user,
+            tramo_personajes=tramo,
+            nombre_juego=datos['nombre_juego'],
+            nombre_cancion=datos['nombre_cancion'],
+            link_video=datos['link_video'],
+            informacion_adicional=datos.get('informacion_adicional', ''),
+        )
+
+        try:
+            orden_paypal = _crear_orden_pago_paypal_comision(
+                orden, 'comision_motion', f"Comisión de Motion - {tramo.nombre}",
+            )
+        except paypal_utils.PayPalError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"detail": f"No se pudo iniciar el pago con PayPal: {e}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        orden.paypal_order_id = orden_paypal["id"]
+        orden.save(update_fields=['paypal_order_id'])
+
+        return Response(
+            {"paypal_order_id": orden_paypal["id"], "comision": ComisionMotionSerializer(comision, context={'request': request}).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class SolicitarComisionModeloView(generics.ListCreateAPIView):
     """
     GET: lista las comisiones de Modelo del usuario autenticado.
@@ -191,6 +253,55 @@ class SolicitarComisionModeloView(generics.ListCreateAPIView):
 
         return Response(
             {"checkout_url": session.url, "comision": ComisionModeloSerializer(comision, context={'request': request}).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class SolicitarComisionModeloPayPalView(generics.CreateAPIView):
+    """Igual que SolicitarComisionModeloView.create, pero crea una orden de PayPal."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SolicitudComisionModeloSerializer
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        entrada = SolicitudComisionModeloSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        datos = entrada.validated_data
+        juego = datos['juego']
+
+        orden = Orden.objects.create(
+            codigo_orden=f"MOD-{uuid.uuid4().hex[:10].upper()}",
+            usuario=request.user,
+            total=juego.precio,
+            estado_pago=Orden.EstadoPago.PENDIENTE,
+            tipo_orden=Orden.TipoOrden.COMISION_MODELO,
+            pasarela_pago='PayPal',
+        )
+        comision = ComisionModelo.objects.create(
+            orden=orden,
+            usuario=request.user,
+            juego=juego,
+            nombre_personaje=datos['nombre_personaje'],
+            foto_referencia_1=datos['foto_referencia_1'],
+            foto_referencia_2=datos.get('foto_referencia_2'),
+        )
+
+        try:
+            orden_paypal = _crear_orden_pago_paypal_comision(
+                orden, 'comision_modelo', f"Comisión de Modelo - {juego.nombre}",
+            )
+        except paypal_utils.PayPalError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"detail": f"No se pudo iniciar el pago con PayPal: {e}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        orden.paypal_order_id = orden_paypal["id"]
+        orden.save(update_fields=['paypal_order_id'])
+
+        return Response(
+            {"paypal_order_id": orden_paypal["id"], "comision": ComisionModeloSerializer(comision, context={'request': request}).data},
             status=status.HTTP_201_CREATED,
         )
 

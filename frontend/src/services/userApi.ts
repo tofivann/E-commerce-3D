@@ -14,6 +14,13 @@ export interface RegisterResponse {
   checkout_url: string
 }
 
+export interface RegisterPayPalResponse {
+  mensaje: string;
+  email: string;
+  estado_suscripcion: string;
+  paypal_order_id: string;
+}
+
 export type Rol = 'CLIENTE' | 'ADMIN';
 export type EstadoSuscripcion = 'INACTIVO' | 'PENDIENTE_PAGO' | 'ACTIVO' | 'NO_APLICA';
 
@@ -36,6 +43,11 @@ export const userApi = {
   
   register: async (data: RegisterData): Promise<RegisterResponse> => {
     const response = await axiosClient.post<RegisterResponse>('users/auth/register/', data);
+    return response.data;
+  },
+
+  registerPayPal: async (data: RegisterData): Promise<RegisterPayPalResponse> => {
+    const response = await axiosClient.post<RegisterPayPalResponse>('users/auth/register-paypal/', data);
     return response.data;
   },
 
@@ -66,6 +78,11 @@ export const userApi = {
 
   activarCuenta: async (): Promise<{ checkout_url: string }> => {
     const response = await axiosClient.post<{ checkout_url: string }>('users/activar-cuenta-pago/');
+    return response.data;
+  },
+
+  activarCuentaPayPal: async (): Promise<{ paypal_order_id: string }> => {
+    const response = await axiosClient.post<{ paypal_order_id: string }>('users/activar-cuenta-pago-paypal/');
     return response.data;
   },
 

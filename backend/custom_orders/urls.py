@@ -4,7 +4,9 @@ from .views import (
     TramoPersonajesMotionViewSet,
     JuegoComisionViewSet,
     SolicitarComisionMotionView,
+    SolicitarComisionMotionPayPalView,
     SolicitarComisionModeloView,
+    SolicitarComisionModeloPayPalView,
     DescargarComisionMotionView,
     DescargarComisionModeloView,
     ComisionMotionAdminViewSet,
@@ -19,8 +21,10 @@ router.register(r'admin/comisiones/modelo', ComisionModeloAdminViewSet, basename
 
 urlpatterns = [
     path('comisiones/motion/', SolicitarComisionMotionView.as_view(), name='comisiones-motion'),
+    path('comisiones/motion/paypal/', SolicitarComisionMotionPayPalView.as_view(), name='comisiones-motion-paypal'),
     path('comisiones/motion/<int:pk>/descargar/', DescargarComisionMotionView.as_view(), name='comision-motion-descargar'),
     path('comisiones/modelo/', SolicitarComisionModeloView.as_view(), name='comisiones-modelo'),
+    path('comisiones/modelo/paypal/', SolicitarComisionModeloPayPalView.as_view(), name='comisiones-modelo-paypal'),
     path('comisiones/modelo/<int:pk>/descargar/', DescargarComisionModeloView.as_view(), name='comision-modelo-descargar'),
     path('', include(router.urls)),
 ]

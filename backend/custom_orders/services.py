@@ -22,18 +22,20 @@ def datos_comision_para_email(orden):
 
 
 @transaction.atomic
-def marcar_comision_pagada(session_id):
+def marcar_comision_pagada(session_id=None, paypal_order_id=None):
     """
     Marca como pagada la Orden que respalda una comisión (Motion o Modelo)
-    cuando Stripe confirma el pago (checkout.session.completed). Idempotente.
+    cuando se confirma el pago (webhook de Stripe o captura de PayPal).
+    Idempotente.
 
     A diferencia de shopping_cart.services.marcar_orden_pagada, esto NO toca
     el carrito ni ComprasDigitales: la comisión ya tiene su propio archivo de
     entrega (ComisionMotion/ComisionModelo.archivo_entrega), que el admin
     sube más adelante cuando termina el trabajo.
     """
+    lookup = {'stripe_session_id': session_id} if session_id else {'paypal_order_id': paypal_order_id}
     try:
-        orden = Orden.objects.select_for_update().get(stripe_session_id=session_id)
+        orden = Orden.objects.select_for_update().get(**lookup)
     except Orden.DoesNotExist:
         return
 

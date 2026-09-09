@@ -64,6 +64,11 @@ export interface CheckoutComisionResponse<T> {
   comision: T;
 }
 
+export interface CheckoutComisionPayPalResponse<T> {
+  paypal_order_id: string;
+  comision: T;
+}
+
 export interface ComisionMotionAdmin extends Omit<ComisionMotion, "descarga_url"> {
   usuario_nombre: string;
   usuario_email: string;
@@ -106,6 +111,12 @@ export const comisionesApi = {
     const { data } = await axiosClient.post("custom-orders/comisiones/motion/", payload);
     return data;
   },
+  solicitarComisionMotionPayPal: async (
+    payload: SolicitudComisionMotion,
+  ): Promise<CheckoutComisionPayPalResponse<ComisionMotion>> => {
+    const { data } = await axiosClient.post("custom-orders/comisiones/motion/paypal/", payload);
+    return data;
+  },
 
   // Comisiones de Modelo Nuevo
   misComisionesModelo: async (): Promise<ComisionModelo[]> => {
@@ -116,6 +127,14 @@ export const comisionesApi = {
     formData: FormData,
   ): Promise<CheckoutComisionResponse<ComisionModelo>> => {
     const { data } = await axiosClient.post("custom-orders/comisiones/modelo/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
+  solicitarComisionModeloPayPal: async (
+    formData: FormData,
+  ): Promise<CheckoutComisionPayPalResponse<ComisionModelo>> => {
+    const { data } = await axiosClient.post("custom-orders/comisiones/modelo/paypal/", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;

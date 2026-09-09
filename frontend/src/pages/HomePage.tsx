@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import { ProductList } from "../components/products/ProductList";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
@@ -8,6 +9,7 @@ import { Sidebar } from "../components/layout/Sidebar";
 import { LanguageSwitcher } from "../components/layout/LanguageSwitcher";
 import { carritoApi } from "../api/carrito.api";
 import { bibliotecaApi } from "../api/biblioteca.api";
+import { capturarOrdenPayPal } from "../api/paypal.api";
 import { userApi } from "../services/userApi";
 import type { Producto } from "../api/productos.api";
 import heroImage from "../assets/hero1.webp";
@@ -99,6 +101,14 @@ export const HomePage: React.FC<HomePageProps> = ({
       window.alert("No se pudo conectar con la pasarela de pagos. Si ya realizaste el cobro, tu cuenta se activará automáticamente en breve.");
       setActivandoPago(false);
     }
+  };
+
+  const handleActivarCuentaPayPalAprobado = async (paypalOrderId: string) => {
+    await capturarOrdenPayPal(paypalOrderId);
+    // El backend ya confirmó el pago y activó la suscripción; refrescamos
+    // el estado local para que App.tsx lo relea desde localStorage.
+    localStorage.setItem("estado_suscripcion", "ACTIVO");
+    window.location.reload();
   };
 
   return (
@@ -269,13 +279,25 @@ export const HomePage: React.FC<HomePageProps> = ({
                   {t("home.pendingBody")}
                 </p>
               </div>
-              <button
-                onClick={handleActivarCuenta}
-                disabled={activandoPago}
-                className="px-6 py-3 bg-error hover:bg-error/90 text-on-error font-bold rounded-xl transition duration-200 shadow-lg shadow-error/20 disabled:opacity-50 whitespace-nowrap"
-              >
-                {activandoPago ? t("home.pendingLoading") : t("home.pendingCta")}
-              </button>
+              <div className="flex flex-col gap-2 items-stretch w-full md:w-56">
+                <button
+                  onClick={handleActivarCuenta}
+                  disabled={activandoPago}
+                  className="px-6 py-3 bg-error hover:bg-error/90 text-on-error font-bold rounded-xl transition duration-200 shadow-lg shadow-error/20 disabled:opacity-50 whitespace-nowrap"
+                >
+                  {activandoPago ? t("home.pendingLoading") : t("home.pendingCta")}
+                </button>
+                <PayPalButtons
+                  style={{ layout: "horizontal", height: 40 }}
+                  disabled={activandoPago}
+                  createOrder={async () => {
+                    const { paypal_order_id } = await userApi.activarCuentaPayPal();
+                    return paypal_order_id;
+                  }}
+                  onApprove={(data) => handleActivarCuentaPayPalAprobado(data.orderID)}
+                  onError={() => window.alert(t("common.paypalError"))}
+                />
+              </div>
             </div>
           )}
           

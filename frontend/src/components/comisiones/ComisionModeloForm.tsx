@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { JuegoComision } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
+import { capturarOrdenPayPal } from "../../api/paypal.api";
 
 export const ComisionModeloForm: React.FC = () => {
   const { t } = useTranslation();
@@ -12,6 +14,18 @@ export const ComisionModeloForm: React.FC = () => {
   const [foto2, setFoto2] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagadoPayPal, setPagadoPayPal] = useState(false);
+
+  const formularioValido = Boolean(juegoId && foto1);
+
+  const construirFormData = () => {
+    const formData = new FormData();
+    formData.append("juego", String(juegoId));
+    formData.append("nombre_personaje", nombrePersonaje);
+    if (foto1) formData.append("foto_referencia_1", foto1);
+    if (foto2) formData.append("foto_referencia_2", foto2);
+    return formData;
+  };
 
   useEffect(() => {
     comisionesApi
@@ -50,6 +64,15 @@ export const ComisionModeloForm: React.FC = () => {
       setEnviando(false);
     }
   };
+
+  if (pagadoPayPal) {
+    return (
+      <div className="flex flex-col items-center gap-3 text-center py-10">
+        <span className="material-symbols-outlined text-primary text-4xl">check_circle</span>
+        <p className="text-on-surface font-semibold">{t("modeloForm.paypalSuccess")}</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -144,6 +167,29 @@ export const ComisionModeloForm: React.FC = () => {
         <span className="material-symbols-outlined text-[18px]">payments</span>
         {enviando ? t("motionForm.redirecting") : t("motionForm.submit")}
       </button>
+
+      <div className="relative flex py-1 items-center">
+        <div className="flex-grow border-t border-outline-variant/50"></div>
+        <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
+          {t("common.orPayWith")}
+        </span>
+        <div className="flex-grow border-t border-outline-variant/50"></div>
+      </div>
+
+      <PayPalButtons
+        style={{ layout: "horizontal", height: 45 }}
+        disabled={!formularioValido || enviando}
+        forceReRender={[juegoId, foto1, foto2]}
+        createOrder={async () => {
+          const { paypal_order_id } = await comisionesApi.solicitarComisionModeloPayPal(construirFormData());
+          return paypal_order_id;
+        }}
+        onApprove={async (data) => {
+          await capturarOrdenPayPal(data.orderID);
+          setPagadoPayPal(true);
+        }}
+        onError={() => setError(t("common.paypalError"))}
+      />
     </form>
   );
 };

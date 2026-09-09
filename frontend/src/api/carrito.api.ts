@@ -41,6 +41,10 @@ export interface CheckoutResponse {
   checkout_url: string;
 }
 
+export interface CheckoutPayPalResponse {
+  paypal_order_id: string;
+}
+
 // API del carrito de compras (un carrito por usuario autenticado)
 export const carritoApi = {
   // Obtiene (y crea si no existe) el carrito del usuario autenticado
@@ -69,6 +73,13 @@ export const carritoApi = {
   // (vía webhook), no en esta llamada.
   checkout: async (): Promise<CheckoutResponse> => {
     const { data } = await axiosClient.post<CheckoutResponse>("cart/checkout/");
+    return data;
+  },
+
+  // Igual que checkout(), pero crea una orden de PayPal en vez de una Stripe
+  // Checkout Session. Se captura con paypal.api.ts::capturarOrdenPayPal.
+  checkoutPayPal: async (): Promise<CheckoutPayPalResponse> => {
+    const { data } = await axiosClient.post<CheckoutPayPalResponse>("cart/checkout-paypal/");
     return data;
   },
 

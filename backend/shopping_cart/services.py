@@ -7,14 +7,15 @@ from .models import CarritoItem
 
 
 @transaction.atomic
-def marcar_orden_pagada(session_id):
+def marcar_orden_pagada(session_id=None, paypal_order_id=None):
     """
     Otorga las ComprasDigitales de una Orden y vacía el carrito del
-    comprador cuando Stripe confirma el pago (checkout.session.completed).
-    Idempotente: Stripe puede reenviar el mismo evento varias veces.
+    comprador cuando se confirma el pago (webhook de Stripe o captura de
+    PayPal). Idempotente: ambas pasarelas pueden reintentar/reenviar.
     """
+    lookup = {'stripe_session_id': session_id} if session_id else {'paypal_order_id': paypal_order_id}
     try:
-        orden = Orden.objects.select_for_update().get(stripe_session_id=session_id)
+        orden = Orden.objects.select_for_update().get(**lookup)
     except Orden.DoesNotExist:
         return
 
