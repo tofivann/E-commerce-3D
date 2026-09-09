@@ -221,13 +221,10 @@ class GoogleLoginView(generics.GenericAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # Validación de estado (si no es admin, exige que esté activo)
-            if usuario.rol != Usuario.Rol.ADMIN and usuario.estado_suscripcion != Usuario.EstadoSuscripcion.ACTIVO:
-                return Response(
-                    {"detail": "Tu cuenta se encuentra pendiente de pago o inactiva."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-
+            # No se bloquea por estado de suscripción: mismo comportamiento que el
+            # login tradicional por contraseña, que tampoco lo exige. El resto de
+            # la app (banner de pago pendiente, hasAccess, etc.) ya maneja la
+            # cuenta pendiente/inactiva una vez adentro.
             refresh = RefreshToken.for_user(usuario)
 
             # Estructura idéntica a la que inyecta tu CustomTokenObtainPairSerializer

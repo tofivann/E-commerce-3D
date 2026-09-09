@@ -65,7 +65,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         onLoginSuccess(isStaff, estadoSuscripcion);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || t("login.error"));
+      setError(err.response?.data?.detail || t("login.error"));
     } finally {
       setLoading(false);
     }

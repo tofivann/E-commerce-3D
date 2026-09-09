@@ -69,13 +69,15 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
         {/* BARRA SUPERIOR */}
         <header className="fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
           <div className="flex justify-end items-center px-gutter max-w-container-max mx-auto h-20">
-            <button
-              onClick={() => setCartOpen(true)}
-              aria-label={t("common.cart")}
-              className="text-on-surface-variant hover:text-primary transition-colors p-2"
-            >
-              <span className="material-symbols-outlined">shopping_cart</span>
-            </button>
+            {hasAccess && (
+              <button
+                onClick={() => setCartOpen(true)}
+                aria-label={t("common.cart")}
+                className="text-on-surface-variant hover:text-primary transition-colors p-2"
+              >
+                <span className="material-symbols-outlined">shopping_cart</span>
+              </button>
+            )}
           </div>
         </header>
 

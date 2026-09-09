@@ -140,18 +140,20 @@ export const HomePage: React.FC<HomePageProps> = ({
 
                 <div className="flex items-center gap-3 shrink-0">
                   <LanguageSwitcher />
-                  <button
-                    onClick={() => setCartOpen(true)}
-                    aria-label={t("common.cart")}
-                    className="relative text-on-surface-variant hover:text-primary transition-colors p-2"
-                  >
-                    <span className="material-symbols-outlined">shopping_cart</span>
-                    {cartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-primary-container text-on-primary-fixed text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                        {cartCount}
-                      </span>
-                    )}
-                  </button>
+                  {hasAccess && (
+                    <button
+                      onClick={() => setCartOpen(true)}
+                      aria-label={t("common.cart")}
+                      className="relative text-on-surface-variant hover:text-primary transition-colors p-2"
+                    >
+                      <span className="material-symbols-outlined">shopping_cart</span>
+                      {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-primary-container text-on-primary-fixed text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                          {cartCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
               </>
             ) : (

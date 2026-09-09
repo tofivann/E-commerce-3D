@@ -28,17 +28,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
         {t("sidebar.home")}
       </NavLink>
 
-      <NavLink to="/biblioteca" className={linkClass} onClick={closeMobile}>
-        <span className="material-symbols-outlined text-[20px]">inventory_2</span>
-        {t("sidebar.library")}
-      </NavLink>
+      {/* Biblioteca, Comisiones y el chat solo se muestran con suscripción activa o staff;
+          una cuenta pendiente de pago/inactiva no tiene nada que mostrar ahí todavía. */}
+      {hasAccess && (
+        <NavLink to="/biblioteca" className={linkClass} onClick={closeMobile}>
+          <span className="material-symbols-outlined text-[20px]">inventory_2</span>
+          {t("sidebar.library")}
+        </NavLink>
+      )}
 
-      <NavLink to="/comisiones" className={linkClass} onClick={closeMobile}>
-        <span className="material-symbols-outlined text-[20px]">design_services</span>
-        {t("sidebar.commissions")}
-      </NavLink>
+      {hasAccess && (
+        <NavLink to="/comisiones" className={linkClass} onClick={closeMobile}>
+          <span className="material-symbols-outlined text-[20px]">design_services</span>
+          {t("sidebar.commissions")}
+        </NavLink>
+      )}
 
-      {/* El chat solo se muestra si el usuario tiene suscripción activa o es staff */}
       {hasAccess && (
         <NavLink to="/soporte" className={linkClass} onClick={closeMobile}>
           <span className="material-symbols-outlined text-[20px]">chat</span>
