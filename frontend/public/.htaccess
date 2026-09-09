@@ -1,0 +1,23 @@
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the "ea-php82" package as the default "PHP" programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
+
+<IfModule mod_headers.c>
+  # Permite que el popup de "Iniciar sesión con Google" siga comunicándose
+  # con esta pestaña via postMessage (sin esto Chrome muestra un warning en
+  # consola: "Cross-Origin-Opener-Policy policy would block the window.postMessage call").
+  Header set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+</IfModule>
+
+# SPA fallback (React Router) — sirve index.html para cualquier ruta que no sea un archivo/carpeta real
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
