@@ -104,11 +104,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleActivarCuentaPayPalAprobado = async (paypalOrderId: string) => {
-    await capturarOrdenPayPal(paypalOrderId);
-    // El backend ya confirmó el pago y activó la suscripción; refrescamos
-    // el estado local para que App.tsx lo relea desde localStorage.
-    localStorage.setItem("estado_suscripcion", "ACTIVO");
-    window.location.reload();
+    try {
+      await capturarOrdenPayPal(paypalOrderId);
+      // El backend ya confirmó el pago y activó la suscripción; refrescamos
+      // el estado local para que App.tsx lo relea desde localStorage.
+      localStorage.setItem("estado_suscripcion", "ACTIVO");
+      window.location.reload();
+    } catch (err: any) {
+      console.error("Error al capturar el pago de PayPal:", err);
+      window.alert(t("common.paypalError"));
+    }
   };
 
   return (

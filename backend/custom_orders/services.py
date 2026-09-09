@@ -22,6 +22,22 @@ def datos_comision_para_email(orden):
 
 
 @transaction.atomic
+def _marcar_comision_pagada_db(lookup):
+    """Solo la parte de base de datos, en su propia transacción corta. Devuelve
+    la Orden recién pagada, o None si no existía o ya estaba COMPLETADO."""
+    try:
+        orden = Orden.objects.select_for_update().get(**lookup)
+    except Orden.DoesNotExist:
+        return None
+
+    if orden.estado_pago == Orden.EstadoPago.COMPLETADO:
+        return None
+
+    orden.estado_pago = Orden.EstadoPago.COMPLETADO
+    orden.save(update_fields=['estado_pago'])
+    return orden
+
+
 def marcar_comision_pagada(session_id=None, paypal_order_id=None):
     """
     Marca como pagada la Orden que respalda una comisión (Motion o Modelo)
@@ -32,18 +48,16 @@ def marcar_comision_pagada(session_id=None, paypal_order_id=None):
     el carrito ni ComprasDigitales: la comisión ya tiene su propio archivo de
     entrega (ComisionMotion/ComisionModelo.archivo_entrega), que el admin
     sube más adelante cuando termina el trabajo.
+
+    El guardado en base de datos y el envío del correo están deliberadamente
+    separados (no en una sola @transaction.atomic): el correo puede tardar o
+    fallar (ver core/email_utils.py) y NUNCA debe poder tumbar ni revertir el
+    pago ya otorgado.
     """
     lookup = {'stripe_session_id': session_id} if session_id else {'paypal_order_id': paypal_order_id}
-    try:
-        orden = Orden.objects.select_for_update().get(**lookup)
-    except Orden.DoesNotExist:
+    orden = _marcar_comision_pagada_db(lookup)
+    if orden is None:
         return
-
-    if orden.estado_pago == Orden.EstadoPago.COMPLETADO:
-        return
-
-    orden.estado_pago = Orden.EstadoPago.COMPLETADO
-    orden.save(update_fields=['estado_pago'])
 
     tipo_label, detalle = datos_comision_para_email(orden)
     enviar_email(
