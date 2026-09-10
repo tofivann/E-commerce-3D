@@ -24,7 +24,6 @@ def _marcar_usuario_activo(user_id):
 
     usuario.estado_suscripcion = Usuario.EstadoSuscripcion.ACTIVO
     usuario.save(update_fields=['estado_suscripcion'])
-    print(f"¡Suscripción activada con éxito para el usuario ID: {user_id}!")
     return usuario
 
 
@@ -50,6 +49,11 @@ def activar_suscripcion_usuario(session_data):
     usuario = _marcar_usuario_activo(user_id)
     if usuario is None:
         return
+
+    try:
+        print(f"¡Suscripción activada con éxito para el usuario ID: {user_id}!")
+    except UnicodeEncodeError:
+        print(f"Suscripcion activada con exito para el usuario ID: {user_id}")
 
     enviar_email(
         to=usuario.email,
