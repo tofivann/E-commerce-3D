@@ -7,6 +7,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from orders.services import marcar_orden_expirada
 from shopping_cart.services import marcar_orden_pagada
 from users.services import activar_suscripcion_usuario
 from custom_orders.services import marcar_comision_pagada
@@ -33,6 +34,14 @@ class StripeWebhookView(APIView):
     al manejador correspondiente según metadata['tipo'], que cada vista que
     crea una sesión de Stripe (CheckoutView, RegistroView,
     ActivarCuentaPagoView) debe fijar al crear la sesión.
+
+    También maneja checkout.session.expired: si el cliente nunca completó
+    el pago y la sesión expira sola (~24h), cancela la Orden en vez de
+    dejarla en PENDIENTE para siempre. IMPORTANTE: además de este código,
+    hay que habilitar manualmente ese tipo de evento en el Dashboard de
+    Stripe para este endpoint (Developers > Webhooks > este endpoint >
+    Events to send) — si no está marcado ahí, Stripe nunca lo manda,
+    sin importar que el código ya sepa procesarlo.
     """
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
@@ -67,6 +76,21 @@ class StripeWebhookView(APIView):
                 # reintente infinitamente el mismo evento.
                 print(f"Error procesando checkout.session.completed: {e}")
                 return HttpResponse(status=500)
+
+        elif event['type'] == 'checkout.session.expired':
+            session_data = event['data']['object']
+            metadata = stripe_dict_get(session_data, 'metadata', {})
+            tipo = stripe_dict_get(metadata, 'tipo')
+
+            # Registro/activación de cuenta no tiene una Orden que cancelar —
+            # el Usuario ya se queda en PENDIENTE_PAGO indefinidamente hasta
+            # que pague, sea cual sea la razón por la que no pagó esta vez.
+            if tipo == 'compra_carrito' or tipo in TIPOS_COMISION:
+                try:
+                    marcar_orden_expirada(session_data['id'])
+                except Exception as e:
+                    print(f"Error procesando checkout.session.expired: {e}")
+                    return HttpResponse(status=500)
 
         return HttpResponse(status=200)
 
