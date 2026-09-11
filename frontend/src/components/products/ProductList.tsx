@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getAllProductos } from "../../api/productos.api";
-import type { Producto } from "../../api/productos.api";
+import { getAllProductos, categoriasApi } from "../../api/productos.api";
+import type { Producto, Categoria } from "../../api/productos.api";
 import { ProductCard } from "./ProductCard";
 import { coincideBusqueda } from "../../utils/normalizarTexto";
+import { nombreCategoria } from "../../utils/categoria";
 
 interface ProductListProps {
   isLoggedIn: boolean;
@@ -27,19 +28,34 @@ export const ProductList: React.FC<ProductListProps> = ({
   onGoToLibrary,
   searchQuery = "",
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const toggleCategoria = (id: number) => {
+    setCategoriasSeleccionadas((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   const productosFiltrados = productos.filter(
     (p) =>
-      coincideBusqueda(p.titulo, searchQuery) ||
-      coincideBusqueda(p.descripcion, searchQuery)
+      (coincideBusqueda(p.titulo, searchQuery) ||
+        coincideBusqueda(p.descripcion, searchQuery)) &&
+      (categoriasSeleccionadas.size === 0 || categoriasSeleccionadas.has(p.categoria))
   );
 
   useEffect(() => {
     fetchProductos();
+    categoriasApi
+      .listar()
+      .then(setCategorias)
+      .catch((err) => console.error("Error al cargar categorías:", err));
   }, []);
 
   const fetchProductos = async () => {
@@ -68,6 +84,35 @@ export const ProductList: React.FC<ProductListProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Filtro por categoría */}
+      {categorias.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setCategoriasSeleccionadas(new Set())}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+              categoriasSeleccionadas.size === 0
+                ? "bg-primary-container text-on-primary-fixed border-primary-container"
+                : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
+            }`}
+          >
+            {t("catalog.allCategories")}
+          </button>
+          {categorias.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => toggleCategoria(cat.id)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                categoriasSeleccionadas.has(cat.id)
+                  ? "bg-primary-container text-on-primary-fixed border-primary-container"
+                  : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
+              }`}
+            >
+              {nombreCategoria(cat, i18n.language)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Estado de Carga */}
       {loading && (

@@ -72,7 +72,8 @@
     "unlockGuest": "Regístrate para descubrir",
     "defaultDescription": "Modelo MMD 3D",
     "goToLibrary": "Ir a mi biblioteca",
-    "add": "Agregar"
+    "add": "Agregar",
+    "allCategories": "Todas"
   },
   "productDetails": {
     "previewOf": "Vista previa de {{title}}",
