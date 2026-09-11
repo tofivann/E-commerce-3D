@@ -31,7 +31,7 @@
   },
   "login": {
     "subtitle": "Welcome Back",
-    "description": "Enter your credentials to access the marketplace.",
+    "description": "Enter your credentials to access the store.",
     "email": "Email Address",
     "password": "Password",
     "forgotPassword": "Forgot Password?",
@@ -41,10 +41,10 @@
   },
   "register": {
     "paypalSuccess": "PayPal payment received! Your account is now active.",
-    "tagline": "Join the Creator Community.",
-    "badge": "Next-Gen Marketplace",
+    "tagline": "Models, Motion, and commissions for MikuMikuDance.",
+    "badge": "MMD Model Store",
     "title": "Create Account",
-    "description": "Enter your details to start commissioning and selling high-fidelity 3D assets.",
+    "description": "Enter your details to start browsing and commissioning high-fidelity 3D assets.",
     "username": "Username",
     "fullName": "Full Name",
     "email": "Email Address",
@@ -223,7 +223,7 @@
     "thankYouBodyBefore": "Your 3D models are now available. This file was permanently added to your",
     "downloading": "Downloading...",
     "downloadFile": "Download File",
-    "backToMarketplace": "Back to Marketplace",
+    "backToMarketplace": "Back to Store",
     "viewMyLibrary": "View My Library",
     "downloadError": "Could not download the file. Please try again."
   },
@@ -396,7 +396,7 @@
     "colMax": "Max",
     "minCharacters": "Min. characters",
     "maxCharacters": "Max. characters",
-    "tramoNamePlaceholder": "E.g: 1-3 Characters",
+    "tramoNamePlaceholder": "Characters",
     "createTramoError": "Could not create the tier."
   },
   "comisionDetalle": {

@@ -31,7 +31,7 @@
   },
   "login": {
     "subtitle": "Bienvenido de nuevo",
-    "description": "Ingresa tus credenciales para acceder al mercado.",
+    "description": "Ingresa tus credenciales para acceder a la tienda.",
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "forgotPassword": "¿Olvidaste tu contraseña?",
@@ -41,10 +41,10 @@
   },
   "register": {
     "paypalSuccess": "¡Pago con PayPal recibido! Tu cuenta ya está activa.",
-    "tagline": "Únete a la comunidad de creadores.",
-    "badge": "Mercado de nueva generación",
+    "tagline": "Modelos, Motion y comisiones para MikuMikuDance.",
+    "badge": "Tienda de modelos MMD",
     "title": "Crear Cuenta",
-    "description": "Ingresa tus datos para empezar a comisionar y vender modelos 3D de alta calidad.",
+    "description": "Ingresa tus datos para empezar a comprar y comisionar modelos 3D de alta calidad.",
     "username": "Usuario",
     "fullName": "Nombre Completo",
     "email": "Correo Electrónico",
@@ -223,7 +223,7 @@
     "thankYouBodyBefore": "Tus modelos 3D ya están disponibles. Este archivo fue añadido permanentemente a tu",
     "downloading": "Descargando...",
     "downloadFile": "Descargar Archivo",
-    "backToMarketplace": "Volver al Marketplace",
+    "backToMarketplace": "Volver a la Tienda",
     "viewMyLibrary": "Ver Mi Biblioteca",
     "downloadError": "No se pudo descargar el archivo. Inténtalo de nuevo."
   },
@@ -396,7 +396,7 @@
     "colMax": "Max",
     "minCharacters": "Mín. personajes",
     "maxCharacters": "Máx. personajes",
-    "tramoNamePlaceholder": "Ej: 1-3 Characters",
+    "tramoNamePlaceholder": "Characters",
     "createTramoError": "No se pudo crear el tramo."
   },
   "comisionDetalle": {

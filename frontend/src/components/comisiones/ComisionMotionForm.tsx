@@ -4,6 +4,7 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { TramoPersonajesMotion } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
+import { nombreTramoMotion } from "../../utils/tramoMotion";
 
 export const ComisionMotionForm: React.FC = () => {
   const { t } = useTranslation();
@@ -85,7 +86,7 @@ export const ComisionMotionForm: React.FC = () => {
                   : "border-outline-variant/50 hover:border-primary/50 hover:bg-surface-variant/20"
               }`}
             >
-              <p className="font-semibold text-on-surface">{tramo.nombre}</p>
+              <p className="font-semibold text-on-surface">{nombreTramoMotion(tramo)}</p>
               <p className="text-primary-fixed-dim font-bold font-mono">${Number(tramo.precio).toFixed(2)}</p>
             </button>
           ))}

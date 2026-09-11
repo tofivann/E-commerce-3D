@@ -6,6 +6,7 @@ import type {
   EstadoComision,
 } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
+import { nombreTramoMotion } from "../../utils/tramoMotion";
 import { PublicarProductoModal } from "./PublicarProductoModal";
 import { CompletarComisionModal } from "./CompletarComisionModal";
 import { ComisionDetalleModal } from "./ComisionDetalleModal";
@@ -86,7 +87,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
         const titulo = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
         const subtitulo =
           item.tipo === "motion"
-            ? `${item.data.tramo_personajes.nombre} · ${item.data.nombre_juego}`
+            ? `${nombreTramoMotion(item.data.tramo_personajes)} · ${item.data.nombre_juego}`
             : item.data.juego.nombre;
         const puedePublicar = Boolean(item.data.archivo_entrega) && !item.data.producto_publicado;
 

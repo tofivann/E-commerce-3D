@@ -12,7 +12,7 @@ class EstadoComision(models.TextChoices):
 
 class TramoPersonajesMotion(models.Model):
     """Tramo de cantidad de personajes con su precio fijo para una comisión de Motion."""
-    nombre = models.CharField(max_length=50, help_text="Ej: '1-3 Characters'")
+    nombre = models.CharField(max_length=50, help_text="Ej: 'Characters'")
     min_personajes = models.PositiveIntegerField()
     max_personajes = models.PositiveIntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)

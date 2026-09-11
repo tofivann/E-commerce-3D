@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { nombreCategoria } from "../../utils/categoria";
+import { nombreTramoMotion } from "../../utils/tramoMotion";
 import type { Item } from "./SolicitudesComisionesTable";
 
 interface ComisionDetalleModalProps {
@@ -69,7 +70,7 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
           <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-outline-variant/30">
             <div className="grid grid-cols-2 gap-4">
               <Campo label={t("comisionDetalle.tramoLabel")}>
-                {item.data.tramo_personajes.nombre} (${Number(item.data.tramo_personajes.precio).toFixed(2)})
+                {nombreTramoMotion(item.data.tramo_personajes)} (${Number(item.data.tramo_personajes.precio).toFixed(2)})
               </Campo>
               <Campo label={t("comisionDetalle.gameNameLabel")}>{item.data.nombre_juego}</Campo>
             </div>

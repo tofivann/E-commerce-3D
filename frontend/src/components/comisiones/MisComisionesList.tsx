@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ComisionMotion, ComisionModelo, EstadoComision } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
+import { nombreTramoMotion } from "../../utils/tramoMotion";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
@@ -90,7 +91,7 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
         const subtitulo =
           item.tipo === "motion"
             ? t("misComisiones.motionSubtitle", {
-                tramo: item.data.tramo_personajes.nombre,
+                tramo: nombreTramoMotion(item.data.tramo_personajes),
                 juego: item.data.nombre_juego,
               })
             : t("misComisiones.modeloSubtitle", { juego: item.data.juego.nombre });
