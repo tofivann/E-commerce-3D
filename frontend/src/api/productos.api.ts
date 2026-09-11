@@ -1,11 +1,20 @@
 import { axiosClient } from "../services/axiosClient";
 
+export interface Categoria {
+  id: number;
+  nombre: string;
+  nombre_en: string;
+  activo: boolean;
+}
+
 // 1. Interfaz para mantener el autocompletado y tipado de TypeScript
 export interface Producto {
   id?: number;
   titulo: string;
   descripcion: string;
   precio: number | string; // DecimalField llega como string/number desde el JSON
+  categoria: number; // id de la Categoria (PrimaryKeyRelatedField, tanto al leer como al escribir)
+  categoria_detalle?: Categoria; // solo lectura, para mostrar sin tener que cruzar con la lista de categorías
   formato_archivo: string;
   archivo_3d?: File | string; // File cuando se sube desde un input tipo file, string si es la URL
   imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada
@@ -15,6 +24,25 @@ export interface Producto {
 }
 
 const BASE = "products/products/";
+const CATEGORIAS_BASE = "products/categorias/";
+
+export const categoriasApi = {
+  listar: async (): Promise<Categoria[]> => {
+    const { data } = await axiosClient.get<Categoria[]>(CATEGORIAS_BASE);
+    return data;
+  },
+  crear: async (payload: { nombre: string; nombre_en: string; activo: boolean }): Promise<Categoria> => {
+    const { data } = await axiosClient.post<Categoria>(CATEGORIAS_BASE, payload);
+    return data;
+  },
+  actualizar: async (id: number, payload: Partial<Categoria>): Promise<Categoria> => {
+    const { data } = await axiosClient.patch<Categoria>(`${CATEGORIAS_BASE}${id}/`, payload);
+    return data;
+  },
+  eliminar: async (id: number): Promise<void> => {
+    await axiosClient.delete(`${CATEGORIAS_BASE}${id}/`);
+  },
+};
 
 // 2. Métodos CRUD para Productos (usan la instancia axios compartida — mismo
 // VITE_API_URL/JWT que el resto de la app, sin una baseURL propia aparte)

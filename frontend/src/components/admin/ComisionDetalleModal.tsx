@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { nombreCategoria } from "../../utils/categoria";
 import type { Item } from "./SolicitudesComisionesTable";
 
 interface ComisionDetalleModalProps {
@@ -111,33 +112,49 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
                 ))}
               </div>
             </Campo>
-            {item.data.producto_publicado && (
-              <Campo label={t("comisionDetalle.publishedInShop")}>
-                <span className="text-primary-fixed-dim font-semibold flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                  {t("comisionDetalle.productNumber", { id: item.data.producto_publicado })}
-                </span>
-              </Campo>
-            )}
           </div>
         )}
 
         {/* Entrega */}
-        <Campo label={t("comisionDetalle.deliveryFile")}>
-          {item.data.archivo_entrega ? (
-            <a
-              href={item.data.archivo_entrega}
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[16px]">download</span>
-              {t("comisionDetalle.viewUploadedFile")}
-            </a>
-          ) : (
-            <span className="text-on-surface-variant">{t("comisionDetalle.notUploadedYet")}</span>
+        <div className="flex flex-wrap items-start gap-6">
+          <Campo label={t("comisionDetalle.deliveryFile")}>
+            {item.data.archivo_entrega ? (
+              <a
+                href={item.data.archivo_entrega}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[16px]">download</span>
+                {t("comisionDetalle.viewUploadedFile")}
+              </a>
+            ) : (
+              <span className="text-on-surface-variant">{t("comisionDetalle.notUploadedYet")}</span>
+            )}
+          </Campo>
+          {item.data.foto_entrega && (
+            <Campo label={t("comisionDetalle.deliveryPhoto")}>
+              <a href={item.data.foto_entrega} target="_blank" rel="noreferrer">
+                <img
+                  src={item.data.foto_entrega}
+                  alt={t("comisionDetalle.deliveryPhoto")}
+                  className="w-20 h-20 object-cover rounded-lg border border-outline-variant/30 hover:opacity-80 transition-opacity mt-1"
+                />
+              </a>
+            </Campo>
           )}
-        </Campo>
+          {item.data.categoria && (
+            <Campo label={t("comisionDetalle.categoryLabel")}>{nombreCategoria(item.data.categoria, i18n.language)}</Campo>
+          )}
+          {item.data.producto_publicado && (
+            <Campo label={t("comisionDetalle.publishedInShop")}>
+              <span className="text-primary-fixed-dim font-semibold flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                {t("comisionDetalle.productNumber", { id: item.data.producto_publicado })}
+              </span>
+            </Campo>
+          )}
+        </div>
       </div>
     </div>
   );

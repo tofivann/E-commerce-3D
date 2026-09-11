@@ -7,8 +7,9 @@ import { ProductAdminTable } from "../components/products/ProductAdminTable";
 import { UserAdminTable } from "../components/users/UserAdminTable";
 import { ChatPanel } from "../components/chat/ChatPanel";
 import { ComisionesAdmin } from "../components/admin/ComisionesAdmin";
+import { CategoriasTable } from "../components/admin/CategoriasTable";
 
-type AjustesEntidad = "productos" | "usuarios";
+type AjustesEntidad = "productos" | "categorias" | "usuarios";
 
 interface AdminPageProps {
   onLogout: () => void;
@@ -52,6 +53,17 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
                 {t("adminPage.products")}
               </button>
               <button
+                onClick={() => setEntidad("categorias")}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 ${
+                  entidad === "categorias"
+                    ? "bg-primary-container text-on-primary-fixed"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">sell</span>
+                {t("adminPage.categories")}
+              </button>
+              <button
                 onClick={() => setEntidad("usuarios")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 ${
                   entidad === "usuarios"
@@ -64,7 +76,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
               </button>
             </div>
 
-            {entidad === "productos" ? <ProductAdminTable /> : <UserAdminTable />}
+            {entidad === "productos" && <ProductAdminTable />}
+            {entidad === "categorias" && <CategoriasTable />}
+            {entidad === "usuarios" && <UserAdminTable />}
           </div>
         )}
       </main>

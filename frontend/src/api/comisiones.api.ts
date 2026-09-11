@@ -1,4 +1,7 @@
 import { axiosClient } from "../services/axiosClient";
+import type { Categoria } from "./productos.api";
+
+export type { Categoria };
 
 export type EstadoComision = "SOLICITADO" | "EN_PROCESO" | "COMPLETADO" | "CANCELADO";
 
@@ -36,6 +39,9 @@ export interface ComisionMotion {
   link_video: string;
   informacion_adicional: string;
   estado: EstadoComision;
+  foto_entrega: string | null;
+  categoria: Categoria | null;
+  producto_publicado: number | null;
   descarga_url: string | null;
 }
 
@@ -47,6 +53,8 @@ export interface ComisionModelo {
   foto_referencia_1: string;
   foto_referencia_2: string | null;
   estado: EstadoComision;
+  foto_entrega: string | null;
+  categoria: Categoria | null;
   producto_publicado: number | null;
   descarga_url: string | null;
 }
@@ -86,7 +94,6 @@ export interface PublicarProductoPayload {
   descripcion: string;
   precio: string | number;
   formato_archivo: string;
-  imagen_previa?: File;
 }
 
 export const comisionesApi = {
@@ -200,21 +207,34 @@ export const comisionesAdminApi = {
     id: number,
     payload: PublicarProductoPayload,
   ): Promise<ComisionModeloAdmin> => {
-    const formData = new FormData();
-    formData.append("titulo", payload.titulo);
-    formData.append("descripcion", payload.descripcion);
-    formData.append("precio", String(payload.precio));
-    formData.append("formato_archivo", payload.formato_archivo);
-    if (payload.imagen_previa) formData.append("imagen_previa", payload.imagen_previa);
-
     const { data } = await axiosClient.post(
       `custom-orders/admin/comisiones/modelo/${id}/publicar/`,
-      formData,
+      construirFormDataPublicar(payload),
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data;
+  },
+  publicarComisionMotion: async (
+    id: number,
+    payload: PublicarProductoPayload,
+  ): Promise<ComisionMotionAdmin> => {
+    const { data } = await axiosClient.post(
+      `custom-orders/admin/comisiones/motion/${id}/publicar/`,
+      construirFormDataPublicar(payload),
       { headers: { "Content-Type": "multipart/form-data" } },
     );
     return data;
   },
 };
+
+function construirFormDataPublicar(payload: PublicarProductoPayload): FormData {
+  const formData = new FormData();
+  formData.append("titulo", payload.titulo);
+  formData.append("descripcion", payload.descripcion);
+  formData.append("precio", String(payload.precio));
+  formData.append("formato_archivo", payload.formato_archivo);
+  return formData;
+}
 
 // Descarga autenticada del archivo de entrega (blob + JWT, mismo patrón que biblioteca.api.ts)
 async function descargar(path: string, filenameFallback: string): Promise<void> {

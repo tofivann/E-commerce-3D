@@ -54,6 +54,15 @@ class ComisionMotion(models.Model):
     informacion_adicional = models.TextField(blank=True)
     estado = models.CharField(max_length=20, choices=EstadoComision.choices, default=EstadoComision.SOLICITADO)
     archivo_entrega = models.FileField(upload_to='comisiones/motion/', null=True, blank=True)
+    # Foto del resultado terminado, subida por el admin junto con archivo_entrega y
+    # categoria al completar la comisión — mismo patrón que ComisionModelo.foto_entrega.
+    foto_entrega = models.ImageField(upload_to='comisiones/motion/entrega/', null=True, blank=True)
+    categoria = models.ForeignKey('products.Categoria', null=True, blank=True, on_delete=models.PROTECT)
+    # Se completa al publicar el Producto derivado de esta comisión en el catálogo.
+    producto_publicado = models.ForeignKey(
+        'products.Producto', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='comision_motion_origen',
+    )
 
     class Meta:
         verbose_name = "Comisión de Motion"
@@ -73,6 +82,11 @@ class ComisionModelo(models.Model):
     foto_referencia_2 = models.ImageField(upload_to='comisiones/modelo/referencias/', null=True, blank=True)
     estado = models.CharField(max_length=20, choices=EstadoComision.choices, default=EstadoComision.SOLICITADO)
     archivo_entrega = models.FileField(upload_to='comisiones/modelo/', null=True, blank=True)
+    # Foto del modelo ya terminado, subida por el admin junto con archivo_entrega al
+    # completar la comisión (distinta de foto_referencia_1/2, que sube el cliente al
+    # pedirla). Se reutiliza como imagen_previa al publicar el Producto en la tienda.
+    foto_entrega = models.ImageField(upload_to='comisiones/modelo/entrega/', null=True, blank=True)
+    categoria = models.ForeignKey('products.Categoria', null=True, blank=True, on_delete=models.PROTECT)
     # Se completa al publicar el Producto derivado de esta comisión en el catálogo.
     producto_publicado = models.ForeignKey(
         'products.Producto', null=True, blank=True,

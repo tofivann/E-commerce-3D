@@ -253,8 +253,9 @@
   },
   "adminPage": {
     "settingsTitle": "Settings",
-    "settingsSubtitle": "Choose what you want to manage: catalog products or user accounts.",
+    "settingsSubtitle": "Choose what you want to manage: catalog products, their categories, or user accounts.",
     "products": "Products",
+    "categories": "Categories",
     "users": "Users"
   },
   "adminSidebar": {
@@ -277,6 +278,7 @@
     "new": "New",
     "addProduct": "Add product",
     "colProduct": "Product",
+    "colCategory": "Category",
     "colFormat": "Format",
     "colPrice": "Price",
     "colStatus": "Status",
@@ -292,6 +294,16 @@
     "delete": "Delete",
     "defaultDescription": "3D Model"
   },
+  "categoriasAdmin": {
+    "title": "Product Categories",
+    "subtitle": "Used to classify catalog products. Enter both a Spanish and an English name for each.",
+    "namePlaceholder": "Category name (ES)",
+    "namePlaceholderEn": "Category name (EN)",
+    "colNameEs": "Name (ES)",
+    "colNameEn": "Name (EN)",
+    "createError": "Could not create the category. Does the name already exist?",
+    "updateError": "Could not save the change."
+  },
   "productForm": {
     "errorNoFile": "You must attach the model's 3D file.",
     "errorSave": "Could not save the product. Check the details and try again.",
@@ -303,12 +315,14 @@
     "dropNew": "Drag and drop the 3D file here",
     "supportedFormats": "Supported formats: STL, OBJ, FBX...",
     "titleLabel": "Title",
-    "titlePlaceholder": "E.g. Cyberpunk Modular Kit",
+    "titlePlaceholder": "E.g. Aoi Igawa",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Describe the geometry, level of detail, and intended use...",
     "priceLabel": "Price (USD)",
     "formatLabel": "File format",
     "formatPlaceholder": "STL, OBJ, FBX...",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Choose a category",
     "youtubeLabel": "YouTube video",
     "youtubeHelp": "Shown as a preview video in the product's detail view.",
     "previewImageLabel": "Preview image",
@@ -328,10 +342,23 @@
     "errorSave": "Could not publish the product. Check the details and try again.",
     "resalePrice": "Resale price (USD)",
     "format": "Format",
-    "coverImage": "Cover image",
-    "coverImageOptional": "(optional, uses the reference photo if omitted)",
+    "autoPhotoNote": "The cover image is automatically taken from the delivery photo uploaded when the commission was completed.",
     "publishing": "Publishing...",
     "publishProduct": "Publish Product"
+  },
+  "completarComisionModal": {
+    "title": "Complete Commission",
+    "description": "Upload the final file and a photo of the finished result for \"{{name}}\".",
+    "zipLabel": "Delivery file (.zip)",
+    "zipNone": "Select the final file",
+    "photoLabel": "Photo of the finished result",
+    "photoNone": "Select a photo",
+    "photoHelp": "This photo will be used as the cover image if you later publish this model to the shop.",
+    "categoryLabel": "Category",
+    "errorMissing": "You must upload the file, the photo, and choose a category to complete the commission.",
+    "errorSave": "Could not complete the commission. Please try again.",
+    "submitting": "Saving...",
+    "submit": "Mark as completed"
   },
   "comisionesAdmin": {
     "title": "Commissions",
@@ -339,7 +366,6 @@
     "requests": "Requests",
     "prices": "Prices",
     "statusError": "Could not update the status.",
-    "fileError": "Could not upload the delivery file.",
     "loading": "Loading requests...",
     "empty": "No commission requests yet.",
     "unknownUser": "—",
@@ -393,7 +419,9 @@
     "productNumber": "Product #{{id}}",
     "deliveryFile": "Delivery file",
     "viewUploadedFile": "View uploaded file",
-    "notUploadedYet": "Not uploaded yet."
+    "notUploadedYet": "Not uploaded yet.",
+    "deliveryPhoto": "Delivery photo",
+    "categoryLabel": "Category"
   },
   "userForm": {
     "errorNoPassword": "You must set a password for the new user.",

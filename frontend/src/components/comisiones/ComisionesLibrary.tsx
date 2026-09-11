@@ -58,7 +58,7 @@ export const ComisionesLibrary: React.FC = () => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((n) => (
-          <div key={n} className="h-56 rounded-lg bg-surface-container-low animate-pulse border border-outline-variant/20" />
+          <div key={n} className="h-80 rounded-lg bg-surface-container-low animate-pulse border border-outline-variant/20" />
         ))}
       </div>
     );
@@ -91,11 +91,24 @@ export const ComisionesLibrary: React.FC = () => {
         const titulo = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
         const subtitulo = item.tipo === "motion" ? item.data.nombre_juego : item.data.juego.nombre;
 
+        const foto = item.data.foto_entrega;
+
         return (
           <div
             key={key}
             className="card-hover bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col h-full"
           >
+            <div className="relative h-40 overflow-hidden bg-surface-container-lowest shrink-0">
+              {foto ? (
+                <img src={foto} alt={titulo} className="object-cover w-full h-full" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[40px] text-outline">
+                    {item.tipo === "motion" ? "music_note" : "view_in_ar"}
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="p-4 flex flex-col flex-1 gap-1">
               <span className="self-start text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-container/40 text-primary-fixed-dim mb-1">
                 {item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}

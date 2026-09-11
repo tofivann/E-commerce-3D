@@ -7,6 +7,7 @@ import type {
 } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
 import { PublicarProductoModal } from "./PublicarProductoModal";
+import { CompletarComisionModal } from "./CompletarComisionModal";
 import { ComisionDetalleModal } from "./ComisionDetalleModal";
 
 export type Item =
@@ -20,7 +21,8 @@ export const SolicitudesComisionesTable: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [guardandoId, setGuardandoId] = useState<string | null>(null);
-  const [publicando, setPublicando] = useState<ComisionModeloAdmin | null>(null);
+  const [publicando, setPublicando] = useState<Item | null>(null);
+  const [completando, setCompletando] = useState<Item | null>(null);
   const [viendo, setViendo] = useState<Item | null>(null);
 
   const cargar = async () => {
@@ -65,23 +67,6 @@ export const SolicitudesComisionesTable: React.FC = () => {
     }
   };
 
-  const handleArchivo = async (item: Item, file: File) => {
-    const key = `${item.tipo}-${item.data.id}`;
-    setGuardandoId(key);
-    try {
-      const formData = new FormData();
-      formData.append("archivo_entrega", file);
-      if (item.tipo === "motion") await comisionesAdminApi.actualizarSolicitudMotion(item.data.id, formData);
-      else await comisionesAdminApi.actualizarSolicitudModelo(item.data.id, formData);
-      cargar();
-    } catch (err) {
-      console.error("Error al subir el archivo:", err);
-      window.alert(t("comisionesAdmin.fileError"));
-    } finally {
-      setGuardandoId(null);
-    }
-  };
-
   if (loading) {
     return <div className="py-8 text-center text-on-surface-variant">{t("comisionesAdmin.loading")}</div>;
   }
@@ -103,8 +88,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
           item.tipo === "motion"
             ? `${item.data.tramo_personajes.nombre} · ${item.data.nombre_juego}`
             : item.data.juego.nombre;
-        const puedePublicar =
-          item.tipo === "modelo" && item.data.archivo_entrega && !item.data.producto_publicado;
+        const puedePublicar = Boolean(item.data.archivo_entrega) && !item.data.producto_publicado;
 
         return (
           <div
@@ -154,29 +138,24 @@ export const SolicitudesComisionesTable: React.FC = () => {
                 ))}
               </select>
 
-              <label className="text-xs bg-surface-container-low border border-outline-variant/50 px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:border-primary/50 transition-colors flex items-center gap-1">
+              <button
+                onClick={() => setCompletando(item)}
+                className="text-xs bg-surface-container-low border border-outline-variant/50 px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:border-primary/50 transition-colors flex items-center gap-1"
+              >
                 <span className="material-symbols-outlined text-[16px]">upload_file</span>
                 {item.data.archivo_entrega ? t("comisionesAdmin.replaceFile") : t("comisionesAdmin.uploadDelivery")}
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleArchivo(item, file);
-                  }}
-                />
-              </label>
+              </button>
 
               {puedePublicar && (
                 <button
-                  onClick={() => setPublicando(item.data as ComisionModeloAdmin)}
+                  onClick={() => setPublicando(item)}
                   className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1.5 rounded-md font-semibold flex items-center gap-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">storefront</span>
                   {t("comisionesAdmin.publishToShop")}
                 </button>
               )}
-              {item.tipo === "modelo" && item.data.producto_publicado && (
+              {item.data.producto_publicado && (
                 <span className="text-xs text-primary-fixed-dim font-semibold flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">check_circle</span>
                   {t("comisionesAdmin.published")}
@@ -188,10 +167,19 @@ export const SolicitudesComisionesTable: React.FC = () => {
       })}
 
       <PublicarProductoModal
-        comision={publicando}
+        item={publicando}
         onClose={() => setPublicando(null)}
         onPublicado={() => {
           setPublicando(null);
+          cargar();
+        }}
+      />
+
+      <CompletarComisionModal
+        item={completando}
+        onClose={() => setCompletando(null)}
+        onCompletado={() => {
+          setCompletando(null);
           cargar();
         }}
       />

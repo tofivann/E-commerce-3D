@@ -1,9 +1,25 @@
 from django.db import models
 
+
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    nombre_en = models.CharField(max_length=100, help_text="Nombre en inglés, para el sitio en modo EN.")
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Categoría"
+        verbose_name_plural = "Categorías"
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+
 class Producto(models.Model):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name='productos')
     formato_archivo = models.CharField(max_length=50, help_text="Ej: STL, OBJ, FBX")
     archivo_3d = models.FileField(upload_to='modelos_3d/')
     imagen_previa = models.ImageField(

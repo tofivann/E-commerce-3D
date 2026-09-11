@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from orders.models import Orden
+from products.models import Categoria
+from products.serializers import CategoriaSerializer
 from .models import TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
 
 
@@ -54,13 +56,15 @@ class SolicitudComisionModeloSerializer(serializers.Serializer):
 class ComisionMotionSerializer(serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
+    categoria = CategoriaSerializer(read_only=True)
     descarga_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ComisionMotion
         fields = [
             'id', 'orden', 'tramo_personajes', 'nombre_juego', 'nombre_cancion',
-            'link_video', 'informacion_adicional', 'estado', 'descarga_url',
+            'link_video', 'informacion_adicional', 'estado', 'foto_entrega',
+            'categoria', 'producto_publicado', 'descarga_url',
         ]
         read_only_fields = fields
 
@@ -75,13 +79,14 @@ class ComisionMotionSerializer(serializers.ModelSerializer):
 class ComisionModeloSerializer(serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     juego = JuegoComisionSerializer(read_only=True)
+    categoria = CategoriaSerializer(read_only=True)
     descarga_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ComisionModelo
         fields = [
             'id', 'orden', 'juego', 'nombre_personaje', 'foto_referencia_1', 'foto_referencia_2',
-            'estado', 'producto_publicado', 'descarga_url',
+            'estado', 'foto_entrega', 'categoria', 'producto_publicado', 'descarga_url',
         ]
         read_only_fields = fields
 
@@ -97,35 +102,62 @@ class ComisionModeloSerializer(serializers.ModelSerializer):
 # Admin — puede cambiar estado y subir el archivo de entrega.
 # ---------------------------------------------------------------------------
 
-class ComisionMotionAdminSerializer(serializers.ModelSerializer):
+class ValidacionEntregaMixin:
+    """
+    Compartida por ComisionMotionAdminSerializer y ComisionModeloAdminSerializer:
+    archivo_entrega, foto_entrega y categoria se suben juntos desde el modal de
+    "completar comisión" del frontend — si se está tocando cualquiera de los
+    tres, los tres deben terminar con valor (nunca uno o dos sin el resto).
+    """
+    CAMPOS_ENTREGA = ('archivo_entrega', 'foto_entrega', 'categoria')
+
+    def validate(self, attrs):
+        if any(campo in attrs for campo in self.CAMPOS_ENTREGA):
+            valores = [attrs.get(campo, getattr(self.instance, campo)) for campo in self.CAMPOS_ENTREGA]
+            if not all(valores):
+                raise serializers.ValidationError(
+                    "El archivo de entrega, la foto del resultado y la categoría deben subirse juntos."
+                )
+        return attrs
+
+
+class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
     usuario_email = serializers.EmailField(source='usuario.email', read_only=True)
+    categoria = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.filter(activo=True), required=False, allow_null=True,
+    )
 
     class Meta:
         model = ComisionMotion
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
             'nombre_cancion', 'link_video', 'informacion_adicional', 'estado', 'archivo_entrega',
+            'foto_entrega', 'categoria', 'producto_publicado',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
-            'nombre_cancion', 'link_video', 'informacion_adicional',
+            'nombre_cancion', 'link_video', 'informacion_adicional', 'producto_publicado',
         ]
 
 
-class ComisionModeloAdminSerializer(serializers.ModelSerializer):
+class ComisionModeloAdminSerializer(ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     juego = JuegoComisionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
     usuario_email = serializers.EmailField(source='usuario.email', read_only=True)
+    categoria = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.filter(activo=True), required=False, allow_null=True,
+    )
 
     class Meta:
         model = ComisionModelo
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
-            'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'producto_publicado',
+            'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'foto_entrega',
+            'categoria', 'producto_publicado',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
@@ -134,9 +166,12 @@ class ComisionModeloAdminSerializer(serializers.ModelSerializer):
 
 
 class PublicarProductoSerializer(serializers.Serializer):
-    """Datos que el admin completa para publicar el Producto derivado de una ComisionModelo."""
+    """
+    Datos que el admin completa para publicar el Producto derivado de una
+    ComisionModelo. No incluye imagen_previa: se reutiliza automáticamente
+    foto_entrega (la foto del resultado ya subida al completar la comisión).
+    """
     titulo = serializers.CharField(max_length=200)
     descripcion = serializers.CharField()
     precio = serializers.DecimalField(max_digits=10, decimal_places=2)
     formato_archivo = serializers.CharField(max_length=50)
-    imagen_previa = serializers.ImageField(required=False)

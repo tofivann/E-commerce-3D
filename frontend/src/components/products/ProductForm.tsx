@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Producto } from "../../api/productos.api";
-import { createProducto, patchProducto } from "../../api/productos.api";
+import type { Categoria, Producto } from "../../api/productos.api";
+import { categoriasApi, createProducto, patchProducto } from "../../api/productos.api";
+import { nombreCategoria } from "../../utils/categoria";
 
 interface ProductFormProps {
   open: boolean;
@@ -14,6 +15,7 @@ const emptyForm = {
   titulo: "",
   descripcion: "",
   precio: "",
+  categoria: "",
   formato_archivo: "",
   link_youtube: "",
   activo: true,
@@ -25,7 +27,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   onClose,
   onSaved,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isEdit = Boolean(producto?.id);
   const [form, setForm] = useState(emptyForm);
   const [archivo3d, setArchivo3d] = useState<File | null>(null);
@@ -35,6 +37,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [imagenDragOver, setImagenDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+
+  useEffect(() => {
+    categoriasApi.listar().then(setCategorias).catch((err) => console.error("Error al cargar categorías:", err));
+  }, []);
 
   useEffect(() => {
     if (producto) {
@@ -42,6 +49,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         titulo: producto.titulo || "",
         descripcion: producto.descripcion || "",
         precio: String(producto.precio ?? ""),
+        categoria: producto.categoria ? String(producto.categoria) : "",
         formato_archivo: producto.formato_archivo || "",
         link_youtube: producto.link_youtube || "",
         activo: producto.activo ?? true,
@@ -50,13 +58,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         typeof producto.imagen_previa === "string" ? producto.imagen_previa : ""
       );
     } else {
-      setForm(emptyForm);
+      const categoriaModelo = categorias.find((c) => c.nombre === "Modelo");
+      setForm({ ...emptyForm, categoria: categoriaModelo ? String(categoriaModelo.id) : "" });
       setImagenPreviaUrl("");
     }
     setArchivo3d(null);
     setImagenPrevia(null);
     setError(null);
-  }, [producto, open]);
+  }, [producto, open, categorias]);
 
   // Genera y limpia la vista previa local del archivo de imagen seleccionado.
   useEffect(() => {
@@ -84,6 +93,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     data.append("formato_archivo", form.formato_archivo);
     data.append("link_youtube", form.link_youtube);
     data.append("activo", String(form.activo));
+    data.append("categoria", form.categoria);
     if (archivo3d) {
       data.append("archivo_3d", archivo3d);
     }
@@ -217,7 +227,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
                 {t("productForm.priceLabel")}
@@ -247,6 +257,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   setForm({ ...form, formato_archivo: e.target.value })
                 }
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
+                {t("productForm.categoryLabel")}
+              </label>
+              <select
+                required
+                className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
+                value={form.categoria}
+                onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+              >
+                <option value="" disabled>{t("productForm.categoryPlaceholder")}</option>
+                {categorias.map((categoria) => (
+                  <option key={categoria.id} value={categoria.id}>{nombreCategoria(categoria, i18n.language)}</option>
+                ))}
+              </select>
             </div>
           </div>
 

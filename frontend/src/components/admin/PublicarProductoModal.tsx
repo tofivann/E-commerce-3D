@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ComisionModeloAdmin } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
+import type { Item } from "./SolicitudesComisionesTable";
 
 interface PublicarProductoModalProps {
-  comision: ComisionModeloAdmin | null;
+  item: Item | null;
   onClose: () => void;
   onPublicado: () => void;
 }
@@ -12,43 +12,45 @@ interface PublicarProductoModalProps {
 const emptyForm = { titulo: "", descripcion: "", precio: "", formato_archivo: "" };
 
 export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
-  comision,
+  item,
   onClose,
   onPublicado,
 }) => {
   const { t } = useTranslation();
   const [form, setForm] = useState(emptyForm);
-  const [imagenPrevia, setImagenPrevia] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (comision) {
-      setForm({
-        titulo: `${comision.nombre_personaje} (${comision.juego.nombre})`,
-        descripcion: "",
-        precio: "",
-        formato_archivo: "",
-      });
-      setImagenPrevia(null);
+    if (item) {
+      const titulo = item.tipo === "motion"
+        ? `${item.data.nombre_cancion} (${item.data.nombre_juego})`
+        : `${item.data.nombre_personaje} (${item.data.juego.nombre})`;
+      setForm({ titulo, descripcion: "", precio: "", formato_archivo: "" });
       setError(null);
     }
-  }, [comision]);
+  }, [item]);
 
-  if (!comision) return null;
+  if (!item) return null;
+
+  const nombreItem = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSaving(true);
     try {
-      await comisionesAdminApi.publicarComisionModelo(comision.id, {
+      const payload = {
         titulo: form.titulo,
         descripcion: form.descripcion,
         precio: form.precio,
         formato_archivo: form.formato_archivo,
-        imagen_previa: imagenPrevia || undefined,
-      });
+      };
+      if (item.tipo === "motion") {
+        await comisionesAdminApi.publicarComisionMotion(item.data.id, payload);
+      } else {
+        await comisionesAdminApi.publicarComisionModelo(item.data.id, payload);
+      }
       onPublicado();
     } catch (err) {
       console.error("Error al publicar el producto:", err);
@@ -73,7 +75,7 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
 
         <h2 className="text-2xl font-bold text-on-surface mb-2">{t("publicarModal.title")}</h2>
         <p className="text-on-surface-variant mb-6 text-sm">
-          {t("publicarModal.description", { name: comision.nombre_personaje })}
+          {t("publicarModal.description", { name: nombreItem })}
         </p>
 
         {error && (
@@ -137,17 +139,10 @@ export const PublicarProductoModal: React.FC<PublicarProductoModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-              {t("publicarModal.coverImage")} <span className="normal-case font-normal text-outline">{t("publicarModal.coverImageOptional")}</span>
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImagenPrevia(e.target.files?.[0] || null)}
-              className="w-full text-sm text-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary-container file:text-on-primary-fixed file:font-semibold file:cursor-pointer cursor-pointer"
-            />
-          </div>
+          <p className="text-on-surface-variant text-xs -mt-2 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+            {t("publicarModal.autoPhotoNote")}
+          </p>
 
           <div className="flex justify-end gap-4 pt-4 border-t border-outline-variant/30">
             <button

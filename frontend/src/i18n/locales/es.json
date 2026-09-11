@@ -253,8 +253,9 @@
   },
   "adminPage": {
     "settingsTitle": "Ajustes",
-    "settingsSubtitle": "Elige qué quieres administrar: los productos del catálogo o las cuentas de usuario.",
+    "settingsSubtitle": "Elige qué quieres administrar: los productos del catálogo, sus categorías o las cuentas de usuario.",
     "products": "Productos",
+    "categories": "Categorías",
     "users": "Usuarios"
   },
   "adminSidebar": {
@@ -277,6 +278,7 @@
     "new": "Nuevo",
     "addProduct": "Añadir producto",
     "colProduct": "Producto",
+    "colCategory": "Categoría",
     "colFormat": "Formato",
     "colPrice": "Precio",
     "colStatus": "Estado",
@@ -292,6 +294,16 @@
     "delete": "Eliminar",
     "defaultDescription": "Modelo 3D"
   },
+  "categoriasAdmin": {
+    "title": "Categorías de Producto",
+    "subtitle": "Se usan para clasificar los productos del catálogo. Escribe el nombre en español e inglés para cada una.",
+    "namePlaceholder": "Nombre de la categoría (ES)",
+    "namePlaceholderEn": "Nombre de la categoría (EN)",
+    "colNameEs": "Nombre (ES)",
+    "colNameEn": "Nombre (EN)",
+    "createError": "No se pudo crear la categoría. ¿El nombre ya existe?",
+    "updateError": "No se pudo guardar el cambio."
+  },
   "productForm": {
     "errorNoFile": "Debes adjuntar el archivo 3D del modelo.",
     "errorSave": "No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.",
@@ -303,12 +315,14 @@
     "dropNew": "Arrastra y suelta el archivo 3D aquí",
     "supportedFormats": "Formatos soportados: STL, OBJ, FBX...",
     "titleLabel": "Título",
-    "titlePlaceholder": "Ej. Kit Modular Cyberpunk",
+    "titlePlaceholder": "Ej. Aoi Igawa",
     "descriptionLabel": "Descripción",
     "descriptionPlaceholder": "Describe la geometría, el nivel de detalle y el uso previsto...",
     "priceLabel": "Precio (USD)",
     "formatLabel": "Formato de archivo",
     "formatPlaceholder": "STL, OBJ, FBX...",
+    "categoryLabel": "Categoría",
+    "categoryPlaceholder": "Elige una categoría",
     "youtubeLabel": "Video de YouTube",
     "youtubeHelp": "Se muestra como video de vista previa en el detalle del producto.",
     "previewImageLabel": "Imagen de previsualización",
@@ -328,10 +342,23 @@
     "errorSave": "No se pudo publicar el producto. Revisa los datos e inténtalo de nuevo.",
     "resalePrice": "Precio de reventa (USD)",
     "format": "Formato",
-    "coverImage": "Imagen de portada",
-    "coverImageOptional": "(opcional, usa la foto de referencia si se omite)",
+    "autoPhotoNote": "La foto de portada se toma automáticamente de la foto de entrega subida al completar la comisión.",
     "publishing": "Publicando...",
     "publishProduct": "Publicar Producto"
+  },
+  "completarComisionModal": {
+    "title": "Completar Comisión",
+    "description": "Sube el archivo final y una foto del resultado terminado para \"{{name}}\".",
+    "zipLabel": "Archivo de entrega (.zip)",
+    "zipNone": "Selecciona el archivo final",
+    "photoLabel": "Foto del resultado terminado",
+    "photoNone": "Selecciona una foto",
+    "photoHelp": "Esta foto se usará como portada si luego publicas este modelo en la tienda.",
+    "categoryLabel": "Categoría",
+    "errorMissing": "Debes subir el archivo, la foto y elegir una categoría para completar la comisión.",
+    "errorSave": "No se pudo completar la comisión. Intenta de nuevo.",
+    "submitting": "Guardando...",
+    "submit": "Marcar como completada"
   },
   "comisionesAdmin": {
     "title": "Comisiones",
@@ -339,7 +366,6 @@
     "requests": "Solicitudes",
     "prices": "Precios",
     "statusError": "No se pudo actualizar el estado.",
-    "fileError": "No se pudo subir el archivo de entrega.",
     "loading": "Cargando solicitudes...",
     "empty": "No hay solicitudes de comisiones todavía.",
     "unknownUser": "—",
@@ -393,7 +419,9 @@
     "productNumber": "Producto #{{id}}",
     "deliveryFile": "Archivo de entrega",
     "viewUploadedFile": "Ver archivo subido",
-    "notUploadedYet": "Todavía no se ha subido."
+    "notUploadedYet": "Todavía no se ha subido.",
+    "deliveryPhoto": "Foto de entrega",
+    "categoryLabel": "Categoría"
   },
   "userForm": {
     "errorNoPassword": "Debes definir una contraseña para el nuevo usuario.",

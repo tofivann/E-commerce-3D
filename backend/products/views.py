@@ -1,6 +1,14 @@
 from rest_framework import viewsets, permissions
-from .models import Producto
-from .serializers import ProductoSerializer
+from .models import Categoria, Producto
+from .permissions import EsAdminOSoloLectura
+from .serializers import CategoriaSerializer, ProductoSerializer
+
+
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+    permission_classes = [EsAdminOSoloLectura]
+
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()

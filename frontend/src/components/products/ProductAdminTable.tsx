@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { deleteProducto, getAllProductosAdmin, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
+import { nombreCategoria } from "../../utils/categoria";
 
 export const ProductAdminTable: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +97,7 @@ export const ProductAdminTable: React.FC = () => {
             <thead>
               <tr className="bg-surface-container-high/60 border-b border-outline-variant/30">
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colProduct")}</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colCategory")}</th>
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colFormat")}</th>
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colPrice")}</th>
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("adminProducts.colStatus")}</th>
@@ -139,6 +141,9 @@ export const ProductAdminTable: React.FC = () => {
                         </div>
                         <span className="text-on-surface font-medium truncate max-w-[220px]">{producto.titulo}</span>
                       </div>
+                    </td>
+                    <td className="py-3 px-6 text-on-surface-variant text-sm">
+                      {producto.categoria_detalle ? nombreCategoria(producto.categoria_detalle, i18n.language) : "—"}
                     </td>
                     <td className="py-3 px-6 font-mono text-on-surface-variant text-sm">
                       {producto.formato_archivo || "—"}

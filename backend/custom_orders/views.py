@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from core import paypal_utils
 from core.email_utils import enviar_email
-from orders.models import Orden
+from orders.models import Orden, ComprasDigitales
 from products.models import Producto
 from .models import TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
 from .permissions import EsAdminOSoloLectura
@@ -369,28 +369,30 @@ class ComisionAdminViewSetBase(
                 },
             )
 
+    def _publicar_producto(self, request, comision):
+        """
+        Compartido por ComisionMotionAdminViewSet y ComisionModeloAdminViewSet:
+        crea (una sola vez) el Producto en el catálogo a partir de una comisión
+        ya completada (archivo_entrega + foto_entrega + categoria, los tres
+        obligatorios juntos — ver ValidacionEntregaMixin), y le da acceso
+        inmediato al cliente que la pidió (vía ComprasDigitales, la misma
+        tabla que respalda la biblioteca digital y el badge "En tu
+        biblioteca" del catálogo) — ya pagó por esto al pedirlo, no debería
+        verlo como "agregar al carrito" en la tienda solo porque también se
+        puso a la venta para el resto de los clientes.
 
-class ComisionMotionAdminViewSet(ComisionAdminViewSetBase):
-    queryset = ComisionMotion.objects.select_related('orden', 'usuario', 'tramo_personajes').order_by('-orden__fecha_orden')
-    serializer_class = ComisionMotionAdminSerializer
-
-
-class ComisionModeloAdminViewSet(ComisionAdminViewSetBase):
-    queryset = ComisionModelo.objects.select_related('orden', 'usuario', 'juego').order_by('-orden__fecha_orden')
-    serializer_class = ComisionModeloAdminSerializer
-
-    @action(detail=True, methods=['post'])
-    def publicar(self, request, pk=None):
-        """Crea (una sola vez) el Producto en el catálogo a partir de esta comisión ya completada."""
-        comision = self.get_object()
+        Devuelve (producto, None) si se publicó, o (None, Response) con el
+        error si no se pudo — el caller decide qué serializer usar en la
+        respuesta de éxito, por eso no arma el Response final aquí.
+        """
         if comision.producto_publicado_id:
-            return Response(
+            return None, Response(
                 {"detail": "Esta comisión ya fue publicada como producto."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not comision.archivo_entrega:
-            return Response(
-                {"detail": "Sube el archivo de entrega antes de publicar el producto."},
+        if not comision.archivo_entrega or not comision.foto_entrega or not comision.categoria_id:
+            return None, Response(
+                {"detail": "Completa la comisión (archivo, foto y categoría) antes de publicar el producto."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -403,12 +405,52 @@ class ComisionModeloAdminViewSet(ComisionAdminViewSetBase):
             descripcion=validados['descripcion'],
             precio=validados['precio'],
             formato_archivo=validados['formato_archivo'],
+            categoria=comision.categoria,
             archivo_3d=comision.archivo_entrega,
-            imagen_previa=validados.get('imagen_previa') or comision.foto_referencia_1,
+            imagen_previa=comision.foto_entrega,
         )
         comision.producto_publicado = producto
         comision.save(update_fields=['producto_publicado'])
 
+        # comision.orden ya está pagada (es la orden de la propia comisión) —
+        # se reutiliza como respaldo del permiso, no se crea una orden nueva.
+        ComprasDigitales.objects.create(
+            usuario=comision.usuario,
+            producto=producto,
+            orden=comision.orden,
+        )
+
+        return producto, None
+
+
+class ComisionMotionAdminViewSet(ComisionAdminViewSetBase):
+    queryset = ComisionMotion.objects.select_related('orden', 'usuario', 'tramo_personajes').order_by('-orden__fecha_orden')
+    serializer_class = ComisionMotionAdminSerializer
+
+    @action(detail=True, methods=['post'])
+    @transaction.atomic
+    def publicar(self, request, pk=None):
+        comision = self.get_object()
+        _producto, error = self._publicar_producto(request, comision)
+        if error:
+            return error
+        return Response(
+            ComisionMotionAdminSerializer(comision, context={'request': request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ComisionModeloAdminViewSet(ComisionAdminViewSetBase):
+    queryset = ComisionModelo.objects.select_related('orden', 'usuario', 'juego').order_by('-orden__fecha_orden')
+    serializer_class = ComisionModeloAdminSerializer
+
+    @action(detail=True, methods=['post'])
+    @transaction.atomic
+    def publicar(self, request, pk=None):
+        comision = self.get_object()
+        _producto, error = self._publicar_producto(request, comision)
+        if error:
+            return error
         return Response(
             ComisionModeloAdminSerializer(comision, context={'request': request}).data,
             status=status.HTTP_200_OK,
