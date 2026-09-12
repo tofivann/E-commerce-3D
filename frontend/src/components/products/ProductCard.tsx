@@ -29,6 +29,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const fallbackImage =
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
+  // Invitados, o logueados sin suscripción activa (cuenta PENDIENTE_PAGO):
+  // se tapa toda la info del producto excepto el formato del archivo, con el
+  // mismo estilo de barra pulsante que ya usa el precio en ese mismo caso.
+  const oculto = !hasAccess && !isPurchased;
+  const skeletonClass = "bg-surface-container-highest rounded animate-pulse opacity-20";
+
   const handleCardClick = () => {
     if (isPurchased) {
       onGoToLibrary && onGoToLibrary(producto);
@@ -49,7 +55,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Zona de Imagen */}
       <div className="relative grow h-48 overflow-hidden bg-surface-container-lowest">
         <img
-          alt={producto.titulo}
+          alt={oculto ? "" : producto.titulo}
           src={
             typeof producto.imagen_previa === "string"
               ? producto.imagen_previa
@@ -82,19 +88,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Pie de la Tarjeta */}
       <div className="p-4 glass-panel border-t-0 flex flex-col gap-1 relative z-20">
         <div className="flex justify-between items-start">
-          <h3 className="font-semibold text-on-surface truncate pr-2">
-            {producto.titulo}
-          </h3>
-          <span className="font-mono text-on-secondary-container border border-secondary-container/50 px-2 rounded-full text-[10px] uppercase">
+          {oculto ? (
+            <div className={`h-5 w-2/5 mt-0.5 ${skeletonClass}`} />
+          ) : (
+            <h3 className="font-semibold text-on-surface truncate pr-2">
+              {producto.titulo}
+            </h3>
+          )}
+          <span className="font-mono text-on-secondary-container border border-secondary-container/50 px-2 rounded-full text-[10px] uppercase shrink-0">
             .{producto.formato_archivo || "3D"}
           </span>
         </div>
 
-        <CategoryBadge categoria={producto.categoria_detalle} />
+        {oculto ? (
+          <div className={`h-3 w-1/5 ${skeletonClass}`} />
+        ) : (
+          <CategoryBadge categoria={producto.categoria_detalle} />
+        )}
 
-        <p className="font-mono text-on-surface-variant text-sm truncate">
-          {producto.descripcion || t("catalog.defaultDescription")}
-        </p>
+        {oculto ? (
+          <div className={`h-4 w-1/2 ${skeletonClass}`} />
+        ) : (
+          <p className="font-mono text-on-surface-variant text-sm truncate">
+            {producto.descripcion || t("catalog.defaultDescription")}
+          </p>
+        )}
 
         {/* Precio + Agregar, acceso a biblioteca, o barra de carga de invitado/sin suscripción */}
         {isPurchased ? (
