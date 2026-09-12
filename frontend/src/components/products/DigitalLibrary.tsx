@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { CompraDigital } from "../../api/biblioteca.api";
 import { bibliotecaApi, descargarCompra } from "../../api/biblioteca.api";
+import { categoriasApi } from "../../api/productos.api";
+import type { Categoria } from "../../api/productos.api";
+import { CategoryFilter } from "./CategoryFilter";
+import { CategoryBadge } from "./CategoryBadge";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
@@ -10,12 +14,22 @@ const fallbackImage =
 export const DigitalLibrary: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [compras, setCompras] = useState<CompraDigital[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [descargandoId, setDescargandoId] = useState<number | null>(null);
 
+  const comprasFiltradas = compras.filter(
+    (c) => categoriasSeleccionadas.size === 0 || categoriasSeleccionadas.has(c.producto.categoria)
+  );
+
   useEffect(() => {
     fetchBiblioteca();
+    categoriasApi
+      .listar()
+      .then(setCategorias)
+      .catch((err) => console.error("Error al cargar categorías:", err));
   }, []);
 
   const fetchBiblioteca = async () => {
@@ -53,6 +67,15 @@ export const DigitalLibrary: React.FC = () => {
         </p>
       </header>
 
+      {!loading && !error && compras.length > 0 && (
+        <CategoryFilter
+          categorias={categorias}
+          seleccionadas={categoriasSeleccionadas}
+          onChange={setCategoriasSeleccionadas}
+          className="mb-lg"
+        />
+      )}
+
       {loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((n) => (
@@ -83,9 +106,15 @@ export const DigitalLibrary: React.FC = () => {
         </div>
       )}
 
-      {!loading && !error && compras.length > 0 && (
+      {!loading && !error && compras.length > 0 && comprasFiltradas.length === 0 && (
+        <div className="p-10 text-center text-on-surface-variant">
+          {t("library.noResultsFiltered")}
+        </div>
+      )}
+
+      {!loading && !error && comprasFiltradas.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {compras.map((compra) => (
+          {comprasFiltradas.map((compra) => (
             <div
               key={compra.id}
               className="card-hover bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col h-full"
@@ -107,6 +136,7 @@ export const DigitalLibrary: React.FC = () => {
 
               <div className="p-4 flex flex-col flex-1 gap-1">
                 <h3 className="font-semibold text-on-surface truncate">{compra.producto.titulo}</h3>
+                <CategoryBadge categoria={compra.producto.categoria_detalle} />
                 <p className="text-on-surface-variant text-xs font-mono">
                   {t("library.acquired", {
                     date: new Date(compra.fecha_adquisicion).toLocaleDateString(i18n.language, {

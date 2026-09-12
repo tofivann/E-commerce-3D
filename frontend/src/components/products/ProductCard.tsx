@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
-import { nombreCategoria } from "../../utils/categoria";
+import { CategoryBadge } from "./CategoryBadge";
 
 interface ProductCardProps {
   producto: Producto;
@@ -25,7 +25,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onGoToLibrary,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const fallbackImage =
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
@@ -90,12 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         </div>
 
-        {producto.categoria_detalle && (
-          <span className="inline-flex items-center gap-1 self-start text-[10px] font-semibold uppercase tracking-wide text-primary-fixed-dim">
-            <span className="material-symbols-outlined text-[12px]">sell</span>
-            {nombreCategoria(producto.categoria_detalle, i18n.language)}
-          </span>
-        )}
+        <CategoryBadge categoria={producto.categoria_detalle} />
 
         <p className="font-mono text-on-surface-variant text-sm truncate">
           {producto.descripcion || t("catalog.defaultDescription")}

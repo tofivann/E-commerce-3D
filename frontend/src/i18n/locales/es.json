@@ -102,6 +102,7 @@
     "loadError": "No se pudo cargar tu biblioteca digital.",
     "downloadError": "No se pudo descargar el archivo. Inténtalo de nuevo.",
     "emptyMessage": "Aún no has adquirido ningún modelo.",
+    "noResultsFiltered": "No tienes modelos en esta categoría.",
     "exploreCatalog": "Explorar el catálogo →",
     "acquired": "Adquirido: {{date}}",
     "downloading": "Descargando...",

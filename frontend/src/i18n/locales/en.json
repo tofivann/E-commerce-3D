@@ -102,6 +102,7 @@
     "loadError": "Could not load your digital library.",
     "downloadError": "Could not download the file. Please try again.",
     "emptyMessage": "You haven't acquired any models yet.",
+    "noResultsFiltered": "You don't have any models in this category.",
     "exploreCatalog": "Explore the catalog →",
     "acquired": "Acquired: {{date}}",
     "downloading": "Downloading...",

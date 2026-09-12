@@ -3,10 +3,11 @@ import { useTranslation } from "react-i18next";
 import type { Producto, Categoria } from "../../api/productos.api";
 import { getAllProductosAdmin, patchProducto, categoriasApi } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
-import { nombreCategoria } from "../../utils/categoria";
+import { CategoryFilter, filtrarPorCategorias } from "./CategoryFilter";
+import { CategoryBadge } from "./CategoryBadge";
 
 export const ProductAdminGrid: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
@@ -16,17 +17,7 @@ export const ProductAdminGrid: React.FC = () => {
   const [editing, setEditing] = useState<Producto | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const toggleCategoria = (id: number) => {
-    setCategoriasSeleccionadas((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const productosFiltrados = productos.filter(
-    (p) => categoriasSeleccionadas.size === 0 || categoriasSeleccionadas.has(p.categoria)
-  );
+  const productosFiltrados = filtrarPorCategorias(productos, categoriasSeleccionadas);
 
   const fetchProductos = async () => {
     try {
@@ -92,33 +83,12 @@ export const ProductAdminGrid: React.FC = () => {
         </button>
       </div>
 
-      {categorias.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            onClick={() => setCategoriasSeleccionadas(new Set())}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-              categoriasSeleccionadas.size === 0
-                ? "bg-primary-container text-on-primary-fixed border-primary-container"
-                : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-            }`}
-          >
-            {t("catalog.allCategories")}
-          </button>
-          {categorias.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => toggleCategoria(cat.id)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                categoriasSeleccionadas.has(cat.id)
-                  ? "bg-primary-container text-on-primary-fixed border-primary-container"
-                  : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-              }`}
-            >
-              {nombreCategoria(cat, i18n.language)}
-            </button>
-          ))}
-        </div>
-      )}
+      <CategoryFilter
+        categorias={categorias}
+        seleccionadas={categoriasSeleccionadas}
+        onChange={setCategoriasSeleccionadas}
+        className="mb-6"
+      />
 
       {loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -185,12 +155,7 @@ export const ProductAdminGrid: React.FC = () => {
                 <h3 className="font-semibold text-on-surface leading-tight mb-1 truncate">
                   {producto.titulo}
                 </h3>
-                {producto.categoria_detalle && (
-                  <span className="inline-flex items-center gap-1 self-start text-[10px] font-semibold uppercase tracking-wide text-primary-fixed-dim mb-1">
-                    <span className="material-symbols-outlined text-[12px]">sell</span>
-                    {nombreCategoria(producto.categoria_detalle, i18n.language)}
-                  </span>
-                )}
+                <CategoryBadge categoria={producto.categoria_detalle} className="mb-1" />
                 <p className="text-on-surface-variant text-sm mb-3 truncate">
                   {producto.descripcion || t("adminProducts.defaultDescription")}
                 </p>
