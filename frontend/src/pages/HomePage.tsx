@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { ProductList } from "../components/products/ProductList";
+import { SearchInput } from "../components/products/SearchInput";
 import { CartDrawer } from "../components/products/CartDrawer";
 import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
 import { Sidebar } from "../components/layout/Sidebar";
@@ -137,18 +138,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             {isLoggedIn ? (
               <>
                 {canSearch ? (
-                  <div className="relative w-full max-w-40 sm:max-w-xs md:max-w-sm">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">
-                      search
-                    </span>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t("common.search")}
-                      className="w-full bg-surface-variant border border-outline-variant rounded-full pl-10 pr-4 py-2.5 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                    />
-                  </div>
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    className="w-full max-w-40 sm:max-w-xs md:max-w-sm"
+                  />
                 ) : (
                   <span />
                 )}

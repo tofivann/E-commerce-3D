@@ -5,19 +5,27 @@ import { getAllProductosAdmin, patchProducto, categoriasApi } from "../../api/pr
 import { ProductForm } from "./ProductForm";
 import { CategoryFilter, filtrarPorCategorias } from "./CategoryFilter";
 import { CategoryBadge } from "./CategoryBadge";
+import { SearchInput } from "./SearchInput";
+import { coincideBusqueda } from "../../utils/normalizarTexto";
 
 export const ProductAdminGrid: React.FC = () => {
   const { t } = useTranslation();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Producto | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const productosFiltrados = filtrarPorCategorias(productos, categoriasSeleccionadas);
+  const productosFiltrados = filtrarPorCategorias(
+    productos.filter(
+      (p) => coincideBusqueda(p.titulo, searchQuery) || coincideBusqueda(p.descripcion, searchQuery)
+    ),
+    categoriasSeleccionadas
+  );
 
   const fetchProductos = async () => {
     try {
@@ -82,6 +90,8 @@ export const ProductAdminGrid: React.FC = () => {
           {t("adminProducts.addProduct")}
         </button>
       </div>
+
+      <SearchInput value={searchQuery} onChange={setSearchQuery} className="max-w-sm mb-4" />
 
       <CategoryFilter
         categorias={categorias}
