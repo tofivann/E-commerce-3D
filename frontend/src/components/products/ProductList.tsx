@@ -128,12 +128,6 @@ export const ProductList: React.FC<ProductListProps> = ({
           ))}
         </div>
       )}
-
-      <div className="flex justify-center mt-6">
-        <button className="bg-transparent border border-[var(--color-outline-variant)]/50 text-[var(--color-on-surface)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary-container)]/50 btn-glow-inner rounded px-6 py-2 transition-all active:scale-95 glass-panel">
-          {t("catalog.viewFull")}
-        </button>
-      </div>
     </section>
   );
 };

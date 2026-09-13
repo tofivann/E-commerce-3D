@@ -40,7 +40,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-1 p-1 mb-6 rounded-lg bg-surface-container-high/60 border border-outline-variant/30">
+            <div className="flex flex-wrap items-center gap-1 p-1 mb-6 rounded-lg bg-surface-container-high/60 border border-outline-variant/30 max-w-full">
               <button
                 onClick={() => setEntidad("productos")}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 ${

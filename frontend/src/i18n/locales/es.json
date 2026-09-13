@@ -73,7 +73,6 @@
     "preview": "Mostrando vista previa",
     "loadError": "No se pudieron cargar los productos del servidor.",
     "noResults": "No encontramos modelos que coincidan con \"{{query}}\".",
-    "viewFull": "Ver Catálogo Completo",
     "inLibrary": "En tu biblioteca",
     "unlockSubscribed": "Activa tu suscripción para desbloquear",
     "unlockGuest": "Regístrate para descubrir",

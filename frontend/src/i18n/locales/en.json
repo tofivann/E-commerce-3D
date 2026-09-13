@@ -73,7 +73,6 @@
     "preview": "Showing preview",
     "loadError": "Could not load products from the server.",
     "noResults": "We couldn't find any models matching \"{{query}}\".",
-    "viewFull": "View Full Catalog",
     "inLibrary": "In your library",
     "unlockSubscribed": "Activate your subscription to unlock",
     "unlockGuest": "Sign up to discover",

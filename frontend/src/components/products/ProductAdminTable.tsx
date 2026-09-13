@@ -68,8 +68,8 @@ export const ProductAdminTable: React.FC = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold text-on-surface mb-1">{t("adminProducts.title")}</h2>
           <p className="text-on-surface-variant text-sm">{t("adminProducts.subtitle")}</p>
         </div>
