@@ -5,7 +5,6 @@ import { CategoryBadge } from "./CategoryBadge";
 
 interface ProductCardProps {
   producto: Producto;
-  isLoggedIn: boolean;
   // true solo si además de tener sesión, puede ver/comprar el catálogo
   // (suscripción activa, o administrador).
   hasAccess: boolean;
@@ -18,7 +17,6 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   producto,
-  isLoggedIn,
   hasAccess,
   isPurchased = false,
   onSelect,
@@ -40,16 +38,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onGoToLibrary && onGoToLibrary(producto);
       return;
     }
-    // Ver el detalle no requiere suscripción, pero sí sesión iniciada:
-    // los invitados no ven la ficha del producto, solo el catálogo bloqueado.
-    isLoggedIn && onSelect && onSelect(producto);
+    // Ver el detalle requiere acceso real (suscripción activa o admin):
+    // invitados y cuentas con pago pendiente solo ven el catálogo bloqueado,
+    // nunca la ficha del producto.
+    hasAccess && onSelect && onSelect(producto);
   };
 
   return (
     <article
       onClick={handleCardClick}
       className={`bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col relative group card-hover transition-all duration-300 h-80 ${
-        isLoggedIn || isPurchased ? "cursor-pointer" : ""
+        hasAccess || isPurchased ? "cursor-pointer" : ""
       }`}
     >
       {/* Zona de Imagen */}
@@ -72,14 +71,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Overlay de Bloqueo: invitados, o logueados sin suscripción activa (no aplica si ya lo compró) */}
+        {/* Overlay de Bloqueo: invitados, o logueados sin suscripción activa (no aplica si ya lo compró).
+            Mismo mensaje para ambos casos: no diferenciamos pago pendiente de invitado aquí. */}
         {!hasAccess && !isPurchased && (
           <div className="absolute inset-0 bg-background/40 backdrop-blur-md flex flex-col items-center justify-center gap-2 opacity-100 group-hover:bg-background/60 transition-all z-10">
             <span className="material-symbols-outlined text-primary-container text-[40px] drop-shadow-lg">
-              {isLoggedIn ? "workspace_premium" : "lock"}
+              lock
             </span>
             <span className="text-xs text-on-surface tracking-wider bg-surface/80 px-4 py-1 rounded-full backdrop-blur-sm border border-outline-variant/50 font-semibold text-center">
-              {isLoggedIn ? t("catalog.unlockSubscribed") : t("catalog.unlockGuest")}
+              {t("catalog.unlockGuest")}
             </span>
           </div>
         )}

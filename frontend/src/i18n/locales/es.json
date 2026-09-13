@@ -74,7 +74,6 @@
     "loadError": "No se pudieron cargar los productos del servidor.",
     "noResults": "No encontramos modelos que coincidan con \"{{query}}\".",
     "inLibrary": "En tu biblioteca",
-    "unlockSubscribed": "Activa tu suscripción para desbloquear",
     "unlockGuest": "Regístrate para descubrir",
     "defaultDescription": "Modelo MMD 3D",
     "goToLibrary": "Ir a mi biblioteca",

@@ -7,7 +7,6 @@ import { coincideBusqueda } from "../../utils/normalizarTexto";
 import { CategoryFilter, filtrarPorCategorias } from "./CategoryFilter";
 
 interface ProductListProps {
-  isLoggedIn: boolean;
   // true solo si además de tener sesión, puede ver/comprar el catálogo
   // (suscripción activa, o administrador).
   hasAccess: boolean;
@@ -20,7 +19,6 @@ interface ProductListProps {
 }
 
 export const ProductList: React.FC<ProductListProps> = ({
-  isLoggedIn,
   hasAccess,
   purchasedIds,
   onSelectProducto,
@@ -118,7 +116,6 @@ export const ProductList: React.FC<ProductListProps> = ({
             <ProductCard
               key={prod.id || prod.titulo}
               producto={prod}
-              isLoggedIn={isLoggedIn}
               hasAccess={hasAccess}
               isPurchased={typeof prod.id === "number" && (purchasedIds?.has(prod.id) ?? false)}
               onSelect={onSelectProducto}

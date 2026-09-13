@@ -376,7 +376,6 @@ export const HomePage: React.FC<HomePageProps> = ({
           {/* Lista de productos */}
           <div className={isLoggedIn ? "mt-8" : "mt-0"}>
             <ProductList
-              isLoggedIn={isLoggedIn}
               hasAccess={hasAccess}
               purchasedIds={purchasedIds}
               onAddToCart={handleAddToCart}
