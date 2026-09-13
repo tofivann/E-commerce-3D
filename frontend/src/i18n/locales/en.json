@@ -27,6 +27,13 @@
     "pendingLoading": "Generating payment...",
     "heroAlt": "MimiMMDart — commission polished 3D models ready for MikuMikuDance",
     "heroCta": "Create Account Now",
+    "heroTitleLine1": "Bring Your Favorite Character",
+    "heroTitleConnector": "to",
+    "heroTitleBrand": "MMD",
+    "heroSubtitle": "Commission polished, motion-ready models for MikuMikuDance.",
+    "heroFeature1": "High Quality Models",
+    "heroFeature2": "MMD Ready & Optimized",
+    "heroFeature3": "Expressions & Customization",
     "footerRights": "© 2026 MimiMMDart."
   },
   "login": {
