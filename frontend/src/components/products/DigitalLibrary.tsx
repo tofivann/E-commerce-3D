@@ -60,7 +60,7 @@ export const DigitalLibrary: React.FC = () => {
 
   return (
     <div>
-      <header className="mb-lg flex flex-col gap-2">
+      <header className="mb-6 flex flex-col gap-2">
         <h1 className="text-3xl md:text-4xl font-bold text-on-surface">{t("library.title")}</h1>
         <p className="text-on-surface-variant max-w-2xl">
           {t("library.subtitle")}
@@ -72,7 +72,7 @@ export const DigitalLibrary: React.FC = () => {
           categorias={categorias}
           seleccionadas={categoriasSeleccionadas}
           onChange={setCategoriasSeleccionadas}
-          className="mb-lg"
+          className="mb-6"
         />
       )}
 
