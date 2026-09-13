@@ -14,6 +14,7 @@ import { capturarOrdenPayPal } from "../api/paypal.api";
 import { userApi } from "../services/userApi";
 import type { Producto } from "../api/productos.api";
 import heroImage from "../assets/hero1.webp";
+import heroImageMobile from "../assets/hero-mmd-mobile.webp";
 
 interface HomePageProps {
   isLoggedIn: boolean;
@@ -302,11 +303,14 @@ export const HomePage: React.FC<HomePageProps> = ({
           
           {/* Banner Hero */}
           <section className="relative w-full rounded-xl overflow-hidden glass-panel min-h-100 flex items-end justify-center text-center mt-8">
-            <img
-              src={heroImage}
-              alt={t("home.heroAlt")}
-              className="absolute inset-0 w-full h-full object-cover object-top"
-            />
+            <picture>
+              <source media="(max-width: 767px)" srcSet={heroImageMobile} />
+              <img
+                src={heroImage}
+                alt={t("home.heroAlt")}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+              />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent"></div>
             {!isLoggedIn && (
               <div className="relative z-10 flex flex-col items-center gap-4 max-w-xl p-8">
