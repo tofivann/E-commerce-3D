@@ -35,7 +35,9 @@
     "heroFeature1": "High Quality Models",
     "heroFeature2": "MMD Ready & Optimized",
     "heroFeature3": "Expressions & Customization",
-    "footerRights": "© 2026 MimiMMDart."
+    "footerRights": "© 2026 MimiMMDart.",
+    "footerPrivacy": "Privacy",
+    "footerTerms": "Terms"
   },
   "login": {
     "subtitle": "Welcome Back",
