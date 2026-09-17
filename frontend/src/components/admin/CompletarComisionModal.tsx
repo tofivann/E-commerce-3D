@@ -29,7 +29,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   const [fotoEntrega, setFotoEntrega] = useState<File | null>(null);
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string>("");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [categoriaId, setCategoriaId] = useState<string>("");
+  const [categoriaIds, setCategoriaIds] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,11 +43,15 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     setFotoPreviewUrl("");
     setError(null);
     if (!item) {
-      setCategoriaId("");
+      setCategoriaIds([]);
+      return;
+    }
+    if (item.data.categorias && item.data.categorias.length > 0) {
+      setCategoriaIds(item.data.categorias.map((c) => c.id));
       return;
     }
     const sugerida = categorias.find((c) => c.nombre === CATEGORIA_SUGERIDA[item.tipo]);
-    setCategoriaId(item.data.categoria ? String(item.data.categoria.id) : sugerida ? String(sugerida.id) : "");
+    setCategoriaIds(sugerida ? [sugerida.id] : []);
   }, [item, categorias]);
 
   useEffect(() => {
@@ -65,7 +69,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (!archivoEntrega || !fotoEntrega || !categoriaId) {
+    if (!archivoEntrega || !fotoEntrega || categoriaIds.length === 0) {
       setError(t("completarComisionModal.errorMissing"));
       return;
     }
@@ -75,7 +79,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
       const formData = new FormData();
       formData.append("archivo_entrega", archivoEntrega);
       formData.append("foto_entrega", fotoEntrega);
-      formData.append("categoria", categoriaId);
+      categoriaIds.forEach((id) => formData.append("categorias", String(id)));
       if (item.tipo === "motion") {
         await comisionesAdminApi.actualizarSolicitudMotion(item.data.id, formData);
       } else {
@@ -170,17 +174,31 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
             <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
               {t("completarComisionModal.categoryLabel")}
             </label>
-            <select
-              required
-              className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-              value={categoriaId}
-              onChange={(e) => setCategoriaId(e.target.value)}
-            >
-              <option value="" disabled>{t("productForm.categoryPlaceholder")}</option>
-              {categorias.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>{nombreCategoria(categoria, i18n.language)}</option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-2">
+              {categorias.map((categoria) => {
+                const seleccionada = categoriaIds.includes(categoria.id);
+                return (
+                  <button
+                    key={categoria.id}
+                    type="button"
+                    onClick={() =>
+                      setCategoriaIds(
+                        seleccionada
+                          ? categoriaIds.filter((id) => id !== categoria.id)
+                          : [...categoriaIds, categoria.id]
+                      )
+                    }
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                      seleccionada
+                        ? "bg-primary-container text-on-primary-fixed border-primary-container"
+                        : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
+                    }`}
+                  >
+                    {nombreCategoria(categoria, i18n.language)}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex justify-end gap-4 pt-4 border-t border-outline-variant/30">

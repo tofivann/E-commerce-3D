@@ -103,7 +103,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {oculto ? (
           <div className={`h-3 w-1/5 ${skeletonClass}`} />
         ) : (
-          <CategoryBadge categoria={producto.categoria_detalle} />
+          <CategoryBadge categorias={producto.categorias_detalle} />
         )}
 
         {oculto ? (

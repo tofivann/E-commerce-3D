@@ -55,10 +55,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   );
 };
 
-export function filtrarPorCategorias<T extends { categoria: number }>(
+export function filtrarPorCategorias<T extends { categorias: number[] }>(
   items: T[],
   seleccionadas: Set<number>
 ): T[] {
   if (seleccionadas.size === 0) return items;
-  return items.filter((item) => seleccionadas.has(item.categoria));
+  return items.filter((item) => item.categorias.some((id) => seleccionadas.has(id)));
 }

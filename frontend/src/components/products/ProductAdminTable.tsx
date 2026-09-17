@@ -143,7 +143,9 @@ export const ProductAdminTable: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-6 text-on-surface-variant text-sm">
-                      {producto.categoria_detalle ? nombreCategoria(producto.categoria_detalle, i18n.language) : "—"}
+                      {producto.categorias_detalle && producto.categorias_detalle.length > 0
+                        ? producto.categorias_detalle.map((c) => nombreCategoria(c, i18n.language)).join(", ")
+                        : "—"}
                     </td>
                     <td className="py-3 px-6 font-mono text-on-surface-variant text-sm">
                       {producto.formato_archivo || "—"}

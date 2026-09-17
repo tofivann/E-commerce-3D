@@ -165,7 +165,7 @@ export const ProductAdminGrid: React.FC = () => {
                 <h3 className="font-semibold text-on-surface leading-tight mb-1 truncate">
                   {producto.titulo}
                 </h3>
-                <CategoryBadge categoria={producto.categoria_detalle} className="mb-1" />
+                <CategoryBadge categorias={producto.categorias_detalle} className="mb-1" />
                 <p className="text-on-surface-variant text-sm mb-3 truncate">
                   {producto.descripcion || t("adminProducts.defaultDescription")}
                 </p>

@@ -373,7 +373,7 @@ class ComisionAdminViewSetBase(
         """
         Compartido por ComisionMotionAdminViewSet y ComisionModeloAdminViewSet:
         crea (una sola vez) el Producto en el catálogo a partir de una comisión
-        ya completada (archivo_entrega + foto_entrega + categoria, los tres
+        ya completada (archivo_entrega + foto_entrega + categorias, los tres
         obligatorios juntos — ver ValidacionEntregaMixin), y le da acceso
         inmediato al cliente que la pidió (vía ComprasDigitales, la misma
         tabla que respalda la biblioteca digital y el badge "En tu
@@ -390,9 +390,9 @@ class ComisionAdminViewSetBase(
                 {"detail": "Esta comisión ya fue publicada como producto."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not comision.archivo_entrega or not comision.foto_entrega or not comision.categoria_id:
+        if not comision.archivo_entrega or not comision.foto_entrega or not comision.categorias.exists():
             return None, Response(
-                {"detail": "Completa la comisión (archivo, foto y categoría) antes de publicar el producto."},
+                {"detail": "Completa la comisión (archivo, foto y al menos una categoría) antes de publicar el producto."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -405,10 +405,12 @@ class ComisionAdminViewSetBase(
             descripcion=validados['descripcion'],
             precio=validados['precio'],
             formato_archivo=validados['formato_archivo'],
-            categoria=comision.categoria,
             archivo_3d=comision.archivo_entrega,
             imagen_previa=comision.foto_entrega,
         )
+        # M2M no se puede pasar como kwarg de create(): el producto necesita
+        # existir (tener pk) antes de poder asignarle categorías.
+        producto.categorias.set(comision.categorias.all())
         comision.producto_publicado = producto
         comision.save(update_fields=['producto_publicado'])
 

@@ -13,8 +13,8 @@ export interface Producto {
   titulo: string;
   descripcion: string;
   precio: number | string; // DecimalField llega como string/number desde el JSON
-  categoria: number; // id de la Categoria (PrimaryKeyRelatedField, tanto al leer como al escribir)
-  categoria_detalle?: Categoria; // solo lectura, para mostrar sin tener que cruzar con la lista de categorías
+  categorias: number[]; // ids de las Categorias (PrimaryKeyRelatedField many=True, tanto al leer como al escribir)
+  categorias_detalle?: Categoria[]; // solo lectura, para mostrar sin tener que cruzar con la lista de categorías
   formato_archivo: string;
   archivo_3d?: File | string; // File cuando se sube desde un input tipo file, string si es la URL
   imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada

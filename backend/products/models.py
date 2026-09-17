@@ -19,7 +19,11 @@ class Producto(models.Model):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name='productos')
+    # Un producto puede pertenecer a varias categorías a la vez (ej. un modelo
+    # que también es de Motion). Debe tener al menos una — eso se exige en el
+    # serializer (allow_empty=False), no a nivel de base de datos, ya que un
+    # ManyToManyField no admite una restricción NOT NULL como un FK.
+    categorias = models.ManyToManyField(Categoria, related_name='productos')
     formato_archivo = models.CharField(max_length=50, help_text="Ej: STL, OBJ, FBX")
     archivo_3d = models.FileField(upload_to='modelos_3d/')
     imagen_previa = models.ImageField(

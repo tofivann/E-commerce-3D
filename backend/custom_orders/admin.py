@@ -21,6 +21,7 @@ class ComisionMotionAdmin(admin.ModelAdmin):
     list_filter = ('estado', 'tramo_personajes')
     search_fields = ('usuario__nombre', 'nombre_juego', 'nombre_cancion', 'orden__codigo_orden')
     list_editable = ('estado',)
+    filter_horizontal = ('categorias',)
 
 
 @admin.register(ComisionModelo)
@@ -29,3 +30,4 @@ class ComisionModeloAdmin(admin.ModelAdmin):
     list_filter = ('estado', 'juego')
     search_fields = ('usuario__nombre', 'nombre_personaje', 'orden__codigo_orden')
     list_editable = ('estado',)
+    filter_horizontal = ('categorias',)

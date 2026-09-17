@@ -57,7 +57,9 @@ class ComisionMotion(models.Model):
     # Foto del resultado terminado, subida por el admin junto con archivo_entrega y
     # categoria al completar la comisión — mismo patrón que ComisionModelo.foto_entrega.
     foto_entrega = models.ImageField(upload_to='comisiones/motion/entrega/', null=True, blank=True)
-    categoria = models.ForeignKey('products.Categoria', null=True, blank=True, on_delete=models.PROTECT)
+    # Igual que Producto.categorias: varias categorías por comisión. Opcional
+    # (blank=True) hasta que se completa la entrega — ver ValidacionEntregaMixin.
+    categorias = models.ManyToManyField('products.Categoria', related_name='comisiones_motion', blank=True)
     # Se completa al publicar el Producto derivado de esta comisión en el catálogo.
     producto_publicado = models.ForeignKey(
         'products.Producto', null=True, blank=True,
@@ -86,7 +88,9 @@ class ComisionModelo(models.Model):
     # completar la comisión (distinta de foto_referencia_1/2, que sube el cliente al
     # pedirla). Se reutiliza como imagen_previa al publicar el Producto en la tienda.
     foto_entrega = models.ImageField(upload_to='comisiones/modelo/entrega/', null=True, blank=True)
-    categoria = models.ForeignKey('products.Categoria', null=True, blank=True, on_delete=models.PROTECT)
+    # Igual que Producto.categorias: varias categorías por comisión. Opcional
+    # (blank=True) hasta que se completa la entrega — ver ValidacionEntregaMixin.
+    categorias = models.ManyToManyField('products.Categoria', related_name='comisiones_modelo', blank=True)
     # Se completa al publicar el Producto derivado de esta comisión en el catálogo.
     producto_publicado = models.ForeignKey(
         'products.Producto', null=True, blank=True,

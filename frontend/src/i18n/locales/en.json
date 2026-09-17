@@ -313,6 +313,7 @@
   },
   "productForm": {
     "errorNoFile": "You must attach the model's 3D file.",
+    "errorNoCategory": "You must choose at least one category.",
     "errorSave": "Could not save the product. Check the details and try again.",
     "editTitle": "Edit Product",
     "newTitle": "New Product",
@@ -328,8 +329,8 @@
     "priceLabel": "Price (USD)",
     "formatLabel": "File format",
     "formatPlaceholder": "STL, OBJ, FBX...",
-    "categoryLabel": "Category",
-    "categoryPlaceholder": "Choose a category",
+    "categoryLabel": "Categories",
+    "categoryPlaceholder": "Choose at least one category",
     "youtubeLabel": "YouTube video",
     "youtubeHelp": "Shown as a preview video in the product's detail view.",
     "previewImageLabel": "Preview image",
@@ -361,8 +362,8 @@
     "photoLabel": "Photo of the finished result",
     "photoNone": "Select a photo",
     "photoHelp": "This photo will be used as the cover image if you later publish this model to the shop.",
-    "categoryLabel": "Category",
-    "errorMissing": "You must upload the file, the photo, and choose a category to complete the commission.",
+    "categoryLabel": "Categories",
+    "errorMissing": "You must upload the file, the photo, and choose at least one category to complete the commission.",
     "errorSave": "Could not complete the commission. Please try again.",
     "submitting": "Saving...",
     "submit": "Mark as completed"
@@ -428,7 +429,7 @@
     "viewUploadedFile": "View uploaded file",
     "notUploadedYet": "Not uploaded yet.",
     "deliveryPhoto": "Delivery photo",
-    "categoryLabel": "Category"
+    "categoryLabel": "Categories"
   },
   "userForm": {
     "errorNoPassword": "You must set a password for the new user.",

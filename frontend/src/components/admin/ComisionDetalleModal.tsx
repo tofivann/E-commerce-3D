@@ -144,8 +144,10 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
               </a>
             </Campo>
           )}
-          {item.data.categoria && (
-            <Campo label={t("comisionDetalle.categoryLabel")}>{nombreCategoria(item.data.categoria, i18n.language)}</Campo>
+          {item.data.categorias && item.data.categorias.length > 0 && (
+            <Campo label={t("comisionDetalle.categoryLabel")}>
+              {item.data.categorias.map((c) => nombreCategoria(c, i18n.language)).join(", ")}
+            </Campo>
           )}
           {item.data.producto_publicado && (
             <Campo label={t("comisionDetalle.publishedInShop")}>

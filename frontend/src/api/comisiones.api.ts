@@ -40,7 +40,7 @@ export interface ComisionMotion {
   informacion_adicional: string;
   estado: EstadoComision;
   foto_entrega: string | null;
-  categoria: Categoria | null;
+  categorias: Categoria[];
   producto_publicado: number | null;
   descarga_url: string | null;
 }
@@ -54,7 +54,7 @@ export interface ComisionModelo {
   foto_referencia_2: string | null;
   estado: EstadoComision;
   foto_entrega: string | null;
-  categoria: Categoria | null;
+  categorias: Categoria[];
   producto_publicado: number | null;
   descarga_url: string | null;
 }

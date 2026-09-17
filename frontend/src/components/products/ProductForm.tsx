@@ -15,7 +15,7 @@ const emptyForm = {
   titulo: "",
   descripcion: "",
   precio: "",
-  categoria: "",
+  categorias: [] as number[],
   formato_archivo: "",
   link_youtube: "",
   activo: true,
@@ -49,7 +49,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         titulo: producto.titulo || "",
         descripcion: producto.descripcion || "",
         precio: String(producto.precio ?? ""),
-        categoria: producto.categoria ? String(producto.categoria) : "",
+        categorias: producto.categorias || [],
         formato_archivo: producto.formato_archivo || "",
         link_youtube: producto.link_youtube || "",
         activo: producto.activo ?? true,
@@ -59,7 +59,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       );
     } else {
       const categoriaModelo = categorias.find((c) => c.nombre === "Modelo");
-      setForm({ ...emptyForm, categoria: categoriaModelo ? String(categoriaModelo.id) : "" });
+      setForm({ ...emptyForm, categorias: categoriaModelo ? [categoriaModelo.id] : [] });
       setImagenPreviaUrl("");
     }
     setArchivo3d(null);
@@ -93,7 +93,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     data.append("formato_archivo", form.formato_archivo);
     data.append("link_youtube", form.link_youtube);
     data.append("activo", String(form.activo));
-    data.append("categoria", form.categoria);
+    form.categorias.forEach((id) => data.append("categorias", String(id)));
     if (archivo3d) {
       data.append("archivo_3d", archivo3d);
     }
@@ -109,6 +109,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     if (!isEdit && !archivo3d) {
       setError(t("productForm.errorNoFile"));
+      return;
+    }
+
+    if (form.categorias.length === 0) {
+      setError(t("productForm.errorNoCategory"));
       return;
     }
 
@@ -227,7 +232,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
                 {t("productForm.priceLabel")}
@@ -258,23 +263,41 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 }
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-                {t("productForm.categoryLabel")}
-              </label>
-              <select
-                required
-                className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-                value={form.categoria}
-                onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-              >
-                <option value="" disabled>{t("productForm.categoryPlaceholder")}</option>
-                {categorias.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>{nombreCategoria(categoria, i18n.language)}</option>
-                ))}
-              </select>
+          <div>
+            <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
+              {t("productForm.categoryLabel")}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {categorias.map((categoria) => {
+                const seleccionada = form.categorias.includes(categoria.id);
+                return (
+                  <button
+                    key={categoria.id}
+                    type="button"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        categorias: seleccionada
+                          ? form.categorias.filter((id) => id !== categoria.id)
+                          : [...form.categorias, categoria.id],
+                      })
+                    }
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                      seleccionada
+                        ? "bg-primary-container text-on-primary-fixed border-primary-container"
+                        : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
+                    }`}
+                  >
+                    {nombreCategoria(categoria, i18n.language)}
+                  </button>
+                );
+              })}
             </div>
+            {form.categorias.length === 0 && (
+              <p className="text-on-surface-variant text-xs mt-2">{t("productForm.categoryPlaceholder")}</p>
+            )}
           </div>
 
           <div>

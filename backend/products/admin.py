@@ -4,6 +4,7 @@ from products.models import Producto
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'precio', 'formato_archivo', 'activo', 'fecha_creacion')
-    list_filter = ('activo', 'formato_archivo', 'fecha_creacion')
+    list_filter = ('activo', 'formato_archivo', 'fecha_creacion', 'categorias')
     search_fields = ('titulo', 'descripcion')
     list_editable = ('precio', 'activo')
+    filter_horizontal = ('categorias',)

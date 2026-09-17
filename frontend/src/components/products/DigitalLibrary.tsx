@@ -21,7 +21,9 @@ export const DigitalLibrary: React.FC = () => {
   const [descargandoId, setDescargandoId] = useState<number | null>(null);
 
   const comprasFiltradas = compras.filter(
-    (c) => categoriasSeleccionadas.size === 0 || categoriasSeleccionadas.has(c.producto.categoria)
+    (c) =>
+      categoriasSeleccionadas.size === 0 ||
+      c.producto.categorias.some((id) => categoriasSeleccionadas.has(id))
   );
 
   useEffect(() => {
@@ -136,7 +138,7 @@ export const DigitalLibrary: React.FC = () => {
 
               <div className="p-4 flex flex-col flex-1 gap-1">
                 <h3 className="font-semibold text-on-surface truncate">{compra.producto.titulo}</h3>
-                <CategoryBadge categoria={compra.producto.categoria_detalle} />
+                <CategoryBadge categorias={compra.producto.categorias_detalle} />
                 <p className="text-on-surface-variant text-xs font-mono">
                   {t("library.acquired", {
                     date: new Date(compra.fecha_adquisicion).toLocaleDateString(i18n.language, {
