@@ -6,7 +6,8 @@
     "language": "Idioma",
     "close": "Cerrar",
     "orPayWith": "O paga con",
-    "paypalError": "No se pudo procesar el pago con PayPal. Inténtalo de nuevo."
+    "paypalError": "No se pudo procesar el pago con PayPal. Inténtalo de nuevo.",
+    "backHome": "Volver al inicio"
   },
   "sidebar": {
     "home": "Inicio",

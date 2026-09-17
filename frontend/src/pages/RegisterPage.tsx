@@ -194,7 +194,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
               </div>
               <div className="ml-3 text-sm">
                 <label className="text-on-surface-variant cursor-pointer" htmlFor="terms">
-                  {t("register.termsPrefix")} <a className="text-primary hover:underline underline-offset-4 decoration-primary/50 transition-colors font-medium" href="#">{t("register.termsLink")}</a>
+                  {t("register.termsPrefix")} <a className="text-primary hover:underline underline-offset-4 decoration-primary/50 transition-colors font-medium" href="/terminos" target="_blank" rel="noreferrer">{t("register.termsLink")}</a>
                 </label>
               </div>
             </div>

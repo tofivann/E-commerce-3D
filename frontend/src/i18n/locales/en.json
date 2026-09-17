@@ -6,7 +6,8 @@
     "language": "Language",
     "close": "Close",
     "orPayWith": "Or pay with",
-    "paypalError": "Could not process the PayPal payment. Please try again."
+    "paypalError": "Could not process the PayPal payment. Please try again.",
+    "backHome": "Back to home"
   },
   "sidebar": {
     "home": "Home",

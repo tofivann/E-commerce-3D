@@ -12,6 +12,7 @@ import { ActivationSuccessPage } from "./pages/ActivationSuccessPage";
 import { RegisterSuccessPage } from "./pages/RegisterSuccessPage";
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { LegalPage } from './pages/LegalPage';
 
 /**
  * Componente principal App que configura las rutas de la aplicación.
@@ -217,6 +218,9 @@ function AppRoutes() {
 
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      <Route path="/privacidad" element={<LegalPage documento="privacidad" />} />
+      <Route path="/terminos" element={<LegalPage documento="terminos" />} />
     </Routes>
   );
 }
