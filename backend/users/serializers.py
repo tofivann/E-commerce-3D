@@ -19,21 +19,29 @@ class UsuarioSerializer(serializers.ModelSerializer):
     # Sobrescribimos el método create para encriptar la contraseña correctamente
     def create(self, validated_data):
         password = validated_data.pop('password')
+        validated_data['is_staff'] = validated_data.get('rol') == Usuario.Rol.ADMIN
         user = Usuario.objects.create_user(password=password, **validated_data)
         return user
 
     def update(self, instance, validated_data):
         # Si la petición incluye un nuevo password, lo extraemos y encriptamos
         password = validated_data.pop('password', None)
-        
+
+        # rol es el único control que expone este formulario para dar acceso de
+        # administrador — is_staff (lo que realmente habilita /admin y el panel
+        # admin del sitio) no es un campo editable aparte, así que se mantiene
+        # sincronizado con rol en cada guardado.
+        if 'rol' in validated_data:
+            instance.is_staff = validated_data['rol'] == Usuario.Rol.ADMIN
+
         # Actualizamos los demás campos (username, email, etc.)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-            
+
         # Si se envió un nuevo password, usamos set_password para encriptarlo
         if password:
             instance.set_password(password)
-            
+
         instance.save()
         return instance
 
