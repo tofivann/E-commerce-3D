@@ -169,4 +169,11 @@ STORAGES = {
     },
 }
 
-GOOGLE_CLIENT_ID = "257526057158-5ld1epn18ov5fc4gi6s74g2d9mmukidn.apps.googleusercontent.com"
+# No es secreto (es el mismo id que va hardcodeado en la app de Google Sign-In
+# del frontend, en VITE_GOOGLE_CLIENT_ID — deben coincidir siempre). Se lee de
+# .env igual que las demás credenciales de pasarelas para poder tener un
+# Client ID de "Testing" en local y uno "In production" en el servidor sin
+# tocar código.
+GOOGLE_CLIENT_ID = os.getenv(
+    'GOOGLE_CLIENT_ID', '257526057158-5ld1epn18ov5fc4gi6s74g2d9mmukidn.apps.googleusercontent.com'
+)

@@ -6,11 +6,11 @@ import './index.css'
 import './i18n/config'
 import App from './App.tsx'
 
-// 2. Coloca aquí el Client ID real que generaste en Google Cloud
-const GOOGLE_CLIENT_ID = "257526057158-5ld1epn18ov5fc4gi6s74g2d9mmukidn.apps.googleusercontent.com";
-
-// Client ID de la app de PayPal (sandbox por ahora) — no es secreto, igual que el de Google.
-const PAYPAL_CLIENT_ID = "AWkHHbQRrllIemVQuB7pqFqf0leNTillqjNiN4jt6dfPrOxyRrbiYGVEir3WNruifnfULRT9k0bBAoGk";
+// Client IDs públicos (no son secretos, igual que VITE_API_URL) — vienen de
+// .env/.env.production para poder tener sandbox en local y live en
+// producción sin tocar código, mismo patrón que Stripe en el backend.
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
