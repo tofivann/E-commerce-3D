@@ -148,3 +148,83 @@ class PayPalCapturarOrdenView(APIView):
             return Response({"detail": "Error al procesar el pago."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"status": "ok", "tipo": tipo}, status=status.HTTP_200_OK)
+
+
+class PayPalWebhookView(APIView):
+    """
+    Webhook real de PayPal — respaldo de PayPalCapturarOrdenView (la captura
+    activa que dispara el frontend en onApprove). Cubre el caso en que esa
+    captura activa nunca llegó a completarse (el navegador se cerró, se
+    perdió la conexión, el usuario cerró la pestaña justo después de
+    aprobar) — sin esto, esas órdenes solo se recuperarían hasta que corra
+    el cron cancelar_ordenes_paypal_expiradas, con horas de demora.
+
+    A diferencia de Stripe, PayPal no firma con HMAC local: hay que mandarle
+    de vuelta las cabeceras de la transmisión para que él mismo confirme la
+    firma (ver paypal_utils.verificar_webhook_signature) — nunca se procesa
+    un evento sin esa verificación.
+
+    Escucha PAYMENT.CAPTURE.COMPLETED y enruta por el mismo custom_id que ya
+    usa la captura activa, reutilizando las mismas funciones idempotentes
+    (marcar_orden_pagada/activar_suscripcion_usuario/marcar_comision_pagada)
+    — no importa si este webhook y la captura activa procesan el mismo pago
+    dos veces, la segunda vez es un no-op.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        try:
+            payload = json.loads(request.body)
+        except ValueError:
+            return HttpResponse(status=400)
+
+        cabeceras = {
+            'PAYPAL-AUTH-ALGO': request.META.get('HTTP_PAYPAL_AUTH_ALGO'),
+            'PAYPAL-CERT-URL': request.META.get('HTTP_PAYPAL_CERT_URL'),
+            'PAYPAL-TRANSMISSION-ID': request.META.get('HTTP_PAYPAL_TRANSMISSION_ID'),
+            'PAYPAL-TRANSMISSION-SIG': request.META.get('HTTP_PAYPAL_TRANSMISSION_SIG'),
+            'PAYPAL-TRANSMISSION-TIME': request.META.get('HTTP_PAYPAL_TRANSMISSION_TIME'),
+        }
+
+        try:
+            firma_valida = paypal_utils.verificar_webhook_signature(
+                headers=cabeceras, webhook_event=payload, webhook_id=settings.PAYPAL_WEBHOOK_ID,
+            )
+        except paypal_utils.PayPalError as e:
+            print(f"Error verificando firma de webhook de PayPal: {e}")
+            return HttpResponse(status=400)
+
+        if not firma_valida:
+            print("Webhook de PayPal con firma inválida — evento descartado.")
+            return HttpResponse(status=400)
+
+        if payload.get('event_type') == 'PAYMENT.CAPTURE.COMPLETED':
+            resource = payload.get('resource', {})
+            custom_id = resource.get('custom_id')
+
+            try:
+                datos = json.loads(custom_id) if custom_id else {}
+            except ValueError:
+                print(f"Webhook de PayPal: captura sin custom_id legible: {custom_id!r}")
+                return HttpResponse(status=200)
+
+            tipo = datos.get('tipo')
+            paypal_order_id = (
+                resource.get('supplementary_data', {}).get('related_ids', {}).get('order_id')
+            )
+
+            try:
+                if tipo == 'compra_carrito':
+                    marcar_orden_pagada(paypal_order_id=paypal_order_id)
+                elif tipo in TIPOS_ACTIVACION_USUARIO:
+                    activar_suscripcion_usuario({'metadata': {'user_id': datos.get('user_id')}})
+                elif tipo in TIPOS_COMISION:
+                    marcar_comision_pagada(paypal_order_id=paypal_order_id)
+                else:
+                    print(f"Webhook de PayPal con tipo desconocido: {tipo!r}")
+            except Exception as e:
+                print(f"Error procesando PAYMENT.CAPTURE.COMPLETED de PayPal: {e}")
+                return HttpResponse(status=500)
+
+        return HttpResponse(status=200)

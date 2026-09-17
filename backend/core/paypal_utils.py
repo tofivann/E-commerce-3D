@@ -78,6 +78,43 @@ def consultar_orden(paypal_order_id):
     return _revisar_respuesta(resp)
 
 
+def verificar_webhook_signature(headers, webhook_event, webhook_id):
+    """
+    Verifica la firma de un evento entrante del webhook de PayPal.
+
+    A diferencia de Stripe (que firma con HMAC y se verifica localmente con
+    STRIPE_WEBHOOK_SECRET, sin llamar a la red), PayPal exige mandarle de
+    vuelta las cabeceras de la transmisión para que él mismo confirme si la
+    firma es válida — no hay forma de verificarla sin esta llamada. Nunca
+    proceses un evento sin llamar esto primero y confirmar que devolvió True.
+
+    `headers` debe traer las claves PAYPAL-AUTH-ALGO, PAYPAL-CERT-URL,
+    PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-SIG y PAYPAL-TRANSMISSION-TIME
+    (tal cual las manda PayPal); `webhook_event` es el body del request ya
+    parseado como dict (no el string crudo).
+    """
+    token = _obtener_access_token()
+    try:
+        resp = requests.post(
+            f"{settings.PAYPAL_API_BASE}/v1/notifications/verify-webhook-signature",
+            headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+            json={
+                'auth_algo': headers.get('PAYPAL-AUTH-ALGO'),
+                'cert_url': headers.get('PAYPAL-CERT-URL'),
+                'transmission_id': headers.get('PAYPAL-TRANSMISSION-ID'),
+                'transmission_sig': headers.get('PAYPAL-TRANSMISSION-SIG'),
+                'transmission_time': headers.get('PAYPAL-TRANSMISSION-TIME'),
+                'webhook_id': webhook_id,
+                'webhook_event': webhook_event,
+            },
+            timeout=10,
+        )
+    except requests.RequestException as e:
+        raise PayPalError(f"No se pudo conectar con PayPal: {e}") from e
+    datos = _revisar_respuesta(resp)
+    return datos.get('verification_status') == 'SUCCESS'
+
+
 def capturar_orden(paypal_order_id):
     token = _obtener_access_token()
     try:

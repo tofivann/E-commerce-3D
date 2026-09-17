@@ -89,6 +89,10 @@ PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')  # 'sandbox' o 'live'
 PAYPAL_API_BASE = (
     'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
 )
+# Id del webhook creado en el Developer Dashboard de PayPal (Apps & Credentials
+# > tu app > Webhooks) — necesario para que PayPal verifique la firma de cada
+# evento entrante. Sandbox y Live tienen webhooks (y por lo tanto ids) distintos.
+PAYPAL_WEBHOOK_ID = os.getenv('PAYPAL_WEBHOOK_ID', '')
 
 # 5. Base de datos con Supabase / PostgreSQL
 DATABASE_URL = os.getenv('DATABASE_URL')
