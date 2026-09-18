@@ -125,7 +125,11 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
               </button>
             ) : (
               <span className="shrink-0 text-on-surface-variant text-xs italic">
-                {item.data.orden.estado_pago !== "COMPLETADO" ? t("misComisiones.confirmingPayment") : t("misComisiones.working")}
+                {item.data.orden.estado_pago !== "COMPLETADO"
+                  ? t("misComisiones.confirmingPayment")
+                  : item.data.estado === "CANCELADO"
+                  ? t("misComisiones.cancelled")
+                  : t("misComisiones.working")}
               </span>
             )}
           </div>

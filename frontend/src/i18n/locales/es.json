@@ -170,7 +170,8 @@
     "downloading": "Descargando...",
     "download": "Descargar",
     "confirmingPayment": "Confirmando pago...",
-    "working": "Trabajando en tu comisión..."
+    "working": "Trabajando en tu comisión...",
+    "cancelled": "Comisión cancelada"
   },
   "comisionesLibrary": {
     "loadError": "No se pudieron cargar tus comisiones.",
