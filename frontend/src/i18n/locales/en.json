@@ -45,6 +45,7 @@
     "email": "Email Address",
     "password": "Password",
     "forgotPassword": "Forgot Password?",
+    "rememberMe": "Keep me signed in",
     "submit": "Login",
     "orContinueWith": "OR CONTINUE WITH",
     "error": "The email or password is incorrect."

@@ -1,6 +1,14 @@
+from datetime import timedelta
+
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Usuario
+
+# Duración del refresh token cuando NO se marca "Mantener sesión abierta" —
+# comparado con REFRESH_TOKEN_LIFETIME (7 días, en core/jwt_settings.py) que
+# aplica cuando sí se marca.
+DURACION_SESION_CORTA = timedelta(days=1)
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,7 +58,25 @@ class UsuarioSerializer(serializers.ModelSerializer):
 # ==========================================
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        # 'remember_me' no es parte del esquema estándar de login (email +
+        # password) — llega como un campo extra en el mismo body, se lee del
+        # initial_data crudo. Si no se marca, el refresh token dura solo
+        # DURACION_SESION_CORTA en vez de los 7 días completos.
+        remember_me = str(self.initial_data.get('remember_me', '')).lower() in ('true', '1')
+
         data = super().validate(attrs)
+
+        # super().validate() ya generó un refresh/access token con la
+        # duración default — lo reemplazamos por uno propio para poder
+        # ajustar su duración y guardar la preferencia como claim, así
+        # sobrevive a la rotación en /auth/refresh/ (ver
+        # CustomTokenRefreshSerializer más abajo).
+        refresh = RefreshToken.for_user(self.user)
+        refresh['remember_me'] = remember_me
+        if not remember_me:
+            refresh.set_exp(lifetime=DURACION_SESION_CORTA)
+        data['refresh'] = str(refresh)
+        data['access'] = str(refresh.access_token)
 
         # Inyectamos los datos del usuario en la respuesta del Login
         data['user'] = {
@@ -63,6 +89,29 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'rol': self.user.rol,
             'estado_suscripcion': self.user.estado_suscripcion,
         }
+
+        return data
+
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    """
+    Con ROTATE_REFRESH_TOKENS=True, cada llamada a /auth/refresh/ reemplaza
+    el refresh token por uno nuevo — sin esto, ese nuevo token volvería a la
+    duración default (7 días) sin importar que el login haya sido sin
+    "mantener sesión abierta". Se lee la preferencia guardada en el token
+    ENTRANTE (antes de que se rote) y se reaplica al nuevo.
+    """
+    def validate(self, attrs):
+        token_entrante = RefreshToken(attrs['refresh'])
+        remember_me = bool(token_entrante.get('remember_me', True))
+
+        data = super().validate(attrs)
+
+        if not remember_me:
+            nuevo_refresh = RefreshToken(data['refresh'])
+            nuevo_refresh['remember_me'] = False
+            nuevo_refresh.set_exp(lifetime=DURACION_SESION_CORTA)
+            data['refresh'] = str(nuevo_refresh)
 
         return data
 

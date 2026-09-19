@@ -15,6 +15,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +29,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       // el login compara el correo de forma exacta (sensible a mayúsculas),
       // así que se normaliza a minúsculas justo antes de enviarlo, sin
       // importar cómo haya quedado escrito en el campo.
-      const data = await authApi.login({ email: email.trim().toLowerCase(), password });
+      const data = await authApi.login({ email: email.trim().toLowerCase(), password, remember_me: rememberMe });
 
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
@@ -118,6 +119,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </Link>
             }
           />
+
+        <label className="flex items-center gap-2 cursor-pointer select-none -mt-2">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 rounded bg-surface-variant border-outline-variant text-primary focus:ring-primary"
+          />
+          <span className="text-sm text-on-surface-variant">{t("login.rememberMe")}</span>
+        </label>
 
         <Button type="submit" loading={loading} icon="login" className="mt-2">
           {t("login.submit")}

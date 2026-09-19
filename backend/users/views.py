@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import transaction
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,6 +17,7 @@ from core import paypal_utils
 from .models import Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer,
+    CustomTokenRefreshSerializer,
     RegistroSerializer,
     UsuarioSerializer,
 )
@@ -30,6 +31,10 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # ==========================================
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
 
 
 # ==========================================

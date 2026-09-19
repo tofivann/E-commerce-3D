@@ -16,27 +16,94 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Si el token guardado ya expiró (o el backend lo rechaza por cualquier
-// motivo), redirige a /login en vez de dejar la app en un estado roto con
-// 401 silenciosos en cada petición (ver nota en CLAUDE.md sobre este hueco
-// conocido — ACCESS_TOKEN_LIFETIME es de 60 minutos y nunca se usa
-// refresh_token automáticamente). Solo aplica cuando la petición rechazada
-// SÍ llevaba un Authorization: Bearer — un 401 de credenciales incorrectas
-// en el propio formulario de login (que no manda token) no debe redirigir,
-// solo debe mostrarse como el error de login normal.
+function limpiarSesionYRedirigir() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('is_staff');
+  localStorage.removeItem('estado_suscripcion');
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+}
+
+// Cuando el access token expira (cada 60 min) llega un 401 — antes de
+// mandar a /login de una, se intenta renovar con el refresh_token guardado
+// (dura 1 día sin "Mantener sesión abierta" marcado en el login, o 7 días
+// si sí se marcó — ver CustomTokenObtainPairSerializer en el backend). Solo
+// si ese refresh también falla (el refresh_token también expiró, o nunca
+// hubo uno) se limpia la sesión y se redirige de verdad.
+let refrescando = false;
+let peticionesEnEspera: ((token: string) => void)[] = [];
+
+function avisarCuandoHayaToken(cb: (token: string) => void) {
+  peticionesEnEspera.push(cb);
+}
+
+function notificarNuevoToken(token: string) {
+  peticionesEnEspera.forEach((cb) => cb(token));
+  peticionesEnEspera = [];
+}
+
 axiosClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const llevabaToken = Boolean(error.config?.headers?.Authorization);
-    if (error.response?.status === 401 && llevabaToken) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('is_staff');
-      localStorage.removeItem('estado_suscripcion');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+  async (error) => {
+    const originalRequest = error.config;
+    const llevabaToken = Boolean(originalRequest?.headers?.Authorization);
+
+    // !originalRequest._retry evita un loop infinito si la petición YA se
+    // reintentó una vez con un token "nuevo" y aun así volvió a dar 401 (el
+    // refresh_token también venció, o el backend rechaza por otro motivo).
+    if (error.response?.status !== 401 || !llevabaToken || originalRequest._retry) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      limpiarSesionYRedirigir();
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    // Si ya hay una renovación en curso (varias peticiones fallaron casi a
+    // la vez, ej. al cargar una página que dispara varios fetch juntos), las
+    // demás esperan a que termine esa única renovación en vez de disparar
+    // una llamada a /auth/refresh/ por cada una.
+    if (refrescando) {
+      return new Promise((resolve) => {
+        avisarCuandoHayaToken((nuevoToken) => {
+          originalRequest.headers.Authorization = `Bearer ${nuevoToken}`;
+          resolve(axiosClient(originalRequest));
+        });
+      });
+    }
+
+    refrescando = true;
+    try {
+      const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1/';
+      // axios "pelado" (no axiosClient) a propósito: usar axiosClient aquí
+      // volvería a pasar por este mismo interceptor si esta llamada también
+      // da 401, causando un loop.
+      const { data } = await axios.post(`${baseURL}users/auth/refresh/`, { refresh: refreshToken });
+
+      localStorage.setItem('access_token', data.access);
+      if (data.refresh) {
+        // ROTATE_REFRESH_TOKENS está activo en el backend: cada renovación
+        // devuelve un refresh_token nuevo y invalida el viejo — hay que
+        // guardarlo siempre, si no la SIGUIENTE renovación fallaría.
+        localStorage.setItem('refresh_token', data.refresh);
+      }
+
+      refrescando = false;
+      notificarNuevoToken(data.access);
+
+      originalRequest.headers.Authorization = `Bearer ${data.access}`;
+      return axiosClient(originalRequest);
+    } catch (refreshError) {
+      refrescando = false;
+      peticionesEnEspera = [];
+      limpiarSesionYRedirigir();
+      return Promise.reject(refreshError);
+    }
   }
 );

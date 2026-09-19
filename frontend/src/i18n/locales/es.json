@@ -45,6 +45,7 @@
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "forgotPassword": "¿Olvidaste tu contraseña?",
+    "rememberMe": "Mantener sesión abierta",
     "submit": "Iniciar Sesión",
     "orContinueWith": "O CONTINÚA CON",
     "error": "El correo electrónico o la contraseña son incorrectos."
