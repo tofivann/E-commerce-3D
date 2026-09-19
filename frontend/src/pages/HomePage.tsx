@@ -74,6 +74,24 @@ export const HomePage: React.FC<HomePageProps> = ({
       .catch((err) => console.error("Error al cargar la biblioteca:", err));
   }, [isLoggedIn]);
 
+  // Al redirigir a Stripe/PayPal con window.location.href, activandoPago se
+  // queda en true (nunca se resetea, porque se asume que la página va a
+  // navegar afuera). Si el usuario le da "atrás" en el navegador en vez de
+  // cerrar la pestaña, el navegador puede restaurar esta página congelada tal
+  // cual estaba (bfcache) en vez de recargarla desde cero — el botón queda
+  // pegado en "Validando..." hasta que alguien recarga a mano. El evento
+  // "pageshow" con persisted=true detecta exactamente ese caso de restauración
+  // desde bfcache, así que ahí se resetea el estado sin depender de un reload.
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setActivandoPago(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   const handleAddToCart = async (producto: Producto) => {
     if (!producto.id) return;
     try {
