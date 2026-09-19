@@ -26,6 +26,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   extraRightContent,
 }) => {
   const esPassword = type === "password";
+  const esEmail = type === "email";
   const [mostrarPassword, setMostrarPassword] = React.useState(false);
   const tipoReal = esPassword && mostrarPassword ? "text" : type;
 
@@ -52,6 +53,12 @@ export const InputField: React.FC<InputFieldProps> = ({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          // iOS pone en mayúscula la primera letra de un campo de texto por
+          // defecto, incluso en type="email" — y como el login compara el
+          // correo de forma exacta (sensible a mayúsculas), esa "C" que iOS
+          // agrega solo puede rechazar el login sin que se note al escribir.
+          autoCapitalize={esEmail ? "none" : undefined}
+          autoCorrect={esEmail ? "off" : undefined}
         />
         {esPassword && (
           <button

@@ -24,7 +24,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const data = await authApi.login({ email, password });
+      // Segunda capa de defensa además de autoCapitalize="none" en el input:
+      // el login compara el correo de forma exacta (sensible a mayúsculas),
+      // así que se normaliza a minúsculas justo antes de enviarlo, sin
+      // importar cómo haya quedado escrito en el campo.
+      const data = await authApi.login({ email: email.trim().toLowerCase(), password });
 
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
