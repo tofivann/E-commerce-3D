@@ -1,4 +1,5 @@
 import { axiosClient } from "../services/axiosClient";
+import type { RespuestaPaginada } from "./types";
 
 export interface Categoria {
   id: number;
@@ -47,14 +48,32 @@ export const categoriasApi = {
 // 2. Métodos CRUD para Productos (usan la instancia axios compartida — mismo
 // VITE_API_URL/JWT que el resto de la app, sin una baseURL propia aparte)
 
-// Obtener todos los productos (catálogo público: solo activos, sin importar quién esté logueado)
-export function getAllProductos() {
-  return axiosClient.get<Producto[]>(BASE);
+export interface FiltrosProductos {
+  // Texto libre; el backend busca en título y descripción sin distinguir acentos ni mayúsculas.
+  search?: string;
+  // Ids de categorías: coincide con cualquiera de ellas. Vacío = todas.
+  categorias?: number[];
+  // Solo tiene efecto para staff (panel admin); el catálogo público siempre ve solo activos.
+  incluirInactivos?: boolean;
 }
 
-// Panel admin: incluye también los productos inactivos (solo staff puede pedir esto).
-export function getAllProductosAdmin() {
-  return axiosClient.get<Producto[]>(BASE, { params: { incluir_inactivos: "true" } });
+// Listado paginado (50 por página, ver core/pagination.py). La búsqueda y el
+// filtro por categoría se resuelven en el servidor: como el cliente solo
+// tiene cargadas las páginas que ya pidió, filtrar en memoria solo vería esa
+// parte y daría resultados incompletos.
+export async function listarProductos(
+  filtros: FiltrosProductos = {},
+  page = 1,
+): Promise<RespuestaPaginada<Producto>> {
+  const { data } = await axiosClient.get<RespuestaPaginada<Producto>>(BASE, {
+    params: {
+      page,
+      search: filtros.search?.trim() || undefined,
+      categorias: filtros.categorias?.length ? filtros.categorias.join(",") : undefined,
+      incluir_inactivos: filtros.incluirInactivos ? "true" : undefined,
+    },
+  });
+  return data;
 }
 
 // Obtener un solo producto por ID

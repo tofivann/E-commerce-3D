@@ -1,46 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
-import { deleteProducto, getAllProductosAdmin, patchProducto } from "../../api/productos.api";
+import { deleteProducto, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
+import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
+import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 import { nombreCategoria } from "../../utils/categoria";
 
 export const ProductAdminTable: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Producto | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const fetchProductos = async () => {
-    try {
-      setLoading(true);
-      const response = await getAllProductosAdmin();
-      setProductos(response.data);
-      setError(null);
-    } catch (err) {
-      console.error("Error al cargar productos:", err);
-      setError(t("adminProducts.loadError"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProductos();
-  }, []);
+  const {
+    items: productos,
+    cargando,
+    cargandoMas,
+    error,
+    hayMas,
+    cargarMas,
+    recargar,
+    actualizarItem,
+    eliminarItem,
+  } = useProductosPaginados({ incluirInactivos: true });
 
   const handleToggleActivo = async (producto: Producto) => {
     if (!producto.id) return;
     setTogglingId(producto.id);
     try {
       await patchProducto(producto.id, { activo: !producto.activo });
-      setProductos((prev) =>
-        prev.map((p) => (p.id === producto.id ? { ...p, activo: !p.activo } : p))
-      );
+      actualizarItem(producto.id, { activo: !producto.activo });
     } catch (err) {
       console.error("Error al cambiar el estado del producto:", err);
       window.alert(t("adminProducts.toggleError"));
@@ -57,7 +48,7 @@ export const ProductAdminTable: React.FC = () => {
     setDeletingId(producto.id);
     try {
       await deleteProducto(producto.id);
-      setProductos((prev) => prev.filter((p) => p.id !== producto.id));
+      eliminarItem(producto.id);
     } catch (err) {
       console.error("Error al eliminar el producto:", err);
       window.alert(t("adminProducts.deleteError"));
@@ -87,7 +78,7 @@ export const ProductAdminTable: React.FC = () => {
 
       {error && (
         <div className="p-4 mb-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
-          {error}
+          {t("adminProducts.loadError")}
         </div>
       )}
 
@@ -105,107 +96,118 @@ export const ProductAdminTable: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
-              {loading && (
+              {cargando && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-on-surface-variant">
+                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
                     {t("adminProducts.loading")}
                   </td>
                 </tr>
               )}
 
-              {!loading && productos.length === 0 && (
+              {!cargando && !error && productos.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-on-surface-variant">
+                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
                     {t("adminProducts.empty")}
                   </td>
                 </tr>
               )}
 
-              {!loading &&
-                productos.map((producto) => (
-                  <tr key={producto.id} className="hover:bg-surface-container-highest/30 transition-colors group">
-                    <td className="py-3 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md overflow-hidden border border-outline-variant/30 bg-surface-container-lowest shrink-0">
-                          {typeof producto.imagen_previa === "string" && producto.imagen_previa ? (
-                            <img
-                              src={producto.imagen_previa}
-                              alt={producto.titulo}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-outline">
-                              <span className="material-symbols-outlined text-[18px]">deployed_code</span>
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-on-surface font-medium truncate max-w-[220px]">{producto.titulo}</span>
+              {productos.map((producto) => (
+                <tr key={producto.id} className="hover:bg-surface-container-highest/30 transition-colors group">
+                  <td className="py-3 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-md overflow-hidden border border-outline-variant/30 bg-surface-container-lowest shrink-0">
+                        {typeof producto.imagen_previa === "string" && producto.imagen_previa ? (
+                          <img
+                            src={producto.imagen_previa}
+                            alt={producto.titulo}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-outline">
+                            <span className="material-symbols-outlined text-[18px]">deployed_code</span>
+                          </div>
+                        )}
                       </div>
-                    </td>
-                    <td className="py-3 px-6 text-on-surface-variant text-sm">
-                      {producto.categorias_detalle && producto.categorias_detalle.length > 0
-                        ? producto.categorias_detalle.map((c) => nombreCategoria(c, i18n.language)).join(", ")
-                        : "—"}
-                    </td>
-                    <td className="py-3 px-6 font-mono text-on-surface-variant text-sm">
-                      {producto.formato_archivo || "—"}
-                    </td>
-                    <td className="py-3 px-6 font-mono text-primary-fixed-dim font-semibold">
-                      ${Number(producto.precio).toFixed(2)}
-                    </td>
-                    <td className="py-3 px-6">
-                      <button
-                        onClick={() => handleToggleActivo(producto)}
-                        disabled={togglingId === producto.id}
-                        title={t("adminProducts.toggleTitle")}
-                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full transition-colors disabled:opacity-50 ${
-                          producto.activo
-                            ? "bg-primary-container/40 text-primary-fixed-dim hover:bg-primary-container/60"
-                            : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                      <span className="text-on-surface font-medium truncate max-w-[220px]">{producto.titulo}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-6 text-on-surface-variant text-sm">
+                    {producto.categorias_detalle && producto.categorias_detalle.length > 0
+                      ? producto.categorias_detalle.map((c) => nombreCategoria(c, i18n.language)).join(", ")
+                      : "—"}
+                  </td>
+                  <td className="py-3 px-6 font-mono text-on-surface-variant text-sm">
+                    {producto.formato_archivo || "—"}
+                  </td>
+                  <td className="py-3 px-6 font-mono text-primary-fixed-dim font-semibold">
+                    ${Number(producto.precio).toFixed(2)}
+                  </td>
+                  <td className="py-3 px-6">
+                    <button
+                      onClick={() => handleToggleActivo(producto)}
+                      disabled={togglingId === producto.id}
+                      title={t("adminProducts.toggleTitle")}
+                      className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full transition-colors disabled:opacity-50 ${
+                        producto.activo
+                          ? "bg-primary-container/40 text-primary-fixed-dim hover:bg-primary-container/60"
+                          : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          producto.activo ? "bg-primary-fixed-dim" : "bg-outline-variant"
                         }`}
+                      />
+                      {producto.activo ? t("adminProducts.active") : t("adminProducts.inactive")}
+                    </button>
+                  </td>
+                  <td className="py-3 px-6 text-right">
+                    <div className="flex justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <button
+                        aria-label={t("adminProducts.edit")}
+                        onClick={() => {
+                          setEditing(producto);
+                          setFormOpen(true);
+                        }}
+                        className="p-1.5 rounded border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/50 transition-colors"
                       >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            producto.activo ? "bg-primary-fixed-dim" : "bg-outline-variant"
-                          }`}
-                        />
-                        {producto.activo ? t("adminProducts.active") : t("adminProducts.inactive")}
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
                       </button>
-                    </td>
-                    <td className="py-3 px-6 text-right">
-                      <div className="flex justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                        <button
-                          aria-label={t("adminProducts.edit")}
-                          onClick={() => {
-                            setEditing(producto);
-                            setFormOpen(true);
-                          }}
-                          className="p-1.5 rounded border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/50 transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">edit</span>
-                        </button>
-                        <button
-                          aria-label={t("adminProducts.delete")}
-                          disabled={deletingId === producto.id}
-                          onClick={() => handleDelete(producto)}
-                          className="p-1.5 rounded border border-outline-variant/40 text-on-surface-variant hover:text-error hover:border-error/50 transition-colors disabled:opacity-50"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      <button
+                        aria-label={t("adminProducts.delete")}
+                        disabled={deletingId === producto.id}
+                        onClick={() => handleDelete(producto)}
+                        className="p-1.5 rounded border border-outline-variant/40 text-on-surface-variant hover:text-error hover:border-error/50 transition-colors disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {cargandoMas && (
+                <tr>
+                  <td colSpan={6} className="py-4 text-center text-on-surface-variant text-sm">
+                    {t("common.loadingMore")}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+        <InfiniteScrollSentinel
+          onVisible={cargarMas}
+          disabled={!hayMas || cargando || cargandoMas}
+        />
       </div>
 
       <ProductForm
         open={formOpen}
         producto={editing}
         onClose={() => setFormOpen(false)}
-        onSaved={fetchProductos}
+        onSaved={recargar}
       />
     </div>
   );

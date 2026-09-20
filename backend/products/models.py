@@ -1,5 +1,7 @@
 from django.db import models
 
+from core.text_utils import normalizar_texto
+
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -41,9 +43,30 @@ class Producto(models.Model):
     activo = models.BooleanField(default=True, db_index=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
+    # Copias de titulo/descripcion sin acentos y en minúsculas, mantenidas en
+    # save(). La búsqueda del catálogo (?search=) filtra sobre estas columnas
+    # para ser insensible a acentos en cualquier base de datos: `icontains`
+    # de Postgres ignora mayúsculas pero no acentos, y la extensión `unaccent`
+    # no existe en el SQLite de desarrollo. No se editan a mano.
+    titulo_normalizado = models.CharField(max_length=200, default='', editable=False, db_index=True)
+    descripcion_normalizada = models.TextField(default='', editable=False)
+
     class Meta:
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
+        # Orden determinista: obligatorio para paginar (sin él, Postgres puede
+        # repetir o saltar filas entre páginas). Lo más nuevo primero.
+        ordering = ['-fecha_creacion', '-id']
 
     def __str__(self):
         return self.titulo
+
+    def save(self, *args, **kwargs):
+        self.titulo_normalizado = normalizar_texto(self.titulo)
+        self.descripcion_normalizada = normalizar_texto(self.descripcion)
+        # Si el llamador limitó las columnas a escribir (update_fields), las
+        # normalizadas tienen que ir incluidas o quedarían desactualizadas.
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            kwargs['update_fields'] = set(update_fields) | {'titulo_normalizado', 'descripcion_normalizada'}
+        super().save(*args, **kwargs)

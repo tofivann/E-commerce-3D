@@ -7,7 +7,8 @@
     "close": "Cerrar",
     "orPayWith": "O paga con",
     "paypalError": "No se pudo procesar el pago con PayPal. Inténtalo de nuevo.",
-    "backHome": "Volver al inicio"
+    "backHome": "Volver al inicio",
+    "loadingMore": "Cargando más..."
   },
   "sidebar": {
     "home": "Inicio",
@@ -82,7 +83,8 @@
     "defaultDescription": "Modelo MMD 3D",
     "goToLibrary": "Ir a mi biblioteca",
     "add": "Agregar",
-    "allCategories": "Todas"
+    "allCategories": "Todas",
+    "noResultsFilters": "No hay modelos en las categorías seleccionadas."
   },
   "productDetails": {
     "previewOf": "Vista previa de {{title}}",

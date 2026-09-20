@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getAllProductos, categoriasApi } from "../../api/productos.api";
+import { categoriasApi } from "../../api/productos.api";
 import type { Producto, Categoria } from "../../api/productos.api";
 import { ProductCard } from "./ProductCard";
-import { coincideBusqueda } from "../../utils/normalizarTexto";
-import { CategoryFilter, filtrarPorCategorias } from "./CategoryFilter";
+import { ProductGridSkeleton } from "./ProductGridSkeleton";
+import { CategoryFilter } from "./CategoryFilter";
+import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 
 interface ProductListProps {
   // true solo si además de tener sesión, puede ver/comprar el catálogo
@@ -27,40 +30,34 @@ export const ProductList: React.FC<ProductListProps> = ({
   searchQuery = "",
 }) => {
   const { t } = useTranslation();
-  const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const productosFiltrados = filtrarPorCategorias(
-    productos.filter(
-      (p) =>
-        coincideBusqueda(p.titulo, searchQuery) || coincideBusqueda(p.descripcion, searchQuery)
-    ),
-    categoriasSeleccionadas
-  );
+  // La búsqueda y las categorías se resuelven en el backend (el cliente solo
+  // tiene cargadas las páginas que ya pidió). El texto va con retraso para
+  // no lanzar una petición por cada tecla.
+  const busqueda = useDebounce(searchQuery.trim());
+  const {
+    items: productos,
+    cargando,
+    cargandoMas,
+    error,
+    hayMas,
+    cargarMas,
+  } = useProductosPaginados({
+    search: busqueda,
+    categorias: [...categoriasSeleccionadas],
+  });
 
   useEffect(() => {
-    fetchProductos();
     categoriasApi
       .listar()
       .then(setCategorias)
       .catch((err) => console.error("Error al cargar categorías:", err));
   }, []);
 
-  const fetchProductos = async () => {
-    try {
-      setLoading(true);
-      const response = await getAllProductos();
-      setProductos(response.data);
-    } catch (err) {
-      console.error("Error al cargar productos:", err);
-      setError(t("catalog.loadError"));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const hayFiltros = busqueda !== "" || categoriasSeleccionadas.size > 0;
+  const sinResultados = !cargando && !error && productos.length === 0 && hayFiltros;
 
   return (
     <section className="flex flex-col gap-6 w-full">
@@ -83,36 +80,29 @@ export const ProductList: React.FC<ProductListProps> = ({
         onChange={setCategoriasSeleccionadas}
       />
 
-      {/* Estado de Carga */}
-      {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((n) => (
-            <div
-              key={n}
-              className="h-[320px] rounded-lg bg-[var(--color-surface-container-low)] animate-pulse border border-[var(--color-outline-variant)]/20"
-            />
-          ))}
-        </div>
-      )}
+      {/* Estado de Carga (primera página) */}
+      {cargando && <ProductGridSkeleton />}
 
       {/* Error */}
       {error && (
         <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
-          {error}
+          {t("catalog.loadError")}
         </div>
       )}
 
-      {/* Sin resultados de búsqueda */}
-      {!loading && !error && productos.length > 0 && productosFiltrados.length === 0 && (
+      {/* Sin resultados para la búsqueda / categorías */}
+      {sinResultados && (
         <div className="p-10 text-center text-on-surface-variant">
-          {t("catalog.noResults", { query: searchQuery })}
+          {busqueda
+            ? t("catalog.noResults", { query: busqueda })
+            : t("catalog.noResultsFilters")}
         </div>
       )}
 
       {/* Grilla de Productos */}
-      {!loading && !error && productosFiltrados.length > 0 && (
+      {productos.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productosFiltrados.map((prod) => (
+          {productos.map((prod) => (
             <ProductCard
               key={prod.id || prod.titulo}
               producto={prod}
@@ -125,6 +115,13 @@ export const ProductList: React.FC<ProductListProps> = ({
           ))}
         </div>
       )}
+
+      {/* Scroll infinito: siguiente página al acercarse al final */}
+      {cargandoMas && <ProductGridSkeleton />}
+      <InfiniteScrollSentinel
+        onVisible={cargarMas}
+        disabled={!hayMas || cargando || cargandoMas}
+      />
     </section>
   );
 };

@@ -1,48 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Producto, Categoria } from "../../api/productos.api";
-import { getAllProductosAdmin, patchProducto, categoriasApi } from "../../api/productos.api";
+import { patchProducto, categoriasApi } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
-import { CategoryFilter, filtrarPorCategorias } from "./CategoryFilter";
+import { ProductGridSkeleton } from "./ProductGridSkeleton";
+import { CategoryFilter } from "./CategoryFilter";
 import { CategoryBadge } from "./CategoryBadge";
 import { SearchInput } from "./SearchInput";
-import { coincideBusqueda } from "../../utils/normalizarTexto";
+import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
+import { useDebounce } from "../../hooks/useDebounce";
+import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 
 export const ProductAdminGrid: React.FC = () => {
   const { t } = useTranslation();
-  const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Producto | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const productosFiltrados = filtrarPorCategorias(
-    productos.filter(
-      (p) => coincideBusqueda(p.titulo, searchQuery) || coincideBusqueda(p.descripcion, searchQuery)
-    ),
-    categoriasSeleccionadas
-  );
-
-  const fetchProductos = async () => {
-    try {
-      setLoading(true);
-      const response = await getAllProductosAdmin();
-      setProductos(response.data);
-      setError(null);
-    } catch (err) {
-      console.error("Error al cargar productos:", err);
-      setError(t("adminProducts.loadError"));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const busqueda = useDebounce(searchQuery.trim());
+  const {
+    items: productos,
+    cargando,
+    cargandoMas,
+    error,
+    hayMas,
+    cargarMas,
+    recargar,
+    actualizarItem,
+  } = useProductosPaginados({
+    search: busqueda,
+    categorias: [...categoriasSeleccionadas],
+    incluirInactivos: true,
+  });
 
   useEffect(() => {
-    fetchProductos();
     categoriasApi
       .listar()
       .then(setCategorias)
@@ -64,9 +58,7 @@ export const ProductAdminGrid: React.FC = () => {
     setTogglingId(producto.id);
     try {
       await patchProducto(producto.id, { activo: !producto.activo });
-      setProductos((prev) =>
-        prev.map((p) => (p.id === producto.id ? { ...p, activo: !p.activo } : p))
-      );
+      actualizarItem(producto.id, { activo: !producto.activo });
     } catch (err) {
       console.error("Error al cambiar el estado del producto:", err);
       window.alert(t("adminProducts.toggleError"));
@@ -100,32 +92,23 @@ export const ProductAdminGrid: React.FC = () => {
         className="mb-6"
       />
 
-      {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((n) => (
-            <div
-              key={n}
-              className="h-[320px] rounded-xl bg-surface-container-low animate-pulse border border-outline-variant/20"
-            />
-          ))}
-        </div>
-      )}
+      {cargando && <ProductGridSkeleton />}
 
       {error && (
         <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
-          {error}
+          {t("adminProducts.loadError")}
         </div>
       )}
 
-      {!loading && !error && productosFiltrados.length === 0 && (
+      {!cargando && !error && productos.length === 0 && (
         <div className="p-10 text-center text-on-surface-variant glass-panel rounded-xl">
           {t("adminProducts.emptyGrid")}
         </div>
       )}
 
-      {!loading && !error && productosFiltrados.length > 0 && (
+      {productos.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productosFiltrados.map((producto) => (
+          {productos.map((producto) => (
             <div
               key={producto.id}
               className="group bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant/30 relative flex flex-col h-[320px] transition-all hover:-translate-y-1"
@@ -187,11 +170,17 @@ export const ProductAdminGrid: React.FC = () => {
         </div>
       )}
 
+      {cargandoMas && <ProductGridSkeleton className="mt-6" />}
+      <InfiniteScrollSentinel
+        onVisible={cargarMas}
+        disabled={!hayMas || cargando || cargandoMas}
+      />
+
       <ProductForm
         open={formOpen}
         producto={editing}
         onClose={() => setFormOpen(false)}
-        onSaved={fetchProductos}
+        onSaved={recargar}
       />
     </div>
   );
