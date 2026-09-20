@@ -56,6 +56,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     try {
       const data = await authApi.googleLogin({
         token: credentialResponse.credential,
+        remember_me: rememberMe,
       });
 
       localStorage.setItem("access_token", data.access);

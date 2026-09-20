@@ -1,14 +1,15 @@
-from datetime import timedelta
-
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.utils import datetime_from_epoch
 from .models import Usuario
-
-# Duración del refresh token cuando NO se marca "Mantener sesión abierta" —
-# comparado con REFRESH_TOKEN_LIFETIME (7 días, en core/jwt_settings.py) que
-# aplica cuando sí se marca.
-DURACION_SESION_CORTA = timedelta(days=1)
+from .tokens import (
+    CLAIM_REMEMBER_ME,
+    DURACION_SESION_CORTA,
+    crear_refresh_token,
+    datos_usuario_para_login,
+)
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,40 +58,24 @@ class UsuarioSerializer(serializers.ModelSerializer):
 # SERIALIZER PERSONALIZADO PARA LOGIN (JWT)
 # ==========================================
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    # "Mantener sesión abierta" del formulario de login. Si no se marca, el
+    # refresh token dura solo DURACION_SESION_CORTA en vez de los 7 días.
+    remember_me = serializers.BooleanField(required=False, default=False, write_only=True)
+
     def validate(self, attrs):
-        # 'remember_me' no es parte del esquema estándar de login (email +
-        # password) — llega como un campo extra en el mismo body, se lee del
-        # initial_data crudo. Si no se marca, el refresh token dura solo
-        # DURACION_SESION_CORTA en vez de los 7 días completos.
-        remember_me = str(self.initial_data.get('remember_me', '')).lower() in ('true', '1')
-
+        # Se guarda antes de llamar a super(), que es quien invoca get_token().
+        self._remember_me = attrs.pop('remember_me', False)
         data = super().validate(attrs)
-
-        # super().validate() ya generó un refresh/access token con la
-        # duración default — lo reemplazamos por uno propio para poder
-        # ajustar su duración y guardar la preferencia como claim, así
-        # sobrevive a la rotación en /auth/refresh/ (ver
-        # CustomTokenRefreshSerializer más abajo).
-        refresh = RefreshToken.for_user(self.user)
-        refresh['remember_me'] = remember_me
-        if not remember_me:
-            refresh.set_exp(lifetime=DURACION_SESION_CORTA)
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
-
-        # Inyectamos los datos del usuario en la respuesta del Login
-        data['user'] = {
-            'id': self.user.id,
-            'username': self.user.username,
-            'email': self.user.email,
-            'first_name': getattr(self.user, 'first_name', ''),
-            'last_name': getattr(self.user, 'last_name', ''),
-            'is_staff': self.user.is_staff,
-            'rol': self.user.rol,
-            'estado_suscripcion': self.user.estado_suscripcion,
-        }
-
+        data['user'] = datos_usuario_para_login(self.user)
         return data
+
+    # En la clase base es un classmethod que emite el refresh token con la
+    # duración default. Se sobrescribe aquí (como método de instancia, para
+    # tener acceso a la preferencia) en vez de generar un segundo token
+    # después de super().validate(): así cada login registra exactamente UNA
+    # fila en OutstandingToken, no una válida más una huérfana descartada.
+    def get_token(self, user):
+        return crear_refresh_token(user, self._remember_me)
 
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
@@ -103,17 +88,37 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     """
     def validate(self, attrs):
         token_entrante = RefreshToken(attrs['refresh'])
-        remember_me = bool(token_entrante.get('remember_me', True))
+        # Un token sin el claim solo puede ser uno emitido antes de que
+        # existiera esta lógica, y esos ya duraban 7 días: se respeta.
+        remember_me = bool(token_entrante.get(CLAIM_REMEMBER_ME, True))
 
         data = super().validate(attrs)
 
         if not remember_me:
+            # super() ya rotó el token (mismo objeto: los claims propios,
+            # remember_me incluido, se conservan) con la duración default y
+            # registró su fila en OutstandingToken con ese vencimiento. Se
+            # acorta el token y se corrige la fila para que coincidan; si no,
+            # flushexpiredtokens la conservaría 6 días más de lo real.
             nuevo_refresh = RefreshToken(data['refresh'])
-            nuevo_refresh['remember_me'] = False
             nuevo_refresh.set_exp(lifetime=DURACION_SESION_CORTA)
+            OutstandingToken.objects.filter(jti=nuevo_refresh['jti']).update(
+                expires_at=datetime_from_epoch(nuevo_refresh['exp']),
+            )
             data['refresh'] = str(nuevo_refresh)
 
         return data
+
+
+class GoogleLoginSerializer(serializers.Serializer):
+    token = serializers.CharField(
+        error_messages={
+            'required': 'Falta el token de Google.',
+            'blank': 'Falta el token de Google.',
+        },
+    )
+    # Mismo checkbox "Mantener sesión abierta" que el login por contraseña.
+    remember_me = serializers.BooleanField(required=False, default=False)
 
 # ==========================================
 # SERIALIZADOR DE REGISTRO 

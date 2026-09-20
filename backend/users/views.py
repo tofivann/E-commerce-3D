@@ -8,19 +8,20 @@ from django.conf import settings
 from django.db import transaction
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenBlacklistView, TokenObtainPairView, TokenRefreshView
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
-from rest_framework_simplejwt.tokens import RefreshToken
 from core.email_utils import enviar_email
 from core import paypal_utils
 from .models import Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer,
     CustomTokenRefreshSerializer,
+    GoogleLoginSerializer,
     RegistroSerializer,
     UsuarioSerializer,
 )
+from .tokens import respuesta_login
 
 # Inicializamos Stripe con la clave secreta
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -35,6 +36,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
+
+
+class LogoutView(TokenBlacklistView):
+    """POST {"refresh": ...}: manda el refresh token a la lista negra. Sin
+    esto, cerrar sesión solo borraba el token del navegador y seguía siendo
+    válido en el servidor hasta 7 días (cualquiera que lo hubiera copiado
+    podía seguir renovando la sesión). El access token vigente no se puede
+    revocar (es stateless), pero como mucho vive 60 minutos."""
 
 
 # ==========================================
@@ -277,10 +286,13 @@ class GoogleLoginView(generics.GenericAPIView):
     """
     permission_classes = [permissions.AllowAny]
 
+    serializer_class = GoogleLoginSerializer
+
     def post(self, request):
-        token = request.data.get("token")
-        if not token:
-            return Response({"detail": "Falta el token de Google."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data['token']
+        remember_me = serializer.validated_data['remember_me']
 
         try:
             idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), settings.GOOGLE_CLIENT_ID)
@@ -301,23 +313,11 @@ class GoogleLoginView(generics.GenericAPIView):
             # login tradicional por contraseña, que tampoco lo exige. El resto de
             # la app (banner de pago pendiente, hasAccess, etc.) ya maneja la
             # cuenta pendiente/inactiva una vez adentro.
-            refresh = RefreshToken.for_user(usuario)
-
-            # Estructura idéntica a la que inyecta tu CustomTokenObtainPairSerializer
+            # Misma estructura y mismas reglas de duración ("Mantener sesión
+            # abierta") que el login por contraseña, vía el helper compartido.
             return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "user": {
-                    'id': usuario.id,
-                    'username': usuario.username,
-                    'email': usuario.email,
-                    'first_name': getattr(usuario, 'first_name', ''),
-                    'last_name': getattr(usuario, 'last_name', ''),
-                    'is_staff': usuario.is_staff,
-                    'rol': usuario.rol,
-                    'estado_suscripcion': usuario.estado_suscripcion,
-                },
-                "mensaje": "Inicio de sesión exitoso con Google."
+                **respuesta_login(usuario, remember_me),
+                "mensaje": "Inicio de sesión exitoso con Google.",
             }, status=status.HTTP_200_OK)
 
         except ValueError:

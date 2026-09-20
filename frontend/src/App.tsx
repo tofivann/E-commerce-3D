@@ -13,6 +13,7 @@ import { RegisterSuccessPage } from "./pages/RegisterSuccessPage";
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { LegalPage } from './pages/LegalPage';
+import { authApi } from './services/authApi';
 
 /**
  * Componente principal App que configura las rutas de la aplicación.
@@ -57,12 +58,17 @@ function AppRoutes() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // =========================================================================
-    // 🔒 NOTA SOBRE CIERRE DE SESIÓN CON COOKIES HTTP-ONLY:
-    // Si usas localStorage, basta con hacer removeItem.
-    // Si usas Cookies HTTP-only, deberás llamar a un endpoint del backend (ej. POST /api/auth/logout)
-    // para que el servidor responda invalidando y borrando la cookie del navegador.
-    // =========================================================================
+    // Se invalida el refresh token en el servidor (lista negra) además de
+    // borrarlo del navegador; si no, seguiría sirviendo para renovar la
+    // sesión hasta 7 días. Es "best effort": si la llamada falla (sin red),
+    // la sesión local se cierra igual.
+    //
+    // 🔒 NOTA SOBRE CIERRE DE SESIÓN CON COOKIES HTTP-ONLY: con cookies, ese
+    // mismo endpoint sería además el que borre la cookie en la respuesta.
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (refreshToken) {
+      authApi.logout(refreshToken).catch((err) => console.error("Error al cerrar sesión en el servidor:", err));
+    }
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("is_staff");

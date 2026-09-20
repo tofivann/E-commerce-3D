@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UsuarioViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, RegistroView, RegistroPayPalView, ActivarCuentaPagoView, ActivarCuentaPagoPayPalView, VerificarPagoUsuarioView, GoogleLoginView, SolicitarResetPasswordView, ConfirmarResetPasswordView
+from .views import UsuarioViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView, RegistroView, RegistroPayPalView, ActivarCuentaPagoView, ActivarCuentaPagoPayPalView, VerificarPagoUsuarioView, GoogleLoginView, SolicitarResetPasswordView, ConfirmarResetPasswordView
 
 router = DefaultRouter()
 router.register(r'users', UsuarioViewSet, basename='user')
@@ -9,6 +9,7 @@ urlpatterns = [
     # 1. Rutas de Autenticación con JWT (POST)
     path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/logout/', LogoutView.as_view(), name='token_logout'),
     #ruta del registro
     path('auth/register/', RegistroView.as_view(), name='token_register'),
     path('auth/register-paypal/', RegistroPayPalView.as_view(), name='token_register_paypal'),

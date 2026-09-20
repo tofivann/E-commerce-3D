@@ -6,10 +6,16 @@ export const authApi = {
     return response.data;
   },
 
-  // NUEVO MÉTODO PARA GOOGLE
-  googleLogin: async (data: { token: string }) => {
+  // Mismo checkbox "Mantener sesión abierta" que el login por contraseña.
+  googleLogin: async (data: { token: string; remember_me?: boolean }) => {
     const response = await axiosClient.post('users/auth/google/', data);
     return response.data;
+  },
+
+  // Manda el refresh token a la lista negra del backend: sin esto, cerrar
+  // sesión solo lo borraba del navegador y seguía siendo válido hasta 7 días.
+  logout: async (refreshToken: string) => {
+    await axiosClient.post('users/auth/logout/', { refresh: refreshToken });
   },
 
   solicitarResetPassword: async (email: string) => {
