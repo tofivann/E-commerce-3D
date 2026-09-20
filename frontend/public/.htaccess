@@ -10,12 +10,36 @@
   # con esta pestaña via postMessage (sin esto Chrome muestra un warning en
   # consola: "Cross-Origin-Opener-Policy policy would block the window.postMessage call").
   Header set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+
+  # HSTS: le dice al navegador "este dominio SIEMPRE es HTTPS", para que ni
+  # siquiera intente http:// en la próxima visita (por un año), sin depender
+  # de la redirección del servidor de abajo. Sin "preload" a propósito — eso
+  # implica meter el dominio en una lista fija dentro de los navegadores,
+  # difícil de revertir una vez que se propaga.
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
-# SPA fallback (React Router) — sirve index.html para cualquier ruta que no sea un archivo/carpeta real
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Fuerza el dominio sin "www" como único canónico: www.mimimmdart.com carga
+  # la página igual (200), pero el Origin que manda el navegador en ese caso
+  # es https://www.mimimmdart.com, que no coincide con
+  # CORS_ALLOWED_ORIGINS=https://mimimmdart.com del backend — misma familia
+  # de bug que el de HTTP/HTTPS de abajo, pero por "www" en vez de protocolo.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
+
+  # Fuerza HTTPS: sin esto, http://mimimmdart.com servía la página igual por
+  # HTTP plano (sin cifrar), lo que Safari marca como "No seguro" y además
+  # rompe el login — el navegador manda Origin: http://mimimmdart.com, que no
+  # coincide con CORS_ALLOWED_ORIGINS=https://mimimmdart.com del backend, y la
+  # petición se bloquea silenciosamente ("Network Error" en axios).
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # SPA fallback (React Router) — sirve index.html para cualquier ruta que no sea un archivo/carpeta real
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
