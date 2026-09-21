@@ -3,6 +3,19 @@ from django.db import transaction
 
 from core.email_utils import enviar_email
 from orders.models import Orden
+from .models import EstadoComision
+
+
+def _comision_de_orden(orden):
+    """Relación inversa OneToOne de la Orden a su ComisionMotion/ComisionModelo,
+    o None si la orden no respalda ninguna comisión (no debería pasar para las
+    llamadas de este módulo, pero evita un AttributeError si alguna vez se
+    llama con una orden equivocada)."""
+    if hasattr(orden, 'comision_motion'):
+        return orden.comision_motion
+    if hasattr(orden, 'comision_modelo'):
+        return orden.comision_modelo
+    return None
 
 
 def datos_comision_para_email(orden):
@@ -35,6 +48,18 @@ def _marcar_comision_pagada_db(lookup):
 
     orden.estado_pago = Orden.EstadoPago.COMPLETADO
     orden.save(update_fields=['estado_pago'])
+
+    # Saltar "En cola" (SOLICITADO) por completo: en cuanto el pago se
+    # confirma, el cliente ya no debería ver la comisión como "en cola" sino
+    # como "en proceso" — antes esto se quedaba en SOLICITADO hasta que un
+    # admin lo cambiara a mano en el panel. Solo se toca si sigue en
+    # SOLICITADO (no pisa un CANCELADO manual ni un COMPLETADO ya hecho, por
+    # si el webhook llega tarde o duplicado).
+    comision = _comision_de_orden(orden)
+    if comision is not None and comision.estado == EstadoComision.SOLICITADO:
+        comision.estado = EstadoComision.EN_PROCESO
+        comision.save(update_fields=['estado'])
+
     return orden
 
 

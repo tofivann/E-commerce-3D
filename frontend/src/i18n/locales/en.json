@@ -165,6 +165,10 @@
     "COMPLETADO": "Completed",
     "CANCELADO": "Cancelled"
   },
+  "comisiones": {
+    "confirmingPayment": "Confirming payment",
+    "orderCode": "Order: {{code}}"
+  },
   "misComisiones": {
     "downloadError": "Could not download the file. Please try again.",
     "empty": "You haven't requested any commissions yet.",
@@ -179,8 +183,7 @@
   "comisionesLibrary": {
     "loadError": "Could not load your commissions.",
     "empty": "You don't have any completed commissions yet.",
-    "requestCta": "Request a commission →",
-    "code": "Code: {{code}}"
+    "requestCta": "Request a commission →"
   },
   "chat": {
     "selectConversation": "Select a conversation to start chatting.",
@@ -380,16 +383,16 @@
     "subtitle": "Manage Motion and New Model requests, and each table's prices.",
     "requests": "Requests",
     "prices": "Prices",
-    "statusError": "Could not update the status.",
-    "loading": "Loading requests...",
     "empty": "No commission requests yet.",
     "unknownUser": "—",
-    "orderCode": "Order: {{code}} · Payment: {{estado}}",
     "watchReference": "Watch reference",
     "replaceFile": "Replace file",
     "uploadDelivery": "Upload delivery",
     "publishToShop": "Publish to shop",
-    "published": "Published"
+    "published": "Published",
+    "cancelCommission": "Cancel",
+    "cancelConfirm": "Cancel this commission? The client will see it as cancelled.",
+    "cancelError": "Could not cancel the commission."
   },
   "preciosComisiones": {
     "gamesTitle": "Games (New Model Commission)",

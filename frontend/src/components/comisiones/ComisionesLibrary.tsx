@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
+import { ComisionCard } from "./ComisionCard";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
@@ -94,43 +95,28 @@ export const ComisionesLibrary: React.FC = () => {
         const foto = item.data.foto_entrega;
 
         return (
-          <div
+          <ComisionCard
             key={key}
-            className="card-hover bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col h-full"
-          >
-            <div className="relative h-40 overflow-hidden bg-surface-container-lowest shrink-0">
-              {foto ? (
-                <img src={foto} alt={titulo} className="object-cover w-full h-full" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[40px] text-outline">
-                    {item.tipo === "motion" ? "music_note" : "view_in_ar"}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="p-4 flex flex-col flex-1 gap-1">
-              <span className="self-start text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-container/40 text-primary-fixed-dim mb-1">
-                {item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
-              </span>
-              <h3 className="font-semibold text-on-surface truncate">{titulo}</h3>
-              <p className="text-on-surface-variant text-xs font-mono">{subtitulo}</p>
-              <p className="text-on-surface-variant text-xs font-mono">
-                {t("comisionesLibrary.code", { code: item.data.orden.codigo_orden })}
-              </p>
-
-              <div className="mt-auto pt-3">
-                <button
-                  onClick={() => handleDescargar(item)}
-                  disabled={descargandoId === key}
-                  className="w-full py-2 px-4 rounded bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-                >
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                  {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
-                </button>
-              </div>
-            </div>
-          </div>
+            tipoLabel={item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
+            estado={item.data.estado}
+            titulo={titulo}
+            subtitulo={subtitulo}
+            foto={foto}
+            fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
+            codigoOrden={item.data.orden.codigo_orden}
+            total={item.data.orden.total}
+            fechaOrden={item.data.orden.fecha_orden}
+            footer={
+              <button
+                onClick={() => handleDescargar(item)}
+                disabled={descargandoId === key}
+                className="w-full py-2 px-4 rounded-lg bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+              </button>
+            }
+          />
         );
       })}
     </div>

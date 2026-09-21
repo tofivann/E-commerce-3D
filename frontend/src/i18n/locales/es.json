@@ -165,6 +165,10 @@
     "COMPLETADO": "Completado",
     "CANCELADO": "Cancelado"
   },
+  "comisiones": {
+    "confirmingPayment": "Confirmando pago",
+    "orderCode": "Orden: {{code}}"
+  },
   "misComisiones": {
     "downloadError": "No se pudo descargar el archivo. Inténtalo de nuevo.",
     "empty": "Todavía no has pedido ninguna comisión.",
@@ -179,8 +183,7 @@
   "comisionesLibrary": {
     "loadError": "No se pudieron cargar tus comisiones.",
     "empty": "Aún no tienes comisiones completadas.",
-    "requestCta": "Solicitar una comisión →",
-    "code": "Código: {{code}}"
+    "requestCta": "Solicitar una comisión →"
   },
   "chat": {
     "selectConversation": "Selecciona una conversación para comenzar a chatear.",
@@ -380,16 +383,16 @@
     "subtitle": "Gestiona las solicitudes de Motion y Modelo Nuevo, y los precios de cada tabla.",
     "requests": "Solicitudes",
     "prices": "Precios",
-    "statusError": "No se pudo actualizar el estado.",
-    "loading": "Cargando solicitudes...",
     "empty": "No hay solicitudes de comisiones todavía.",
     "unknownUser": "—",
-    "orderCode": "Orden: {{code}} · Pago: {{estado}}",
     "watchReference": "Ver referencia",
     "replaceFile": "Reemplazar archivo",
     "uploadDelivery": "Subir entrega",
     "publishToShop": "Publicar a la tienda",
-    "published": "Publicado"
+    "published": "Publicado",
+    "cancelCommission": "Cancelar",
+    "cancelConfirm": "¿Cancelar esta comisión? El cliente la verá como cancelada.",
+    "cancelError": "No se pudo cancelar la comisión."
   },
   "preciosComisiones": {
     "gamesTitle": "Juegos (Comisión de Modelo Nuevo)",

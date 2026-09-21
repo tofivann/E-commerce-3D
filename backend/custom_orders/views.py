@@ -15,7 +15,7 @@ from core import paypal_utils
 from core.email_utils import enviar_email
 from orders.models import Orden, ComprasDigitales
 from products.models import Producto
-from .models import TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
+from .models import EstadoComision, TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
 from .permissions import EsAdminOSoloLectura
 from .services import datos_comision_para_email
 from .serializers import (
@@ -355,7 +355,18 @@ class ComisionAdminViewSetBase(
         # estado o reemplazo posterior del archivo.
         tenia_archivo_antes = bool(serializer.instance.archivo_entrega)
         instance = serializer.save()
-        if not tenia_archivo_antes and instance.archivo_entrega:
+        # Una comisión cancelada no se completa por subirle un archivo (el
+        # panel ni siquiera ofrece el botón): ni cambia de estado ni se le
+        # avisa al cliente que "está lista" — sería contradictorio con lo que
+        # ve en su tarjeta.
+        if not tenia_archivo_antes and instance.archivo_entrega and instance.estado != EstadoComision.CANCELADO:
+            # Completar la entrega (archivo + foto + categorías, exigidos
+            # juntos por ValidacionEntregaMixin) pasa la comisión a
+            # COMPLETADO automáticamente — el admin ya no tiene que elegirlo
+            # a mano en un <select> aparte después de subir el archivo.
+            instance.estado = EstadoComision.COMPLETADO
+            instance.save(update_fields=['estado'])
+
             tipo_label, detalle = datos_comision_para_email(instance.orden)
             enviar_email(
                 to=instance.usuario.email,

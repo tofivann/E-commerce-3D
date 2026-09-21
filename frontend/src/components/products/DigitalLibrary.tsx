@@ -129,7 +129,7 @@ export const DigitalLibrary: React.FC = () => {
                       : fallbackImage
                   }
                   alt={compra.producto.titulo}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500"
                 />
                 <span className="absolute top-2 right-2 bg-surface/85 backdrop-blur text-primary-fixed-dim font-mono text-[10px] px-2 py-1 rounded-full border border-outline-variant/40 uppercase">
                   .{compra.producto.formato_archivo || "3D"}

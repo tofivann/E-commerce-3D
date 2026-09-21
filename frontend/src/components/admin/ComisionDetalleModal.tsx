@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { nombreCategoria } from "../../utils/categoria";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
+import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
 import type { Item } from "./SolicitudesComisionesTable";
 
 interface ComisionDetalleModalProps {
@@ -22,6 +23,9 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
   const { t, i18n } = useTranslation();
   if (!item) return null;
 
+  const tema = TEMA_ESTADO[item.data.estado];
+  const etiquetaEstado = t(claveEtiquetaEstado(item.data.estado));
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
@@ -39,8 +43,9 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
           <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary-container/40 text-primary-fixed-dim">
             {item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
           </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">
-            {t(`estado.${item.data.estado}`)}
+          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${tema.badgeBg} ${tema.badgeText}`}>
+            <span className="material-symbols-outlined text-[13px]">{tema.icon}</span>
+            {etiquetaEstado}
           </span>
         </div>
         <h2 className="text-2xl font-bold text-on-surface mb-6">

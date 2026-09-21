@@ -4,7 +4,12 @@ from orders.models import Orden
 
 
 class EstadoComision(models.TextChoices):
-    SOLICITADO = 'SOLICITADO', 'Solicitado'  # ya pagado, en cola de trabajo
+    # Estado inicial, transitorio: existe solo entre que se crea la comisión
+    # y que el pago se confirma (segundos, o para siempre si el cliente
+    # nunca paga). Al confirmarse el pago pasa solo a EN_PROCESO
+    # (services.py), así que una comisión pagada nunca se ve en este estado;
+    # el frontend lo muestra como "Confirmando pago", no como "en cola".
+    SOLICITADO = 'SOLICITADO', 'Solicitado'
     EN_PROCESO = 'EN_PROCESO', 'En Proceso'
     COMPLETADO = 'COMPLETADO', 'Completado'
     CANCELADO = 'CANCELADO', 'Cancelado'

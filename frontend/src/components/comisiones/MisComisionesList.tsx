@@ -1,19 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ComisionMotion, ComisionModelo, EstadoComision } from "../../api/comisiones.api";
+import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
+import { ComisionCard } from "./ComisionCard";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
   | { tipo: "modelo"; data: ComisionModelo };
-
-const ESTADO_CLASS: Record<EstadoComision, string> = {
-  SOLICITADO: "bg-surface-container-high text-on-surface-variant",
-  EN_PROCESO: "bg-tertiary-container/40 text-on-tertiary-container",
-  COMPLETADO: "bg-primary-container/40 text-primary-fixed-dim",
-  CANCELADO: "bg-error/20 text-on-error-container",
-};
 
 export interface MisComisionesListProps {
   refreshKey?: number;
@@ -65,9 +59,9 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-3">
-        {[1, 2].map((n) => (
-          <div key={n} className="h-24 rounded-lg bg-surface-container-low animate-pulse border border-outline-variant/20" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((n) => (
+          <div key={n} className="h-72 rounded-xl bg-surface-container-low animate-pulse border border-outline-variant/20" />
         ))}
       </div>
     );
@@ -83,11 +77,10 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {items.map((item) => {
         const key = `${item.tipo}-${item.data.id}`;
-        const titulo =
-          item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
+        const titulo = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
         const subtitulo =
           item.tipo === "motion"
             ? t("misComisiones.motionSubtitle", {
@@ -95,44 +88,42 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
                 juego: item.data.nombre_juego,
               })
             : t("misComisiones.modeloSubtitle", { juego: item.data.juego.nombre });
+        const foto = item.tipo === "motion" ? item.data.foto_entrega : item.data.foto_entrega || item.data.foto_referencia_1;
+        const puedeDescargar = item.data.estado === "COMPLETADO" && Boolean(item.data.descarga_url);
 
         return (
-          <div
+          <ComisionCard
             key={key}
-            className="bg-surface-container-low rounded-lg border border-outline-variant/30 p-4 flex flex-col md:flex-row md:items-center gap-3 justify-between"
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-on-surface truncate">{titulo}</h3>
-                <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${ESTADO_CLASS[item.data.estado]}`}>
-                  {t(`estado.${item.data.estado}`)}
-                </span>
-              </div>
-              <p className="text-on-surface-variant text-xs font-mono mt-1">{subtitulo}</p>
-              <p className="text-primary-fixed-dim font-bold font-mono text-sm mt-1">
-                ${Number(item.data.orden.total).toFixed(2)}
-              </p>
-            </div>
-
-            {item.data.estado === "COMPLETADO" && item.data.descarga_url ? (
-              <button
-                onClick={() => handleDescargar(item)}
-                disabled={descargandoId === key}
-                className="shrink-0 py-2 px-4 rounded bg-primary-container text-on-primary-fixed font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">download</span>
-                {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
-              </button>
-            ) : (
-              <span className="shrink-0 text-on-surface-variant text-xs italic">
-                {item.data.orden.estado_pago !== "COMPLETADO"
-                  ? t("misComisiones.confirmingPayment")
-                  : item.data.estado === "CANCELADO"
-                  ? t("misComisiones.cancelled")
-                  : t("misComisiones.working")}
-              </span>
-            )}
-          </div>
+            tipoLabel={item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
+            estado={item.data.estado}
+            titulo={titulo}
+            subtitulo={subtitulo}
+            foto={foto}
+            fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
+            codigoOrden={item.data.orden.codigo_orden}
+            total={item.data.orden.total}
+            fechaOrden={item.data.orden.fecha_orden}
+            footer={
+              puedeDescargar ? (
+                <button
+                  onClick={() => handleDescargar(item)}
+                  disabled={descargandoId === key}
+                  className="w-full py-2 px-4 rounded-lg bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                  {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                </button>
+              ) : (
+                <p className="text-on-surface-variant text-xs italic text-center">
+                  {item.data.estado === "SOLICITADO"
+                    ? t("misComisiones.confirmingPayment")
+                    : item.data.estado === "CANCELADO"
+                    ? t("misComisiones.cancelled")
+                    : t("misComisiones.working")}
+                </p>
+              )
+            }
+          />
         );
       })}
     </div>
