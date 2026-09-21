@@ -45,7 +45,11 @@ export const ComisionCard: React.FC<ComisionCardProps> = ({
     >
       <div className="relative h-40 overflow-hidden bg-surface-container-lowest shrink-0">
         {foto ? (
-          <img src={foto} alt={titulo} className="object-cover w-full h-full transition-transform duration-500" />
+          // object-top en vez del centrado por defecto: las fotos de
+          // referencia/entrega suelen ser retratos verticales de un
+          // personaje — centrado recortaba justo la cabeza y dejaba solo
+          // torso hacia abajo, alineado arriba prioriza cara/cabeza.
+          <img src={foto} alt={titulo} className="object-cover object-top w-full h-full transition-transform duration-500" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="material-symbols-outlined text-[40px] text-outline">{fotoIconoFallback}</span>
