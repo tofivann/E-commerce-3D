@@ -1,11 +1,16 @@
+from datetime import timedelta
 from decimal import Decimal
+from io import StringIO
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from orders.models import Orden
+from orders.services import marcar_orden_expirada
 from products.models import Categoria
 from .models import ComisionMotion, ComisionModelo, EstadoComision, TramoPersonajesMotion
 from .services import marcar_comision_pagada
@@ -151,3 +156,64 @@ class CompletarComisionAutomatiTests(APITestCase):
         comision.refresh_from_db()
         self.assertEqual(comision.estado, EstadoComision.CANCELADO)
         mock_enviar_email.assert_not_called()
+
+
+class CancelarComisionPorAbandonoTests(APITestCase):
+    """El cliente pidió la comisión pero nunca terminó de pagar: al cancelarse
+    la Orden (Stripe expired / cron PayPal) la comisión también queda
+    CANCELADO, en vez de SOLICITADO ("Confirmando pago") para siempre."""
+
+    def test_stripe_expired_cancela_orden_y_comision(self):
+        usuario = crear_usuario()
+        orden = crear_orden_comision(usuario, Orden.TipoOrden.COMISION_MOTION, session_id='sess_abandono')
+        comision = crear_comision_motion(usuario, orden)
+
+        marcar_orden_expirada('sess_abandono')
+
+        orden.refresh_from_db()
+        comision.refresh_from_db()
+        self.assertEqual(orden.estado_pago, Orden.EstadoPago.CANCELADO)
+        self.assertEqual(comision.estado, EstadoComision.CANCELADO)
+
+    def test_stripe_expired_no_toca_una_orden_ya_pagada(self):
+        usuario = crear_usuario()
+        orden = crear_orden_comision(
+            usuario, Orden.TipoOrden.COMISION_MOTION,
+            estado_pago=Orden.EstadoPago.COMPLETADO, session_id='sess_pagada',
+        )
+        comision = crear_comision_motion(usuario, orden, estado=EstadoComision.EN_PROCESO)
+
+        self.assertIsNone(marcar_orden_expirada('sess_pagada'))
+
+        orden.refresh_from_db()
+        comision.refresh_from_db()
+        self.assertEqual(orden.estado_pago, Orden.EstadoPago.COMPLETADO)
+        self.assertEqual(comision.estado, EstadoComision.EN_PROCESO)
+
+    def test_stripe_expired_en_orden_del_carrito_sin_comision(self):
+        usuario = crear_usuario()
+        orden = crear_orden_comision(usuario, Orden.TipoOrden.CATALOGO, session_id='sess_carrito')
+
+        marcar_orden_expirada('sess_carrito')
+
+        orden.refresh_from_db()
+        self.assertEqual(orden.estado_pago, Orden.EstadoPago.CANCELADO)
+
+    def test_cron_paypal_cancela_orden_y_comision_abandonadas(self):
+        usuario = crear_usuario()
+        orden = Orden.objects.create(
+            codigo_orden='TEST-PP-ABANDONO', usuario=usuario, total=Decimal('20.00'),
+            tipo_orden=Orden.TipoOrden.COMISION_MOTION, pasarela_pago='PayPal',
+            paypal_order_id='PP-ABANDONO', estado_pago=Orden.EstadoPago.PENDIENTE,
+        )
+        # fecha_orden es auto_now_add: se envejece por queryset para pasar el umbral del cron.
+        Orden.objects.filter(pk=orden.pk).update(fecha_orden=timezone.now() - timedelta(hours=5))
+        comision = crear_comision_motion(usuario, orden)
+
+        with patch('core.paypal_utils.consultar_orden', return_value={'status': 'VOIDED'}):
+            call_command('cancelar_ordenes_paypal_expiradas', stdout=StringIO())
+
+        orden.refresh_from_db()
+        comision.refresh_from_db()
+        self.assertEqual(orden.estado_pago, Orden.EstadoPago.CANCELADO)
+        self.assertEqual(comision.estado, EstadoComision.CANCELADO)

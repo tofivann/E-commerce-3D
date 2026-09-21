@@ -18,6 +18,26 @@ def _comision_de_orden(orden):
     return None
 
 
+def cancelar_comision_por_abandono(orden):
+    """La Orden de una comisión se canceló porque el cliente nunca terminó de
+    pagar (checkout.session.expired de Stripe, o el cron de PayPal confirmó
+    que la orden quedó CREATED/APPROVED/VOIDED). La comisión enlazada tiene
+    que reflejarlo: si se dejara en SOLICITADO, el cliente la seguiría viendo
+    como "Confirmando pago" para siempre y el admin como pendiente de trabajar.
+
+    Solo toca una comisión que siga en SOLICITADO — una orden abandonada no
+    puede haber avanzado más, pero si por cualquier motivo ya está en otro
+    estado no se pisa. Devuelve la comisión cancelada, o None si no había
+    nada que hacer (orden del carrito, o comisión ya fuera de SOLICITADO).
+    """
+    comision = _comision_de_orden(orden)
+    if comision is None or comision.estado != EstadoComision.SOLICITADO:
+        return None
+    comision.estado = EstadoComision.CANCELADO
+    comision.save(update_fields=['estado'])
+    return comision
+
+
 def datos_comision_para_email(orden):
     """
     A partir de la Orden, averigua si la comisión asociada es de Motion o de

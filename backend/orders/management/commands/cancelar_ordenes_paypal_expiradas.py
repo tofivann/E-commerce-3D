@@ -30,7 +30,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        from custom_orders.services import marcar_comision_pagada
+        from custom_orders.services import cancelar_comision_por_abandono, marcar_comision_pagada
         from shopping_cart.services import marcar_orden_pagada
 
         limite = timezone.now() - timedelta(hours=UMBRAL_HORAS_ABANDONO)
@@ -64,9 +64,13 @@ class Command(BaseCommand):
                     marcar_comision_pagada(paypal_order_id=orden.paypal_order_id)
                 recuperadas += 1
             elif estado_paypal in ('CREATED', 'APPROVED', 'VOIDED'):
-                # El comprador nunca terminó de pagar — abandono real.
+                # El comprador nunca terminó de pagar — abandono real. Si la
+                # orden respalda una comisión, esta también se cancela (si
+                # no, se quedaría en SOLICITADO / "Confirmando pago" para
+                # siempre); para una orden del carrito no hay nada más.
                 orden.estado_pago = Orden.EstadoPago.CANCELADO
                 orden.save(update_fields=['estado_pago'])
+                cancelar_comision_por_abandono(orden)
                 canceladas += 1
             else:
                 sin_cambio += 1
