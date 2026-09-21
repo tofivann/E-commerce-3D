@@ -12,6 +12,6 @@ class PaginacionEstandar(PageNumberPagination):
     biblioteca, conversaciones, tablas de precios) son cortos y sus
     consumidores esperan un array plano.
     """
-    page_size = 50
+    page_size = 52
     page_size_query_param = 'page_size'
     max_page_size = 100
