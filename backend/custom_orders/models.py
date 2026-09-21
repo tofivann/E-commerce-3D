@@ -38,6 +38,7 @@ class JuegoComision(models.Model):
         verbose_name = "Juego (Comisión de Modelo)"
         verbose_name_plural = "Juegos (Comisión de Modelo)"
         ordering = ['nombre']
+        #prueba
 
     def __str__(self):
         return f"{self.nombre} - ${self.precio}"
