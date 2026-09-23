@@ -43,7 +43,7 @@ export const ComisionCard: React.FC<ComisionCardProps> = ({
         onClick ? "cursor-pointer" : ""
       }`}
     >
-      <div className="relative h-40 overflow-hidden bg-surface-container-lowest shrink-0">
+      <div className="relative h-56 overflow-hidden bg-surface-container-lowest shrink-0">
         {foto ? (
           // object-top en vez del centrado por defecto: las fotos de
           // referencia/entrega suelen ser retratos verticales de un
@@ -55,15 +55,23 @@ export const ComisionCard: React.FC<ComisionCardProps> = ({
             <span className="material-symbols-outlined text-[40px] text-outline">{fotoIconoFallback}</span>
           </div>
         )}
+        {/* Degradado solo cerca del borde inferior (no toda la foto) para
+            suavizar el encuentro con el panel de abajo, sin aclarar el
+            resto de la imagen. */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-surface-container-high/60 to-transparent z-10" />
         <span
-          className={`absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full ${tema.badgeBg} ${tema.badgeText}`}
+          className={`absolute top-2 right-2 z-20 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full ${tema.badgeBg} ${tema.badgeText}`}
         >
           <span className="material-symbols-outlined text-[13px]">{tema.icon}</span>
           {etiquetaEstado}
         </span>
       </div>
 
-      <div className="p-4 flex flex-col flex-1 gap-1">
+      {/* Se monta sobre la foto (-mt-8) con fondo propio semi-transparente
+          (no la clase compartida .glass-panel, que usan otros 23 archivos —
+          esta opacidad es solo para esta card) más bajo que ese 60% default,
+          para que se note más la imagen detrás sin perder legibilidad. */}
+      <div className="p-4 flex flex-col flex-1 gap-1 relative z-20 -mt-8 bg-surface/20 backdrop-blur-lg border border-outline-variant/30 rounded-t-xl mx-2 mb-2">
         <span className="self-start text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant mb-1">
           {tipoLabel}
         </span>

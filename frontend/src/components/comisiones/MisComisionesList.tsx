@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
-import { ComisionCard } from "./ComisionCard";
+import { ComisionCardCliente } from "./ComisionCardCliente";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
@@ -61,7 +61,7 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((n) => (
-          <div key={n} className="h-72 rounded-xl bg-surface-container-low animate-pulse border border-outline-variant/20" />
+          <div key={n} className="h-80 rounded-xl bg-surface-container-low animate-pulse border border-outline-variant/20" />
         ))}
       </div>
     );
@@ -92,7 +92,7 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
         const puedeDescargar = item.data.estado === "COMPLETADO" && Boolean(item.data.descarga_url);
 
         return (
-          <ComisionCard
+          <ComisionCardCliente
             key={key}
             tipoLabel={item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
             estado={item.data.estado}
@@ -100,21 +100,22 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
             subtitulo={subtitulo}
             foto={foto}
             fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
-            codigoOrden={item.data.orden.codigo_orden}
             total={item.data.orden.total}
-            fechaOrden={item.data.orden.fecha_orden}
             footer={
               puedeDescargar ? (
                 <button
                   onClick={() => handleDescargar(item)}
                   disabled={descargandoId === key}
-                  className="w-full py-2 px-4 rounded-lg bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  title={descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                  aria-label={descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                  className="shrink-0 w-9 h-9 rounded-full bg-primary-container text-on-primary-fixed btn-glow-inner flex items-center justify-center hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                  {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                  <span className={`material-symbols-outlined text-[18px] ${descargandoId === key ? "animate-pulse" : ""}`}>
+                    download
+                  </span>
                 </button>
               ) : (
-                <p className="text-on-surface-variant text-xs italic text-center">
+                <p className="text-on-surface-variant text-[11px] italic text-right truncate">
                   {item.data.estado === "SOLICITADO"
                     ? t("misComisiones.confirmingPayment")
                     : item.data.estado === "CANCELADO"

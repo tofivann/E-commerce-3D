@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
-import { ComisionCard } from "./ComisionCard";
+import { ComisionCardCliente } from "./ComisionCardCliente";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
@@ -95,7 +95,7 @@ export const ComisionesLibrary: React.FC = () => {
         const foto = item.data.foto_entrega;
 
         return (
-          <ComisionCard
+          <ComisionCardCliente
             key={key}
             tipoLabel={item.tipo === "motion" ? t("commissionsPage.motion") : t("commissionsPage.newModel")}
             estado={item.data.estado}
@@ -103,17 +103,18 @@ export const ComisionesLibrary: React.FC = () => {
             subtitulo={subtitulo}
             foto={foto}
             fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
-            codigoOrden={item.data.orden.codigo_orden}
             total={item.data.orden.total}
-            fechaOrden={item.data.orden.fecha_orden}
             footer={
               <button
                 onClick={() => handleDescargar(item)}
                 disabled={descargandoId === key}
-                className="w-full py-2 px-4 rounded-lg bg-primary-container text-on-primary-fixed btn-glow-inner font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                title={descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                aria-label={descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                className="shrink-0 w-9 h-9 rounded-full bg-primary-container text-on-primary-fixed btn-glow-inner flex items-center justify-center hover:bg-primary-fixed-dim transition-all active:scale-95 disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-[18px]">download</span>
-                {descargandoId === key ? t("misComisiones.downloading") : t("misComisiones.download")}
+                <span className={`material-symbols-outlined text-[18px] ${descargandoId === key ? "animate-pulse" : ""}`}>
+                  download
+                </span>
               </button>
             }
           />
