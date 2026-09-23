@@ -11,7 +11,7 @@ from rest_framework.test import APITestCase
 
 from orders.models import Orden
 from orders.services import marcar_orden_expirada
-from products.models import Categoria
+from products.models import Categoria, Producto
 from .models import ComisionMotion, ComisionModelo, EstadoComision, TramoPersonajesMotion
 from .services import marcar_comision_pagada
 
@@ -217,3 +217,132 @@ class CancelarComisionPorAbandonoTests(APITestCase):
         comision.refresh_from_db()
         self.assertEqual(orden.estado_pago, Orden.EstadoPago.CANCELADO)
         self.assertEqual(comision.estado, EstadoComision.CANCELADO)
+
+
+class PublicarProductoTests(APITestCase):
+    """Publicar no recibe body: el Producto se arma con los datos de reventa
+    (DatosPublicacion) que el admin dejó guardados en la comisión al subir la
+    entrega, y link_youtube se copia tal cual."""
+
+    DATOS_PUBLICACION = {
+        'titulo_publicacion': 'Miku Dance Pack',
+        'descripcion_publicacion': 'Coreografía completa lista para MMD.',
+        'precio_publicacion': Decimal('15.00'),
+        'formato_archivo_publicacion': 'VMD',
+        'link_youtube': 'https://www.youtube.com/watch?v=abc123',
+    }
+
+    def setUp(self):
+        self.admin = get_user_model().objects.create_user(
+            username='admin@test.com', email='admin@test.com', password='x',
+            nombre='Admin', is_staff=True,
+        )
+        self.client.force_authenticate(self.admin)
+        self.categoria = Categoria.objects.get(nombre='Motion')
+
+    def _comision_entregada(self, **publicacion):
+        usuario = crear_usuario()
+        orden = crear_orden_comision(
+            usuario, Orden.TipoOrden.COMISION_MOTION,
+            estado_pago=Orden.EstadoPago.COMPLETADO, session_id='sess_pub',
+        )
+        comision = crear_comision_motion(usuario, orden, estado=EstadoComision.COMPLETADO)
+        comision.archivo_entrega.save('modelo.zip', SimpleUploadedFile('modelo.zip', b'contenido'), save=False)
+        comision.foto_entrega.save('foto.gif', imagen_de_prueba(), save=False)
+        for campo, valor in publicacion.items():
+            setattr(comision, campo, valor)
+        comision.save()
+        comision.categorias.set([self.categoria])
+        return comision
+
+    def test_publica_con_los_datos_guardados_y_copia_el_video(self):
+        comision = self._comision_entregada(**self.DATOS_PUBLICACION)
+
+        respuesta = self.client.post(f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/publicar/')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        comision.refresh_from_db()
+        producto = Producto.objects.get(pk=comision.producto_publicado_id)
+        self.assertEqual(producto.titulo, 'Miku Dance Pack')
+        self.assertEqual(producto.descripcion, 'Coreografía completa lista para MMD.')
+        self.assertEqual(producto.precio, Decimal('15.00'))
+        self.assertEqual(producto.formato_archivo, 'VMD')
+        self.assertEqual(producto.link_youtube, 'https://www.youtube.com/watch?v=abc123')
+        self.assertEqual(list(producto.categorias.all()), [self.categoria])
+        # El cliente que la pidió queda con acceso al producto en su biblioteca.
+        self.assertTrue(comision.usuario.compras_digitales.filter(producto=producto).exists())
+
+    def test_sin_video_el_producto_queda_sin_link(self):
+        comision = self._comision_entregada(**{**self.DATOS_PUBLICACION, 'link_youtube': ''})
+
+        respuesta = self.client.post(f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/publicar/')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        comision.refresh_from_db()
+        self.assertIsNone(Producto.objects.get(pk=comision.producto_publicado_id).link_youtube)
+
+    def test_no_publica_si_faltan_datos_de_reventa(self):
+        # Solo el título: faltan descripción, precio y formato.
+        comision = self._comision_entregada(titulo_publicacion='Solo título')
+
+        respuesta = self.client.post(f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/publicar/')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('datos de publicación', respuesta.data['detail'])
+        comision.refresh_from_db()
+        self.assertIsNone(comision.producto_publicado_id)
+        self.assertEqual(Producto.objects.count(), 0)
+
+    @patch('custom_orders.views.enviar_email')
+    def test_los_datos_de_reventa_se_guardan_en_el_mismo_patch_de_entrega(self, _mock_email):
+        usuario = crear_usuario()
+        orden = crear_orden_comision(
+            usuario, Orden.TipoOrden.COMISION_MOTION,
+            estado_pago=Orden.EstadoPago.COMPLETADO, session_id='sess_patch',
+        )
+        comision = crear_comision_motion(usuario, orden, estado=EstadoComision.EN_PROCESO)
+
+        respuesta = self.client.patch(
+            f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/',
+            data={
+                'archivo_entrega': SimpleUploadedFile('modelo.zip', b'contenido'),
+                'foto_entrega': imagen_de_prueba(),
+                'categorias': [self.categoria.id],
+                'titulo_publicacion': 'Miku Dance Pack',
+                'descripcion_publicacion': 'Coreografía completa.',
+                'precio_publicacion': '15.00',
+                'formato_archivo_publicacion': 'VMD',
+                'link_youtube': 'https://www.youtube.com/watch?v=abc123',
+            },
+            format='multipart',
+        )
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        self.assertTrue(respuesta.data['publicacion_completa'])
+        comision.refresh_from_db()
+        self.assertEqual(comision.estado, EstadoComision.COMPLETADO)
+        self.assertEqual(comision.titulo_publicacion, 'Miku Dance Pack')
+        self.assertEqual(comision.precio_publicacion, Decimal('15.00'))
+        self.assertEqual(comision.link_youtube, 'https://www.youtube.com/watch?v=abc123')
+
+    @patch('custom_orders.views.enviar_email')
+    def test_los_datos_de_reventa_son_opcionales_al_entregar(self, _mock_email):
+        usuario = crear_usuario()
+        orden = crear_orden_comision(
+            usuario, Orden.TipoOrden.COMISION_MOTION,
+            estado_pago=Orden.EstadoPago.COMPLETADO, session_id='sess_patch2',
+        )
+        comision = crear_comision_motion(usuario, orden, estado=EstadoComision.EN_PROCESO)
+
+        respuesta = self.client.patch(
+            f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/',
+            data={
+                'archivo_entrega': SimpleUploadedFile('modelo.zip', b'contenido'),
+                'foto_entrega': imagen_de_prueba(),
+                'categorias': [self.categoria.id],
+            },
+            format='multipart',
+        )
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        self.assertFalse(respuesta.data['publicacion_completa'])

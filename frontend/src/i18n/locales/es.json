@@ -354,16 +354,6 @@
     "saveChanges": "Guardar cambios",
     "publish": "Publicar producto"
   },
-  "publicarModal": {
-    "title": "Publicar a la Tienda",
-    "description": "Se creará un producto nuevo en el catálogo usando el archivo de entrega ya subido para \"{{name}}\".",
-    "errorSave": "No se pudo publicar el producto. Revisa los datos e inténtalo de nuevo.",
-    "resalePrice": "Precio de reventa (USD)",
-    "format": "Formato",
-    "autoPhotoNote": "La foto de portada se toma automáticamente de la foto de entrega subida al completar la comisión.",
-    "publishing": "Publicando...",
-    "publishProduct": "Publicar Producto"
-  },
   "completarComisionModal": {
     "title": "Completar Comisión",
     "description": "Sube el archivo final y una foto del resultado terminado para \"{{name}}\".",
@@ -376,7 +366,25 @@
     "errorMissing": "Debes subir el archivo, la foto y elegir al menos una categoría para completar la comisión.",
     "errorSave": "No se pudo completar la comisión. Intenta de nuevo.",
     "submitting": "Guardando...",
-    "submit": "Marcar como completada"
+    "submit": "Marcar como completada",
+    "descriptionUpdate": "Reemplaza la entrega si hace falta y completa los datos de reventa de \"{{name}}\".",
+    "keepCurrentFile": "Actual: {{name}} — elige otro solo si quieres reemplazarlo",
+    "keepCurrentPhoto": "Se conserva la foto actual — elige otra solo si quieres reemplazarla",
+    "publishSection": "Datos para la tienda",
+    "publishSectionHelp": "Así se verá si publicas esta comisión como producto en el catálogo. Puedes dejarlos para después: solo se exigen al publicar.",
+    "resalePrice": "Precio de reventa (USD)",
+    "format": "Formato",
+    "videoLabel": "Video del resultado (YouTube)",
+    "videoHelp": "Opcional. Se mostrará en la ficha del producto, igual que en los demás productos de la tienda.",
+    "autoPhotoNote": "La foto de portada del producto será la foto del resultado subida aquí.",
+    "publishNow": "Publicar en la tienda al guardar",
+    "publishNowHelp": "Si no lo marcas, queda guardado y lo publicas después con el botón \"Publicar a la tienda\".",
+    "alreadyPublished": "Ya está publicado en la tienda (producto #{{id}}). Los cambios de aquí no modifican ese producto.",
+    "errorPublishMissing": "Para publicar en la tienda completa el título, la descripción, el precio y el formato.",
+    "errorPublish": "La entrega se guardó, pero no se pudo publicar el producto. Inténtalo de nuevo.",
+    "submitUpdate": "Guardar cambios",
+    "submitAndPublish": "Guardar y publicar",
+    "publishingNow": "Publicando..."
   },
   "comisionesAdmin": {
     "title": "Comisiones",
@@ -439,7 +447,15 @@
     "viewUploadedFile": "Ver archivo subido",
     "notUploadedYet": "Todavía no se ha subido.",
     "deliveryPhoto": "Foto de entrega",
-    "categoryLabel": "Categorías"
+    "categoryLabel": "Categorías",
+    "publicationSection": "Datos para la tienda",
+    "resaleTitle": "Título en la tienda",
+    "resaleDescription": "Descripción",
+    "resalePrice": "Precio de reventa",
+    "format": "Formato",
+    "resultVideo": "Video del resultado",
+    "publicationComplete": "Listos para publicar",
+    "publicationIncomplete": "Incompletos — se completan desde \"Subir entrega\""
   },
   "userForm": {
     "errorNoPassword": "Debes definir una contraseña para el nuevo usuario.",

@@ -354,16 +354,6 @@
     "saveChanges": "Save changes",
     "publish": "Publish product"
   },
-  "publicarModal": {
-    "title": "Publish to the Shop",
-    "description": "A new product will be created in the catalog using the delivery file already uploaded for \"{{name}}\".",
-    "errorSave": "Could not publish the product. Check the details and try again.",
-    "resalePrice": "Resale price (USD)",
-    "format": "Format",
-    "autoPhotoNote": "The cover image is automatically taken from the delivery photo uploaded when the commission was completed.",
-    "publishing": "Publishing...",
-    "publishProduct": "Publish Product"
-  },
   "completarComisionModal": {
     "title": "Complete Commission",
     "description": "Upload the final file and a photo of the finished result for \"{{name}}\".",
@@ -376,7 +366,25 @@
     "errorMissing": "You must upload the file, the photo, and choose at least one category to complete the commission.",
     "errorSave": "Could not complete the commission. Please try again.",
     "submitting": "Saving...",
-    "submit": "Mark as completed"
+    "submit": "Mark as completed",
+    "descriptionUpdate": "Replace the delivery if needed and fill in the resale details for \"{{name}}\".",
+    "keepCurrentFile": "Current: {{name}} — pick another only to replace it",
+    "keepCurrentPhoto": "The current photo is kept — pick another only to replace it",
+    "publishSection": "Shop details",
+    "publishSectionHelp": "This is how it will look if you publish this commission as a product in the catalog. You can leave them for later: they are only required when publishing.",
+    "resalePrice": "Resale price (USD)",
+    "format": "Format",
+    "videoLabel": "Result video (YouTube)",
+    "videoHelp": "Optional. Shown on the product page, just like on the other shop products.",
+    "autoPhotoNote": "The product cover image will be the result photo uploaded here.",
+    "publishNow": "Publish to the shop on save",
+    "publishNowHelp": "If unchecked, it stays saved and you can publish later with the \"Publish to shop\" button.",
+    "alreadyPublished": "Already published to the shop (product #{{id}}). Changes here don't modify that product.",
+    "errorPublishMissing": "To publish to the shop, fill in the title, description, price, and format.",
+    "errorPublish": "The delivery was saved, but the product could not be published. Please try again.",
+    "submitUpdate": "Save changes",
+    "submitAndPublish": "Save and publish",
+    "publishingNow": "Publishing..."
   },
   "comisionesAdmin": {
     "title": "Commissions",
@@ -439,7 +447,15 @@
     "viewUploadedFile": "View uploaded file",
     "notUploadedYet": "Not uploaded yet.",
     "deliveryPhoto": "Delivery photo",
-    "categoryLabel": "Categories"
+    "categoryLabel": "Categories",
+    "publicationSection": "Shop details",
+    "resaleTitle": "Shop title",
+    "resaleDescription": "Description",
+    "resalePrice": "Resale price",
+    "format": "Format",
+    "resultVideo": "Result video",
+    "publicationComplete": "Ready to publish",
+    "publicationIncomplete": "Incomplete — fill them in from \"Upload delivery\""
   },
   "userForm": {
     "errorNoPassword": "You must set a password for the new user.",

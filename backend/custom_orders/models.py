@@ -49,7 +49,49 @@ class JuegoComision(models.Model):
         return f"{self.nombre} - ${self.precio}"
 
 
-class ComisionMotion(models.Model):
+class DatosPublicacion(models.Model):
+    """
+    Datos de reventa que el admin llena al subir la entrega (en el mismo
+    modal que archivo/foto/categorías): son los campos del Producto que se
+    creará si la comisión se publica en la tienda. _publicar_producto los
+    lee de aquí, por eso publicar ya no pide ningún formulario aparte.
+
+    Todos opcionales al guardar (se pueden completar en otro momento desde
+    el mismo modal); se exigen recién al publicar — ver
+    `publicacion_completa`. Abstracto: ComisionMotion y ComisionModelo lo
+    heredan sin cambios. Son campos del admin: no se exponen al cliente,
+    que sigue viendo su comisión con el nombre que él mismo pidió.
+    """
+    titulo_publicacion = models.CharField(max_length=200, blank=True)
+    descripcion_publicacion = models.TextField(blank=True)
+    precio_publicacion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    formato_archivo_publicacion = models.CharField(max_length=50, blank=True, help_text="Ej: STL, OBJ, FBX")
+    # Mismo nombre y definición que Producto.link_youtube: se copia tal cual
+    # al publicar. Distinto de ComisionMotion.link_video, que es el video de
+    # REFERENCIA que manda el cliente al pedir la comisión.
+    link_youtube = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Link de YouTube con un video del resultado (opcional). Se copia al Producto al publicar.",
+    )
+
+    class Meta:
+        abstract = True
+
+    @property
+    def publicacion_completa(self):
+        """True si ya están los datos mínimos para crear el Producto (todo lo
+        que en Producto es obligatorio). link_youtube es opcional también ahí."""
+        return bool(
+            self.titulo_publicacion
+            and self.descripcion_publicacion
+            and self.precio_publicacion is not None
+            and self.formato_archivo_publicacion
+        )
+
+
+class ComisionMotion(DatosPublicacion):
     """Comisión de coreografía/animación sobre un personaje que el cliente ya tiene."""
     orden = models.OneToOneField(Orden, on_delete=models.CASCADE, related_name='comision_motion')
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='comisiones_motion')
@@ -80,7 +122,7 @@ class ComisionMotion(models.Model):
         return f"Motion #{self.id} - {self.usuario.nombre} - {self.nombre_cancion}"
 
 
-class ComisionModelo(models.Model):
+class ComisionModelo(DatosPublicacion):
     """Comisión de un modelo 3D nuevo (personaje que aún no está en la tienda)."""
     orden = models.OneToOneField(Orden, on_delete=models.CASCADE, related_name='comision_modelo')
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='comisiones_modelo')

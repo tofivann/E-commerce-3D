@@ -163,6 +163,56 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
             </Campo>
           )}
         </div>
+
+        {/* Datos para la tienda (reventa): los llena el admin al subir la
+            entrega; son lo que tendrá el Producto si se publica. */}
+        <div className="mt-6 pt-6 border-t border-outline-variant/30">
+          <div className="flex items-center gap-2 mb-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
+              {t("comisionDetalle.publicationSection")}
+            </p>
+            <span
+              className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                item.data.publicacion_completa
+                  ? "bg-primary-container/40 text-primary-fixed-dim"
+                  : "bg-surface-container-high text-on-surface-variant"
+              }`}
+            >
+              {item.data.publicacion_completa
+                ? t("comisionDetalle.publicationComplete")
+                : t("comisionDetalle.publicationIncomplete")}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Campo label={t("comisionDetalle.resaleTitle")}>{item.data.titulo_publicacion || "—"}</Campo>
+            <Campo label={t("comisionDetalle.resalePrice")}>
+              {item.data.precio_publicacion == null ? "—" : `$${Number(item.data.precio_publicacion).toFixed(2)}`}
+            </Campo>
+            <Campo label={t("comisionDetalle.format")}>{item.data.formato_archivo_publicacion || "—"}</Campo>
+            <Campo label={t("comisionDetalle.resultVideo")}>
+              {item.data.link_youtube ? (
+                <a
+                  href={item.data.link_youtube}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1 break-all"
+                >
+                  <span className="material-symbols-outlined text-[16px]">play_circle</span>
+                  {item.data.link_youtube}
+                </a>
+              ) : (
+                "—"
+              )}
+            </Campo>
+          </div>
+          {item.data.descripcion_publicacion && (
+            <div className="mt-4">
+              <Campo label={t("comisionDetalle.resaleDescription")}>
+                <p className="whitespace-pre-line">{item.data.descripcion_publicacion}</p>
+              </Campo>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

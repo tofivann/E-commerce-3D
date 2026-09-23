@@ -128,6 +128,16 @@ class ValidacionEntregaMixin:
         return attrs
 
 
+# Datos de reventa (DatosPublicacion en models.py): los llena el admin en el
+# mismo PATCH que sube la entrega, todos opcionales — se exigen recién al
+# publicar (_publicar_producto). Deliberadamente fuera del trío de
+# ValidacionEntregaMixin: se pueden completar en otro momento.
+CAMPOS_PUBLICACION = [
+    'titulo_publicacion', 'descripcion_publicacion', 'precio_publicacion',
+    'formato_archivo_publicacion', 'link_youtube',
+]
+
+
 class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
@@ -136,6 +146,8 @@ class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.filter(activo=True), many=True, required=False,
     )
+    # Propiedad del modelo, no columna: hay que declararla para exponerla.
+    publicacion_completa = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = ComisionMotion
@@ -143,6 +155,7 @@ class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
             'nombre_cancion', 'link_video', 'informacion_adicional', 'estado', 'archivo_entrega',
             'foto_entrega', 'categorias', 'producto_publicado',
+            *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
@@ -158,6 +171,7 @@ class ComisionModeloAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.filter(activo=True), many=True, required=False,
     )
+    publicacion_completa = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = ComisionModelo
@@ -165,20 +179,10 @@ class ComisionModeloAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
             'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'foto_entrega',
             'categorias', 'producto_publicado',
+            *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
             'foto_referencia_1', 'foto_referencia_2', 'producto_publicado',
         ]
 
-
-class PublicarProductoSerializer(serializers.Serializer):
-    """
-    Datos que el admin completa para publicar el Producto derivado de una
-    ComisionModelo. No incluye imagen_previa: se reutiliza automáticamente
-    foto_entrega (la foto del resultado ya subida al completar la comisión).
-    """
-    titulo = serializers.CharField(max_length=200)
-    descripcion = serializers.CharField()
-    precio = serializers.DecimalField(max_digits=10, decimal_places=2)
-    formato_archivo = serializers.CharField(max_length=50)

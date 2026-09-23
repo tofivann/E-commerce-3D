@@ -77,23 +77,29 @@ export interface CheckoutComisionPayPalResponse<T> {
   comision: T;
 }
 
-export interface ComisionMotionAdmin extends Omit<ComisionMotion, "descarga_url"> {
+// Datos de reventa que el admin llena al subir la entrega (mismo PATCH que
+// archivo/foto/categorías). Son los campos del Producto que se crea al
+// publicar; todos opcionales al guardar, obligatorios (salvo link_youtube)
+// para publicar — `publicacion_completa` lo resume, lo calcula el backend.
+export interface DatosPublicacion {
+  titulo_publicacion: string;
+  descripcion_publicacion: string;
+  precio_publicacion: string | number | null;
+  formato_archivo_publicacion: string;
+  link_youtube: string | null;
+  publicacion_completa: boolean;
+}
+
+export interface ComisionMotionAdmin extends Omit<ComisionMotion, "descarga_url">, DatosPublicacion {
   usuario_nombre: string;
   usuario_email: string;
   archivo_entrega: string | null;
 }
 
-export interface ComisionModeloAdmin extends Omit<ComisionModelo, "descarga_url"> {
+export interface ComisionModeloAdmin extends Omit<ComisionModelo, "descarga_url">, DatosPublicacion {
   usuario_nombre: string;
   usuario_email: string;
   archivo_entrega: string | null;
-}
-
-export interface PublicarProductoPayload {
-  titulo: string;
-  descripcion: string;
-  precio: string | number;
-  formato_archivo: string;
 }
 
 export const comisionesApi = {
@@ -203,38 +209,17 @@ export const comisionesAdminApi = {
     });
     return data;
   },
-  publicarComisionModelo: async (
-    id: number,
-    payload: PublicarProductoPayload,
-  ): Promise<ComisionModeloAdmin> => {
-    const { data } = await axiosClient.post(
-      `custom-orders/admin/comisiones/modelo/${id}/publicar/`,
-      construirFormDataPublicar(payload),
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+  // Sin body: el backend arma el Producto con los datos de reventa que ya
+  // quedaron guardados en la comisión (DatosPublicacion) al subir la entrega.
+  publicarComisionModelo: async (id: number): Promise<ComisionModeloAdmin> => {
+    const { data } = await axiosClient.post(`custom-orders/admin/comisiones/modelo/${id}/publicar/`);
     return data;
   },
-  publicarComisionMotion: async (
-    id: number,
-    payload: PublicarProductoPayload,
-  ): Promise<ComisionMotionAdmin> => {
-    const { data } = await axiosClient.post(
-      `custom-orders/admin/comisiones/motion/${id}/publicar/`,
-      construirFormDataPublicar(payload),
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+  publicarComisionMotion: async (id: number): Promise<ComisionMotionAdmin> => {
+    const { data } = await axiosClient.post(`custom-orders/admin/comisiones/motion/${id}/publicar/`);
     return data;
   },
 };
-
-function construirFormDataPublicar(payload: PublicarProductoPayload): FormData {
-  const formData = new FormData();
-  formData.append("titulo", payload.titulo);
-  formData.append("descripcion", payload.descripcion);
-  formData.append("precio", String(payload.precio));
-  formData.append("formato_archivo", payload.formato_archivo);
-  return formData;
-}
 
 // Descarga autenticada del archivo de entrega (blob + JWT, mismo patrón que biblioteca.api.ts)
 async function descargar(path: string, filenameFallback: string): Promise<void> {

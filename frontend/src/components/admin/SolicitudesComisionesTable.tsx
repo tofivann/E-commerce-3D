@@ -4,7 +4,6 @@ import type { ComisionMotionAdmin, ComisionModeloAdmin } from "../../api/comisio
 import { comisionesAdminApi } from "../../api/comisiones.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
 import { ComisionCard } from "../comisiones/ComisionCard";
-import { PublicarProductoModal } from "./PublicarProductoModal";
 import { CompletarComisionModal } from "./CompletarComisionModal";
 import { ComisionDetalleModal } from "./ComisionDetalleModal";
 
@@ -17,8 +16,11 @@ export const SolicitudesComisionesTable: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelandoId, setCancelandoId] = useState<string | null>(null);
-  const [publicando, setPublicando] = useState<Item | null>(null);
+  // Un solo modal para entregar y para publicar: "Publicar a la tienda" lo
+  // abre con "publicar al guardar" ya marcado (los datos de reventa viven en
+  // la comisión y se completan ahí mismo — no hay formulario de publicar aparte).
   const [completando, setCompletando] = useState<Item | null>(null);
+  const [publicarAlAbrir, setPublicarAlAbrir] = useState(false);
   const [viendo, setViendo] = useState<Item | null>(null);
 
   const cargar = async () => {
@@ -132,7 +134,10 @@ export const SolicitudesComisionesTable: React.FC = () => {
                   )}
                   {puedeEntregar && (
                     <button
-                      onClick={() => setCompletando(item)}
+                      onClick={() => {
+                        setPublicarAlAbrir(false);
+                        setCompletando(item);
+                      }}
                       className="text-xs bg-surface-container-lowest border border-outline-variant/50 px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:border-primary/50 transition-colors flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-[16px]">upload_file</span>
@@ -142,8 +147,11 @@ export const SolicitudesComisionesTable: React.FC = () => {
 
                   {puedePublicar && (
                     <button
-                      onClick={() => setPublicando(item)}
-                      className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1.5 rounded-md font-semibold cursor-pointer flex items-center gap-1"
+                      onClick={() => {
+                        setPublicarAlAbrir(true);
+                        setCompletando(item);
+                      }}
+                      className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:bg-primary-fixed-dim transition-colors flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-[16px]">storefront</span>
                       {t("comisionesAdmin.publishToShop")}
@@ -173,17 +181,9 @@ export const SolicitudesComisionesTable: React.FC = () => {
         })}
       </div>
 
-      <PublicarProductoModal
-        item={publicando}
-        onClose={() => setPublicando(null)}
-        onPublicado={() => {
-          setPublicando(null);
-          cargar();
-        }}
-      />
-
       <CompletarComisionModal
         item={completando}
+        publicarAlAbrir={publicarAlAbrir}
         onClose={() => setCompletando(null)}
         onCompletado={() => {
           setCompletando(null);

@@ -27,7 +27,6 @@ from .serializers import (
     ComisionModeloSerializer,
     ComisionMotionAdminSerializer,
     ComisionModeloAdminSerializer,
-    PublicarProductoSerializer,
 )
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -380,7 +379,7 @@ class ComisionAdminViewSetBase(
                 },
             )
 
-    def _publicar_producto(self, request, comision):
+    def _publicar_producto(self, comision):
         """
         Compartido por ComisionMotionAdminViewSet y ComisionModeloAdminViewSet:
         crea (una sola vez) el Producto en el catálogo a partir de una comisión
@@ -391,6 +390,11 @@ class ComisionAdminViewSetBase(
         biblioteca" del catálogo) — ya pagó por esto al pedirlo, no debería
         verlo como "agregar al carrito" en la tienda solo porque también se
         puso a la venta para el resto de los clientes.
+
+        No lee ningún body: título/descripción/precio/formato/video salen de
+        los campos de reventa que el admin dejó guardados en la comisión al
+        subir la entrega (DatosPublicacion en models.py) — por eso el
+        frontend ya no tiene formulario de publicar, solo el de entrega.
 
         Devuelve (producto, None) si se publicó, o (None, Response) con el
         error si no se pudo — el caller decide qué serializer usar en la
@@ -406,18 +410,20 @@ class ComisionAdminViewSetBase(
                 {"detail": "Completa la comisión (archivo, foto y al menos una categoría) antes de publicar el producto."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        datos = PublicarProductoSerializer(data=request.data)
-        datos.is_valid(raise_exception=True)
-        validados = datos.validated_data
+        if not comision.publicacion_completa:
+            return None, Response(
+                {"detail": "Completa los datos de publicación (título, descripción, precio y formato) antes de publicar el producto."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         producto = Producto.objects.create(
-            titulo=validados['titulo'],
-            descripcion=validados['descripcion'],
-            precio=validados['precio'],
-            formato_archivo=validados['formato_archivo'],
+            titulo=comision.titulo_publicacion,
+            descripcion=comision.descripcion_publicacion,
+            precio=comision.precio_publicacion,
+            formato_archivo=comision.formato_archivo_publicacion,
             archivo_3d=comision.archivo_entrega,
             imagen_previa=comision.foto_entrega,
+            link_youtube=comision.link_youtube or None,
         )
         # M2M no se puede pasar como kwarg de create(): el producto necesita
         # existir (tener pk) antes de poder asignarle categorías.
@@ -444,7 +450,7 @@ class ComisionMotionAdminViewSet(ComisionAdminViewSetBase):
     @transaction.atomic
     def publicar(self, request, pk=None):
         comision = self.get_object()
-        _producto, error = self._publicar_producto(request, comision)
+        _producto, error = self._publicar_producto(comision)
         if error:
             return error
         return Response(
@@ -461,7 +467,7 @@ class ComisionModeloAdminViewSet(ComisionAdminViewSetBase):
     @transaction.atomic
     def publicar(self, request, pk=None):
         comision = self.get_object()
-        _producto, error = self._publicar_producto(request, comision)
+        _producto, error = self._publicar_producto(comision)
         if error:
             return error
         return Response(
