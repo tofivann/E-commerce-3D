@@ -143,7 +143,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
                   {puedePublicar && (
                     <button
                       onClick={() => setPublicando(item)}
-                      className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1.5 rounded-md font-semibold flex items-center gap-1"
+                      className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1.5 rounded-md font-semibold cursor-pointer flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-[16px]">storefront</span>
                       {t("comisionesAdmin.publishToShop")}
@@ -160,7 +160,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
                     <button
                       onClick={() => handleCancelar(item)}
                       disabled={cancelandoId === key}
-                      className="text-xs bg-error/10 text-on-error-container border border-error/30 px-3 py-1.5 rounded-md font-semibold hover:bg-error/20 transition-colors disabled:opacity-50 flex items-center gap-1"
+                      className="text-xs bg-error/10 text-on-error-container border border-error/30 px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:bg-error/20 transition-colors disabled:opacity-50 disabled:cursor-default flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-[16px]">cancel</span>
                       {t("comisionesAdmin.cancelCommission")}
