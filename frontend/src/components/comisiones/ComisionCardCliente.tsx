@@ -10,6 +10,7 @@ export interface ComisionCardClienteProps {
   subtitulo: string;
   foto: string | null;
   fotoIconoFallback: string;
+  codigoOrden: string;
   total: number | string;
   // Va en la misma fila que el precio, a la derecha — un botón de ícono
   // (Descargar si está completada) o un texto corto de estado si no. Debe
@@ -30,6 +31,7 @@ export const ComisionCardCliente: React.FC<ComisionCardClienteProps> = ({
   subtitulo,
   foto,
   fotoIconoFallback,
+  codigoOrden,
   total,
   footer,
 }) => {
@@ -68,6 +70,9 @@ export const ComisionCardCliente: React.FC<ComisionCardClienteProps> = ({
         </span>
         <h3 className="font-semibold text-on-surface leading-tight truncate">{titulo}</h3>
         <p className="text-on-surface-variant text-xs font-mono truncate">{subtitulo}</p>
+        <p className="text-on-surface-variant/70 text-[11px] font-mono truncate">
+          {t("comisiones.orderCode", { code: codigoOrden })}
+        </p>
 
         {/* Precio y acción en la MISMA fila (como el precio+botón editar de
             ProductAdminGrid) — apilados como antes no cabían en h-80. */}

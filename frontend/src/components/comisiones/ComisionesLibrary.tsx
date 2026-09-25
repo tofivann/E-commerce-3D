@@ -103,6 +103,7 @@ export const ComisionesLibrary: React.FC = () => {
             subtitulo={subtitulo}
             foto={foto}
             fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
+            codigoOrden={item.data.orden.codigo_orden}
             total={item.data.orden.total}
             footer={
               <button

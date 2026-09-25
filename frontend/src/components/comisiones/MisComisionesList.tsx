@@ -100,6 +100,7 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
             subtitulo={subtitulo}
             foto={foto}
             fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
+            codigoOrden={item.data.orden.codigo_orden}
             total={item.data.orden.total}
             footer={
               puedeDescargar ? (
