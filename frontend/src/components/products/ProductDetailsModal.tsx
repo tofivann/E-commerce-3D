@@ -1,6 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
+import { extraerIdYoutube } from "../../utils/youtube";
+import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 
 interface ProductDetailsModalProps {
   producto: Producto | null;
@@ -11,16 +13,6 @@ interface ProductDetailsModalProps {
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
-
-// Extrae el ID de video de los formatos comunes de link de YouTube
-// (watch?v=, youtu.be/, embed/, shorts/), para poder embeberlo.
-function extraerIdYoutube(url?: string | null): string | null {
-  if (!url) return null;
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match ? match[1] : null;
-}
 
 export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   producto,
@@ -51,15 +43,11 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
         </button>
 
         {videoId ? (
-          <div className="w-full aspect-video rounded-xl overflow-hidden mb-6 bg-surface-container-lowest">
-            <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
-              title={t("productDetails.previewOf", { title: producto.titulo })}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
+          <YoutubeEmbed
+            url={producto.link_youtube}
+            title={t("productDetails.previewOf", { title: producto.titulo })}
+            className="mb-6"
+          />
         ) : (
           <div className="w-full h-56 rounded-xl overflow-hidden mb-6 bg-surface-container-lowest">
             <img src={imagenUrl} alt={producto.titulo} className="w-full h-full object-cover" />

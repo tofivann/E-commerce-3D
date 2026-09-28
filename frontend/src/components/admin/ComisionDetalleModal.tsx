@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { nombreCategoria } from "../../utils/categoria";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
 import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
+import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import type { Item } from "./SolicitudesComisionesTable";
 
 interface ComisionDetalleModalProps {
@@ -17,6 +18,37 @@ const Campo: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
     </p>
     <div className="text-on-surface text-sm">{children}</div>
   </div>
+);
+
+// Video reproducible dentro del modal. Si el link no es de YouTube (o no
+// trae un ID reconocible) se cae a un link normal: el dato no se pierde.
+const VideoCampo: React.FC<{ label: string; url: string | null | undefined; titulo: string }> = ({
+  label,
+  url,
+  titulo,
+}) => (
+  <Campo label={label}>
+    <YoutubeEmbed
+      url={url}
+      title={titulo}
+      className="mt-1"
+      fallback={
+        url ? (
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1 break-all"
+          >
+            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            {url}
+          </a>
+        ) : (
+          "—"
+        )
+      }
+    />
+  </Campo>
 );
 
 export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item, onClose }) => {
@@ -80,17 +112,11 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
               <Campo label={t("comisionDetalle.gameNameLabel")}>{item.data.nombre_juego}</Campo>
             </div>
             <Campo label={t("comisionDetalle.song")}>{item.data.nombre_cancion}</Campo>
-            <Campo label={t("comisionDetalle.referenceVideo")}>
-              <a
-                href={item.data.link_video}
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-[16px]">play_circle</span>
-                {item.data.link_video}
-              </a>
-            </Campo>
+            <VideoCampo
+              label={t("comisionDetalle.referenceVideo")}
+              url={item.data.link_video}
+              titulo={t("comisionDetalle.referenceVideoTitle", { name: item.data.nombre_cancion })}
+            />
             {item.data.informacion_adicional && (
               <Campo label={t("motionForm.additionalInfo")}>
                 <p className="whitespace-pre-line">{item.data.informacion_adicional}</p>
@@ -189,21 +215,15 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
               {item.data.precio_publicacion == null ? "—" : `$${Number(item.data.precio_publicacion).toFixed(2)}`}
             </Campo>
             <Campo label={t("comisionDetalle.format")}>{item.data.formato_archivo_publicacion || "—"}</Campo>
-            <Campo label={t("comisionDetalle.resultVideo")}>
-              {item.data.link_youtube ? (
-                <a
-                  href={item.data.link_youtube}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1 break-all"
-                >
-                  <span className="material-symbols-outlined text-[16px]">play_circle</span>
-                  {item.data.link_youtube}
-                </a>
-              ) : (
-                "—"
-              )}
-            </Campo>
+          </div>
+          <div className="mt-4">
+            <VideoCampo
+              label={t("comisionDetalle.resultVideo")}
+              url={item.data.link_youtube}
+              titulo={t("comisionDetalle.resultVideoTitle", {
+                name: item.data.titulo_publicacion || (item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje),
+              })}
+            />
           </div>
           {item.data.descripcion_publicacion && (
             <div className="mt-4">
