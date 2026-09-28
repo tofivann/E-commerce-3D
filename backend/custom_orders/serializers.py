@@ -138,7 +138,33 @@ CAMPOS_PUBLICACION = [
 ]
 
 
-class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSerializer):
+class URLConEsquemaField(serializers.URLField):
+    """URLField que acepta el link como suele venir pegado desde la barra del
+    navegador o el botón "Compartir": sin "https://" ("youtube.com/watch?v=...").
+    Se le antepone el esquema ANTES de la validación de formato (por eso va en
+    to_internal_value y no en validate_<campo>, que corre después y ya
+    llegaría tarde); el resto lo sigue validando el URLField normal.
+    """
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.strip() and '://' not in data:
+            data = f'https://{data.strip()}'
+        return super().to_internal_value(data)
+
+
+class ValidacionPublicacionMixin:
+    """Reglas de los datos de reventa, compartidas por los dos serializers
+    admin. Van en `validate_<campo>` para que DRF devuelva el error bajo el
+    nombre del campo y el modal pueda mostrarlo al lado del input.
+    """
+
+    def validate_precio_publicacion(self, valor):
+        if valor is not None and valor < 0:
+            raise serializers.ValidationError('El precio no puede ser negativo.')
+        return valor
+
+
+class ComisionMotionAdminSerializer(ValidacionPublicacionMixin, ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
@@ -146,6 +172,7 @@ class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.filter(activo=True), many=True, required=False,
     )
+    link_youtube = URLConEsquemaField(max_length=500, required=False, allow_blank=True, allow_null=True)
     # Propiedad del modelo, no columna: hay que declararla para exponerla.
     publicacion_completa = serializers.BooleanField(read_only=True)
 
@@ -163,7 +190,7 @@ class ComisionMotionAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
         ]
 
 
-class ComisionModeloAdminSerializer(ValidacionEntregaMixin, serializers.ModelSerializer):
+class ComisionModeloAdminSerializer(ValidacionPublicacionMixin, ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     juego = JuegoComisionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
@@ -171,6 +198,7 @@ class ComisionModeloAdminSerializer(ValidacionEntregaMixin, serializers.ModelSer
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.filter(activo=True), many=True, required=False,
     )
+    link_youtube = URLConEsquemaField(max_length=500, required=False, allow_blank=True, allow_null=True)
     publicacion_completa = serializers.BooleanField(read_only=True)
 
     class Meta:

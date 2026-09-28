@@ -325,6 +325,59 @@ class PublicarProductoTests(APITestCase):
         self.assertEqual(comision.precio_publicacion, Decimal('15.00'))
         self.assertEqual(comision.link_youtube, 'https://www.youtube.com/watch?v=abc123')
 
+    def _patch_reventa(self, comision, **datos):
+        # Reedición típica desde el modal: sin archivo ni foto (se conservan),
+        # solo categorías + datos de reventa.
+        return self.client.patch(
+            f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/',
+            data={'categorias': [self.categoria.id], **datos},
+            format='multipart',
+        )
+
+    def test_link_de_youtube_sin_esquema_se_normaliza(self):
+        comision = self._comision_entregada()
+
+        respuesta = self._patch_reventa(comision, link_youtube='youtube.com/watch?v=abcdefghijk')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        comision.refresh_from_db()
+        self.assertEqual(comision.link_youtube, 'https://youtube.com/watch?v=abcdefghijk')
+
+    def test_link_de_youtube_con_esquema_se_guarda_tal_cual(self):
+        comision = self._comision_entregada()
+        url = 'https://www.youtube.com/watch?v=abcdefghijk&list=PLxyz'
+
+        respuesta = self._patch_reventa(comision, link_youtube=url)
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        comision.refresh_from_db()
+        self.assertEqual(comision.link_youtube, url)
+
+    def test_link_de_youtube_vacio_lo_borra(self):
+        comision = self._comision_entregada(link_youtube='https://youtu.be/abcdefghijk')
+
+        respuesta = self._patch_reventa(comision, link_youtube='')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        comision.refresh_from_db()
+        self.assertFalse(comision.link_youtube)
+
+    def test_precio_negativo_se_rechaza_con_el_nombre_del_campo(self):
+        comision = self._comision_entregada()
+
+        respuesta = self._patch_reventa(comision, precio_publicacion='-5')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('precio_publicacion', respuesta.data)
+
+    def test_precio_con_coma_se_rechaza_con_el_nombre_del_campo(self):
+        comision = self._comision_entregada()
+
+        respuesta = self._patch_reventa(comision, precio_publicacion='15,50')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('precio_publicacion', respuesta.data)
+
     @patch('custom_orders.views.enviar_email')
     def test_los_datos_de_reventa_son_opcionales_al_entregar(self, _mock_email):
         usuario = crear_usuario()

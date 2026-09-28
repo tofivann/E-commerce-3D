@@ -4,6 +4,8 @@ import type { Categoria } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
 import { categoriasApi } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
+import { extraerErroresValidacion } from "../../utils/erroresApi";
+import type { ErroresPorCampo } from "../../utils/erroresApi";
 import type { Item } from "./SolicitudesComisionesTable";
 
 interface CompletarComisionModalProps {
@@ -58,7 +60,37 @@ function nombreDeArchivo(url: string | null): string {
 
 const inputClass =
   "w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary";
+const inputErrorClass = "border-error focus:border-error focus:ring-error";
 const labelClass = "block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2";
+
+// Nombre del campo en el backend (DRF devuelve los errores del 400 con esta
+// clave) -> campo del formulario. Sirve para pintar el error al lado del
+// input equivocado en vez de un mensaje genérico arriba.
+const CAMPO_POR_ERROR: Record<string, keyof FormPublicacion> = {
+  titulo_publicacion: "titulo",
+  descripcion_publicacion: "descripcion",
+  precio_publicacion: "precio",
+  formato_archivo_publicacion: "formato",
+  link_youtube: "linkYoutube",
+};
+
+type ErroresForm = Partial<Record<keyof FormPublicacion, string>>;
+
+// Precio como lo entiende el backend (DecimalField): dígitos con punto
+// decimal. La coma (15,50) y el símbolo ($15) son los tropiezos típicos —
+// mejor avisar antes de mandar que recibir un 400.
+const PRECIO_VALIDO = /^\d+(\.\d{1,2})?$/;
+
+function validarFormulario(form: FormPublicacion, t: (clave: string) => string): ErroresForm {
+  const errores: ErroresForm = {};
+  const precio = form.precio.trim();
+  if (precio !== "" && !PRECIO_VALIDO.test(precio)) errores.precio = t("completarComisionModal.errorPrice");
+  return errores;
+}
+
+// Mensaje de un input, debajo del campo.
+const ErrorCampo: React.FC<{ mensaje?: string }> = ({ mensaje }) =>
+  mensaje ? <p className="text-error text-xs mt-1">{mensaje}</p> : null;
 
 export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   item,
@@ -75,7 +107,10 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   const [form, setForm] = useState<FormPublicacion>({ titulo: "", descripcion: "", precio: "", formato: "", linkYoutube: "" });
   const [publicarAhora, setPublicarAhora] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Error general (arriba del formulario) y errores por campo (debajo de
+  // cada input) — los del backend llegan ya con el nombre del campo.
   const [error, setError] = useState<string | null>(null);
+  const [erroresCampos, setErroresCampos] = useState<ErroresForm>({});
 
   useEffect(() => {
     categoriasApi.listar().then(setCategorias).catch((err) => console.error("Error al cargar categorías:", err));
@@ -86,6 +121,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     setFotoEntrega(null);
     setFotoPreviewUrl("");
     setError(null);
+    setErroresCampos({});
     if (!item) {
       setCategoriaIds([]);
       return;
@@ -117,11 +153,44 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   const datosReventaCompletos =
     form.titulo.trim() !== "" && form.descripcion.trim() !== "" && form.precio !== "" && form.formato.trim() !== "";
 
-  const actualizarForm = (cambios: Partial<FormPublicacion>) => setForm((prev) => ({ ...prev, ...cambios }));
+  const actualizarForm = (cambios: Partial<FormPublicacion>) => {
+    setForm((prev) => ({ ...prev, ...cambios }));
+    // Al corregir un campo se le quita su error; el general se mantiene
+    // hasta el próximo intento de guardar.
+    const corregidos = Object.keys(cambios) as (keyof FormPublicacion)[];
+    setErroresCampos((prev) => {
+      const next = { ...prev };
+      corregidos.forEach((campo) => delete next[campo]);
+      return next;
+    });
+  };
+
+  // Traduce el 400 del backend a errores por campo (+ general si hay uno sin
+  // campo). Devuelve false si no era un error de validación.
+  const mostrarErroresBackend = (err: unknown, mensajeGenerico: string): void => {
+    const errores: ErroresPorCampo | null = extraerErroresValidacion(err);
+    if (!errores) {
+      setError(mensajeGenerico);
+      return;
+    }
+    const porCampo: ErroresForm = {};
+    let general: string | null = errores[""] ?? null;
+    for (const [campoBackend, mensaje] of Object.entries(errores)) {
+      if (campoBackend === "") continue;
+      const campoForm = CAMPO_POR_ERROR[campoBackend];
+      if (campoForm) porCampo[campoForm] = mensaje;
+      // Errores de campos que no tienen input propio aquí (archivo, foto,
+      // categorías...) se muestran arriba para que no se pierdan.
+      else general = general ?? mensaje;
+    }
+    setErroresCampos(porCampo);
+    setError(general ?? (Object.keys(porCampo).length > 0 ? t("completarComisionModal.errorFields") : mensajeGenerico));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setErroresCampos({});
 
     const faltaEntrega = !yaTieneEntrega && (!archivoEntrega || !fotoEntrega);
     if (faltaEntrega || categoriaIds.length === 0) {
@@ -130,6 +199,12 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     }
     if (publicarAhora && !datosReventaCompletos) {
       setError(t("completarComisionModal.errorPublishMissing"));
+      return;
+    }
+    const erroresLocales = validarFormulario(form, t);
+    if (Object.keys(erroresLocales).length > 0) {
+      setErroresCampos(erroresLocales);
+      setError(t("completarComisionModal.errorFields"));
       return;
     }
 
@@ -141,10 +216,11 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     formData.append("titulo_publicacion", form.titulo.trim());
     formData.append("descripcion_publicacion", form.descripcion.trim());
     formData.append("formato_archivo_publicacion", form.formato.trim());
+    // Sin "https://" también vale: el backend le antepone el esquema.
     formData.append("link_youtube", form.linkYoutube.trim());
     // Vacío se omite (no se manda ""): el backend lo rechazaría como
     // decimal inválido, y un precio en blanco simplemente sigue sin definir.
-    if (form.precio !== "") formData.append("precio_publicacion", form.precio);
+    if (form.precio.trim() !== "") formData.append("precio_publicacion", form.precio.trim());
 
     try {
       if (item.tipo === "motion") {
@@ -154,7 +230,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
       }
     } catch (err) {
       console.error("Error al completar la comisión:", err);
-      setError(t("completarComisionModal.errorSave"));
+      mostrarErroresBackend(err, t("completarComisionModal.errorSave"));
       setSaving(false);
       return;
     }
@@ -170,7 +246,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
         // La entrega ya quedó guardada; solo falló publicar. Se deja el modal
         // abierto para reintentar (volver a guardar es idempotente).
         console.error("Error al publicar el producto:", err);
-        setError(t("completarComisionModal.errorPublish"));
+        mostrarErroresBackend(err, t("completarComisionModal.errorPublish"));
         setSaving(false);
         return;
       }
@@ -320,56 +396,68 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
               <label className={labelClass}>{t("productForm.titleLabel")}</label>
               <input
                 maxLength={200}
-                className={inputClass}
+                className={`${inputClass} ${erroresCampos.titulo ? inputErrorClass : ""}`}
                 value={form.titulo}
                 onChange={(e) => actualizarForm({ titulo: e.target.value })}
               />
+              <ErrorCampo mensaje={erroresCampos.titulo} />
             </div>
 
             <div>
               <label className={labelClass}>{t("productForm.descriptionLabel")}</label>
               <textarea
                 rows={3}
-                className={`${inputClass} resize-y`}
+                className={`${inputClass} resize-y ${erroresCampos.descripcion ? inputErrorClass : ""}`}
                 value={form.descripcion}
                 onChange={(e) => actualizarForm({ descripcion: e.target.value })}
               />
+              <ErrorCampo mensaje={erroresCampos.descripcion} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>{t("completarComisionModal.resalePrice")}</label>
+                {/* type="text" + inputMode="decimal" (no type="number"): así
+                    una coma o un "$" no se descartan en silencio — llegan al
+                    estado y se avisa con un error claro debajo del campo. */}
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={inputClass}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="15.00"
+                  className={`${inputClass} ${erroresCampos.precio ? inputErrorClass : ""}`}
                   value={form.precio}
                   onChange={(e) => actualizarForm({ precio: e.target.value })}
                 />
+                <ErrorCampo mensaje={erroresCampos.precio} />
               </div>
               <div>
                 <label className={labelClass}>{t("completarComisionModal.format")}</label>
                 <input
                   maxLength={50}
                   placeholder="STL, OBJ, FBX..."
-                  className={inputClass}
+                  className={`${inputClass} ${erroresCampos.formato ? inputErrorClass : ""}`}
                   value={form.formato}
                   onChange={(e) => actualizarForm({ formato: e.target.value })}
                 />
+                <ErrorCampo mensaje={erroresCampos.formato} />
               </div>
             </div>
 
             <div>
               <label className={labelClass}>{t("completarComisionModal.videoLabel")}</label>
+              {/* type="text" (no type="url"): el navegador bloquearía en
+                  silencio un link pegado sin "https://", que el backend sí
+                  acepta y normaliza. */}
               <input
-                type="url"
+                type="text"
+                inputMode="url"
                 maxLength={500}
                 placeholder="https://www.youtube.com/watch?v=..."
-                className={inputClass}
+                className={`${inputClass} ${erroresCampos.linkYoutube ? inputErrorClass : ""}`}
                 value={form.linkYoutube}
                 onChange={(e) => actualizarForm({ linkYoutube: e.target.value })}
               />
+              <ErrorCampo mensaje={erroresCampos.linkYoutube} />
               <p className="text-on-surface-variant text-xs mt-1">{t("completarComisionModal.videoHelp")}</p>
             </div>
 
