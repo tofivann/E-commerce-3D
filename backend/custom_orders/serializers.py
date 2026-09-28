@@ -169,9 +169,14 @@ class ComisionMotionAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
     usuario_email = serializers.EmailField(source='usuario.email', read_only=True)
+    # Mismo par que ProductoSerializer: `categorias` son ids (lo que el admin
+    # escribe en el PATCH) y `categorias_detalle` los objetos completos para
+    # mostrar — el frontend usa siempre el segundo para leer. Antes solo
+    # existía `categorias` con ids, y el modal hacía `.id` sobre un número.
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.filter(activo=True), many=True, required=False,
     )
+    categorias_detalle = CategoriaSerializer(source='categorias', many=True, read_only=True)
     link_youtube = URLConEsquemaField(max_length=500, required=False, allow_blank=True, allow_null=True)
     # Propiedad del modelo, no columna: hay que declararla para exponerla.
     publicacion_completa = serializers.BooleanField(read_only=True)
@@ -181,7 +186,7 @@ class ComisionMotionAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
             'nombre_cancion', 'link_video', 'informacion_adicional', 'estado', 'archivo_entrega',
-            'foto_entrega', 'categorias', 'producto_publicado',
+            'foto_entrega', 'categorias', 'categorias_detalle', 'producto_publicado',
             *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [
@@ -198,6 +203,7 @@ class ComisionModeloAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
     categorias = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.filter(activo=True), many=True, required=False,
     )
+    categorias_detalle = CategoriaSerializer(source='categorias', many=True, read_only=True)
     link_youtube = URLConEsquemaField(max_length=500, required=False, allow_blank=True, allow_null=True)
     publicacion_completa = serializers.BooleanField(read_only=True)
 
@@ -206,7 +212,7 @@ class ComisionModeloAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
             'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'foto_entrega',
-            'categorias', 'producto_publicado',
+            'categorias', 'categorias_detalle', 'producto_publicado',
             *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [

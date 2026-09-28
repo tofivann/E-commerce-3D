@@ -53,7 +53,8 @@ export function filtrarComisiones(items: ItemComision[], filtros: FiltrosComisio
   return items.filter((item) => {
     if (filtros.estado && item.data.estado !== filtros.estado) return false;
 
-    const categoriasDeLaComision = new Set(item.data.categorias.map((c) => c.id));
+    // En la respuesta admin `categorias` ya son ids (ver CamposAdmin).
+    const categoriasDeLaComision = new Set(item.data.categorias);
     if (!categoriasPedidas.every((id) => categoriasDeLaComision.has(id))) return false;
 
     if (terminos.length > 0) {

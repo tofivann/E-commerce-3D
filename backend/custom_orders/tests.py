@@ -334,6 +334,33 @@ class PublicarProductoTests(APITestCase):
             format='multipart',
         )
 
+    def test_respuesta_admin_trae_ids_y_detalle_de_categorias(self):
+        # El modal de entrega precarga los chips desde categorias_detalle
+        # (objetos con id); `categorias` son ids planos para escribir. Con
+        # solo ids, el frontend mandaba "undefined" de vuelta y daba 400.
+        comision = self._comision_entregada()
+
+        respuesta = self.client.get(f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/')
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data['categorias'], [self.categoria.id])
+        self.assertEqual(
+            [(c['id'], c['nombre']) for c in respuesta.data['categorias_detalle']],
+            [(self.categoria.id, self.categoria.nombre)],
+        )
+
+    def test_reeditar_entrega_reenviando_las_mismas_categorias(self):
+        # Flujo exacto del modal al reabrir una comisión ya entregada: manda
+        # de vuelta los ids que leyó, sin archivo ni foto.
+        comision = self._comision_entregada(**self.DATOS_PUBLICACION)
+
+        respuesta = self._patch_reventa(comision, descripcion_publicacion='Cambiada')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        comision.refresh_from_db()
+        self.assertEqual(comision.descripcion_publicacion, 'Cambiada')
+        self.assertEqual(list(comision.categorias.all()), [self.categoria])
+
     def test_link_de_youtube_sin_esquema_se_normaliza(self):
         comision = self._comision_entregada()
 

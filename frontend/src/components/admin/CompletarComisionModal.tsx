@@ -128,8 +128,8 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     }
     setForm(formInicial(item));
     setPublicarAhora(publicarAlAbrir && !item.data.producto_publicado);
-    if (item.data.categorias && item.data.categorias.length > 0) {
-      setCategoriaIds(item.data.categorias.map((c) => c.id));
+    if (item.data.categorias.length > 0) {
+      setCategoriaIds(item.data.categorias);
       return;
     }
     const sugerida = categorias.find((c) => c.nombre === CATEGORIA_SUGERIDA[item.tipo]);

@@ -90,17 +90,22 @@ export interface DatosPublicacion {
   publicacion_completa: boolean;
 }
 
-export interface ComisionMotionAdmin extends Omit<ComisionMotion, "descarga_url">, DatosPublicacion {
+// Campos que solo devuelven los serializers admin. Ojo con `categorias`: a
+// diferencia del serializer cliente (objetos), aquí son **ids** — es el
+// mismo campo con el que el admin escribe en el PATCH — y los objetos
+// completos vienen en `categorias_detalle` (mismo par que Producto). Para
+// leer nombres/ids en el panel usar siempre `categorias_detalle`.
+interface CamposAdmin extends DatosPublicacion {
   usuario_nombre: string;
   usuario_email: string;
   archivo_entrega: string | null;
+  categorias: number[];
+  categorias_detalle: Categoria[];
 }
 
-export interface ComisionModeloAdmin extends Omit<ComisionModelo, "descarga_url">, DatosPublicacion {
-  usuario_nombre: string;
-  usuario_email: string;
-  archivo_entrega: string | null;
-}
+export interface ComisionMotionAdmin extends Omit<ComisionMotion, "descarga_url" | "categorias">, CamposAdmin {}
+
+export interface ComisionModeloAdmin extends Omit<ComisionModelo, "descarga_url" | "categorias">, CamposAdmin {}
 
 export const comisionesApi = {
   // Tablas de precio (lectura para armar el formulario del cliente)
