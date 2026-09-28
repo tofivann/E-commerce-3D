@@ -1,4 +1,5 @@
 import type { ComisionMotionAdmin, ComisionModeloAdmin, EstadoComision } from "../api/comisiones.api";
+import { coincideCategoriasExactas } from "./categoria";
 
 // Mismo `Item` que arma SolicitudesComisionesTable (Motion y Modelo en una
 // sola lista). Se declara aquí para que la lógica de filtrado sea pura y
@@ -10,9 +11,10 @@ export type ItemComision =
 export interface FiltrosComisiones {
   // Sin estado = todas.
   estado: EstadoComision | null;
-  // Ids de categoría; la comisión debe tener TODAS (AND), igual que el
-  // filtro de categorías del catálogo. Es el mismo Set que maneja
-  // CategoryFilter (que nunca lo muta: siempre crea uno nuevo en onChange).
+  // Ids de categoría; la comisión debe tener EXACTAMENTE esas, igual que el
+  // filtro de categorías del catálogo (coincideCategoriasExactas). Es el
+  // mismo Set que maneja CategoryFilter (que nunca lo muta: siempre crea uno
+  // nuevo en onChange).
   categorias: Set<number>;
   // Texto libre: cliente, email, canción/personaje, juego o código de orden.
   // Sin acentos ni mayúsculas (misma normalización que el buscador del
@@ -48,14 +50,12 @@ function textoBuscable(item: ItemComision): string {
 
 export function filtrarComisiones(items: ItemComision[], filtros: FiltrosComisiones): ItemComision[] {
   const terminos = normalizarTexto(filtros.texto).split(/\s+/).filter(Boolean);
-  const categoriasPedidas = [...filtros.categorias];
 
   return items.filter((item) => {
     if (filtros.estado && item.data.estado !== filtros.estado) return false;
 
     // En la respuesta admin `categorias` ya son ids (ver CamposAdmin).
-    const categoriasDeLaComision = new Set(item.data.categorias);
-    if (!categoriasPedidas.every((id) => categoriasDeLaComision.has(id))) return false;
+    if (!coincideCategoriasExactas(item.data.categorias, filtros.categorias)) return false;
 
     if (terminos.length > 0) {
       const buscable = textoBuscable(item);

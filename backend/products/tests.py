@@ -101,26 +101,35 @@ class ProductoListadoTests(APITestCase):
         respuesta = self.client.get(self.url, {'search': '   '})
         self.assertEqual(respuesta.data['count'], 2)
 
-    def test_filtro_categorias_exige_todas_y_sin_duplicados(self):
+    def test_filtro_categorias_coincidencia_exacta_con_varias(self):
         ambos = crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])
+        crear_producto('Las tres', categorias=[self.modelo, self.motion, self.juego])
         crear_producto('Solo Motion', categorias=[self.motion])
         crear_producto('Solo Modelo', categorias=[self.modelo])
         crear_producto('Solo Juego', categorias=[self.juego])
 
         respuesta = self.client.get(self.url, {'categorias': f'{self.modelo.id},{self.motion.id}'})
 
-        # AND: solo el que tiene las dos; y una sola vez aunque haya dos joins.
+        # Exacto: solo el que tiene justo esas dos — ni los de una sola, ni
+        # el que además tiene Juego; y una sola vez aunque haya dos joins.
         self.assertEqual([p['id'] for p in respuesta.data['results']], [ambos.id])
         self.assertEqual(respuesta.data['count'], 1)
 
-    def test_filtro_una_categoria_incluye_los_que_tienen_mas(self):
-        ambos = crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])
+    def test_filtro_una_categoria_excluye_los_que_tienen_mas(self):
+        crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])
         solo_motion = crear_producto('Solo Motion', categorias=[self.motion])
         crear_producto('Solo Modelo', categorias=[self.modelo])
 
         respuesta = self.client.get(self.url, {'categorias': str(self.motion.id)})
 
-        self.assertEqual(sorted(p['id'] for p in respuesta.data['results']), sorted([ambos.id, solo_motion.id]))
+        # Marcar "Motion" devuelve únicamente lo que es solo Motion.
+        self.assertEqual([p['id'] for p in respuesta.data['results']], [solo_motion.id])
+
+    def test_filtro_categorias_con_categoria_inexistente_no_devuelve_nada(self):
+        crear_producto('Solo Modelo', categorias=[self.modelo])
+
+        respuesta = self.client.get(self.url, {'categorias': '99999'})
+        self.assertEqual(respuesta.data['count'], 0)
 
     def test_filtro_categorias_ignora_ids_repetidos(self):
         producto = crear_producto('Motion', categorias=[self.motion])
