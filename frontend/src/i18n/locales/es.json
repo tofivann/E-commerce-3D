@@ -382,6 +382,8 @@
     "alreadyPublished": "Ya está publicado en la tienda (producto #{{id}}). Los cambios de aquí no modifican ese producto.",
     "errorPublishMissing": "Para publicar en la tienda completa el título, la descripción, el precio y el formato.",
     "errorPublish": "La entrega se guardó, pero no se pudo publicar el producto. Inténtalo de nuevo.",
+    "errorFields": "Revisa los campos marcados.",
+    "errorPrice": "Usa solo números y punto decimal, por ejemplo 15.50 (sin coma ni símbolo).",
     "submitUpdate": "Guardar cambios",
     "submitAndPublish": "Guardar y publicar",
     "publishingNow": "Publicando..."
@@ -393,14 +395,18 @@
     "prices": "Precios",
     "empty": "No hay solicitudes de comisiones todavía.",
     "unknownUser": "—",
-    "watchReference": "Ver referencia",
     "replaceFile": "Reemplazar archivo",
     "uploadDelivery": "Subir entrega",
     "publishToShop": "Publicar a la tienda",
     "published": "Publicado",
     "cancelCommission": "Cancelar",
     "cancelConfirm": "¿Cancelar esta comisión? El cliente la verá como cancelada.",
-    "cancelError": "No se pudo cancelar la comisión."
+    "cancelError": "No se pudo cancelar la comisión.",
+    "searchPlaceholder": "Buscar por cliente, personaje, canción, juego u orden...",
+    "filterStatus": "Estado",
+    "filterAll": "Todas",
+    "filterCategory": "Categorías",
+    "noResultsFilters": "Ninguna comisión coincide con los filtros."
   },
   "preciosComisiones": {
     "gamesTitle": "Juegos (Comisión de Modelo Nuevo)",
@@ -455,7 +461,9 @@
     "format": "Formato",
     "resultVideo": "Video del resultado",
     "publicationComplete": "Listos para publicar",
-    "publicationIncomplete": "Incompletos — se completan desde \"Subir entrega\""
+    "publicationIncomplete": "Incompletos — se completan desde \"Subir entrega\"",
+    "referenceVideoTitle": "Video de referencia de \"{{name}}\"",
+    "resultVideoTitle": "Video del resultado de \"{{name}}\""
   },
   "userForm": {
     "errorNoPassword": "Debes definir una contraseña para el nuevo usuario.",

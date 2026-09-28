@@ -1,20 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ComisionMotionAdmin, ComisionModeloAdmin } from "../../api/comisiones.api";
+import type { EstadoComision } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
+import type { Categoria } from "../../api/productos.api";
+import { categoriasApi } from "../../api/productos.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
+import { claveEtiquetaEstado } from "../../utils/estadoComision";
+import { FILTROS_COMISIONES_VACIOS, filtrarComisiones } from "../../utils/comisiones";
+import type { FiltrosComisiones, ItemComision } from "../../utils/comisiones";
 import { ComisionCard } from "../comisiones/ComisionCard";
+import { CategoryFilter } from "../products/CategoryFilter";
+import { SearchInput } from "../products/SearchInput";
 import { CompletarComisionModal } from "./CompletarComisionModal";
 import { ComisionDetalleModal } from "./ComisionDetalleModal";
 
-export type Item =
-  | { tipo: "motion"; data: ComisionMotionAdmin }
-  | { tipo: "modelo"; data: ComisionModeloAdmin };
+// Los modales de esta carpeta importan `Item` desde aquí; el tipo real vive
+// en utils/comisiones.ts junto con la lógica de filtrado.
+export type Item = ItemComision;
+
+// Orden de los chips de estado. SOLICITADO va al final: es el transitorio
+// "Confirmando pago", rara vez es lo que se busca.
+const ESTADOS_FILTRO: EstadoComision[] = ["EN_PROCESO", "COMPLETADO", "CANCELADO", "SOLICITADO"];
+
+const chipClass = (activo: boolean) =>
+  `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
+    activo
+      ? "bg-primary-container text-on-primary-fixed border-primary-container"
+      : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
+  }`;
 
 export const SolicitudesComisionesTable: React.FC = () => {
   const { t } = useTranslation();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  // Filtros en memoria: la lista de comisiones no es paginada (llega
+  // completa, como la biblioteca), así que no hace falta ir al servidor.
+  const [filtros, setFiltros] = useState<FiltrosComisiones>(FILTROS_COMISIONES_VACIOS);
   const [cancelandoId, setCancelandoId] = useState<string | null>(null);
   // Un solo modal para entregar y para publicar: "Publicar a la tienda" lo
   // abre con "publicar al guardar" ya marcado (los datos de reventa viven en
@@ -46,7 +68,17 @@ export const SolicitudesComisionesTable: React.FC = () => {
 
   useEffect(() => {
     cargar();
+    categoriasApi
+      .listar()
+      .then(setCategorias)
+      .catch((err) => console.error("Error al cargar categorías:", err));
   }, []);
+
+  const itemsFiltrados = useMemo(() => filtrarComisiones(items, filtros), [items, filtros]);
+  const hayFiltros =
+    filtros.estado !== null || filtros.categorias.size > 0 || filtros.texto.trim() !== "";
+  const actualizarFiltros = (cambios: Partial<FiltrosComisiones>) =>
+    setFiltros((prev) => ({ ...prev, ...cambios }));
 
   // El estado ya no se elige a mano: el pago confirmado la pasa sola a "En
   // Proceso" y subir el archivo de entrega la pasa sola a "Completado" (ver
@@ -90,8 +122,58 @@ export const SolicitudesComisionesTable: React.FC = () => {
 
   return (
     <div>
+      {/* ---- Filtros: texto, estado y categorías (AND entre todos) ---- */}
+      <div className="flex flex-col gap-4 mb-6">
+        <SearchInput
+          value={filtros.texto}
+          onChange={(texto) => actualizarFiltros({ texto })}
+          placeholder={t("comisionesAdmin.searchPlaceholder")}
+          className="max-w-sm"
+        />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mr-1">
+            {t("comisionesAdmin.filterStatus")}
+          </span>
+          <button
+            type="button"
+            onClick={() => actualizarFiltros({ estado: null })}
+            className={chipClass(filtros.estado === null)}
+          >
+            {t("comisionesAdmin.filterAll")}
+          </button>
+          {ESTADOS_FILTRO.map((estado) => (
+            <button
+              key={estado}
+              type="button"
+              onClick={() => actualizarFiltros({ estado: filtros.estado === estado ? null : estado })}
+              className={chipClass(filtros.estado === estado)}
+            >
+              {t(claveEtiquetaEstado(estado))}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mr-1">
+            {t("comisionesAdmin.filterCategory")}
+          </span>
+          <CategoryFilter
+            categorias={categorias}
+            seleccionadas={filtros.categorias}
+            onChange={(categorias) => actualizarFiltros({ categorias })}
+          />
+        </div>
+      </div>
+
+      {itemsFiltrados.length === 0 && hayFiltros && (
+        <div className="glass-panel rounded-xl p-10 text-center text-on-surface-variant">
+          {t("comisionesAdmin.noResultsFilters")}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {items.map((item) => {
+        {itemsFiltrados.map((item) => {
           const key = `${item.tipo}-${item.data.id}`;
           const titulo = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
           const subtitulo =
@@ -121,17 +203,6 @@ export const SolicitudesComisionesTable: React.FC = () => {
               fechaOrden={item.data.orden.fecha_orden}
               footer={
                 <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  {item.tipo === "motion" && (
-                    <a
-                      href={item.data.link_video}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs bg-surface-container-lowest border border-outline-variant/50 px-3 py-1.5 rounded-md font-semibold hover:border-primary/50 transition-colors flex items-center gap-1 text-on-surface no-underline"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">play_circle</span>
-                      {t("comisionesAdmin.watchReference")}
-                    </a>
-                  )}
                   {puedeEntregar && (
                     <button
                       onClick={() => {

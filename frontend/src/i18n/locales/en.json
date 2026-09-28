@@ -382,6 +382,8 @@
     "alreadyPublished": "Already published to the shop (product #{{id}}). Changes here don't modify that product.",
     "errorPublishMissing": "To publish to the shop, fill in the title, description, price, and format.",
     "errorPublish": "The delivery was saved, but the product could not be published. Please try again.",
+    "errorFields": "Check the highlighted fields.",
+    "errorPrice": "Use digits and a decimal point only, e.g. 15.50 (no comma or currency symbol).",
     "submitUpdate": "Save changes",
     "submitAndPublish": "Save and publish",
     "publishingNow": "Publishing..."
@@ -393,14 +395,18 @@
     "prices": "Prices",
     "empty": "No commission requests yet.",
     "unknownUser": "—",
-    "watchReference": "Watch reference",
     "replaceFile": "Replace file",
     "uploadDelivery": "Upload delivery",
     "publishToShop": "Publish to shop",
     "published": "Published",
     "cancelCommission": "Cancel",
     "cancelConfirm": "Cancel this commission? The client will see it as cancelled.",
-    "cancelError": "Could not cancel the commission."
+    "cancelError": "Could not cancel the commission.",
+    "searchPlaceholder": "Search by client, character, song, game or order...",
+    "filterStatus": "Status",
+    "filterAll": "All",
+    "filterCategory": "Categories",
+    "noResultsFilters": "No commissions match the filters."
   },
   "preciosComisiones": {
     "gamesTitle": "Games (New Model Commission)",
@@ -455,7 +461,9 @@
     "format": "Format",
     "resultVideo": "Result video",
     "publicationComplete": "Ready to publish",
-    "publicationIncomplete": "Incomplete — fill them in from \"Upload delivery\""
+    "publicationIncomplete": "Incomplete — fill them in from \"Upload delivery\"",
+    "referenceVideoTitle": "Reference video for \"{{name}}\"",
+    "resultVideoTitle": "Result video for \"{{name}}\""
   },
   "userForm": {
     "errorNoPassword": "You must set a password for the new user.",
