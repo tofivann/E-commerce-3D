@@ -58,10 +58,16 @@ function nombreDeArchivo(url: string | null): string {
   return decodeURIComponent(url.split("/").pop() ?? "");
 }
 
+// Mismas clases que ProductForm: este modal es "el formulario de producto"
+// más el bloque de entrega, y debe verse igual.
 const inputClass =
-  "w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary";
+  "w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner";
 const inputErrorClass = "border-error focus:border-error focus:ring-error";
 const labelClass = "block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2";
+const dropZoneClass = (activo: boolean) =>
+  `border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+    activo ? "border-primary bg-primary-container/10" : "border-outline-variant/50 hover:border-primary/50 hover:bg-surface-variant/20"
+  }`;
 
 // Nombre del campo en el backend (DRF devuelve los errores del 400 con esta
 // clave) -> campo del formulario. Sirve para pintar el error al lado del
@@ -100,7 +106,9 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [archivoEntrega, setArchivoEntrega] = useState<File | null>(null);
+  const [archivoDragOver, setArchivoDragOver] = useState(false);
   const [fotoEntrega, setFotoEntrega] = useState<File | null>(null);
+  const [fotoDragOver, setFotoDragOver] = useState(false);
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string>("");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaIds, setCategoriaIds] = useState<number[]>([]);
@@ -293,68 +301,99 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* ---- Entrega: archivo + foto + categorías ---- */}
+        {/* Mismo orden y mismos bloques que ProductForm (archivo → título →
+            descripción → precio/formato → categorías → video → imagen), más
+            el checkbox de publicar al final. Lo único distinto es qué se
+            guarda: aquí la entrega de la comisión + sus datos de reventa. */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* Zona de archivo (entrega) — igual que la del archivo 3D del producto */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setArchivoDragOver(true);
+            }}
+            onDragLeave={() => setArchivoDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setArchivoDragOver(false);
+              setArchivoEntrega(e.dataTransfer.files?.[0] || null);
+            }}
+            onClick={() => document.getElementById("archivoEntregaInput")?.click()}
+            className={`${dropZoneClass(archivoDragOver)} p-8 flex flex-col items-center justify-center text-center`}
+          >
+            <span className="material-symbols-outlined text-[40px] text-outline mb-2">cloud_upload</span>
+            <p className="font-semibold text-on-surface mb-1">
+              {archivoEntrega
+                ? archivoEntrega.name
+                : yaTieneEntrega
+                ? t("completarComisionModal.keepCurrentFile", { name: nombreDeArchivo(item.data.archivo_entrega) })
+                : t("completarComisionModal.zipNone")}
+            </p>
+            <p className="text-on-surface-variant text-xs font-mono">{t("completarComisionModal.zipLabel")}</p>
+            <input
+              id="archivoEntregaInput"
+              type="file"
+              className="hidden"
+              onChange={(e) => setArchivoEntrega(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          {/* ---- Datos para la tienda (reventa): mismos campos que un producto ---- */}
           <div>
-            <label className={labelClass}>{t("completarComisionModal.zipLabel")}</label>
-            <div
-              onClick={() => document.getElementById("archivoEntregaInput")?.click()}
-              className="border-2 border-dashed rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all border-outline-variant/50 hover:border-primary/50 hover:bg-surface-variant/20"
-            >
-              <span className="material-symbols-outlined text-[28px] text-outline shrink-0">folder_zip</span>
-              <p className="font-semibold text-on-surface text-sm truncate">
-                {archivoEntrega
-                  ? archivoEntrega.name
-                  : yaTieneEntrega
-                  ? t("completarComisionModal.keepCurrentFile", { name: nombreDeArchivo(item.data.archivo_entrega) })
-                  : t("completarComisionModal.zipNone")}
-              </p>
+            <label className={labelClass}>{t("productForm.titleLabel")}</label>
+            <input
+              maxLength={200}
+              placeholder={t("productForm.titlePlaceholder")}
+              className={`${inputClass} ${erroresCampos.titulo ? inputErrorClass : ""}`}
+              value={form.titulo}
+              onChange={(e) => actualizarForm({ titulo: e.target.value })}
+            />
+            <ErrorCampo mensaje={erroresCampos.titulo} />
+          </div>
+
+          <div>
+            <label className={labelClass}>{t("productForm.descriptionLabel")}</label>
+            <textarea
+              rows={4}
+              placeholder={t("productForm.descriptionPlaceholder")}
+              className={`${inputClass} resize-y ${erroresCampos.descripcion ? inputErrorClass : ""}`}
+              value={form.descripcion}
+              onChange={(e) => actualizarForm({ descripcion: e.target.value })}
+            />
+            <ErrorCampo mensaje={erroresCampos.descripcion} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={labelClass}>{t("completarComisionModal.resalePrice")}</label>
+              {/* type="text" + inputMode="decimal" (no type="number"): así
+                  una coma o un "$" no se descartan en silencio — llegan al
+                  estado y se avisa con un error claro debajo del campo. */}
               <input
-                id="archivoEntregaInput"
-                type="file"
-                className="hidden"
-                onChange={(e) => setArchivoEntrega(e.target.files?.[0] || null)}
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                className={`${inputClass} ${erroresCampos.precio ? inputErrorClass : ""}`}
+                value={form.precio}
+                onChange={(e) => actualizarForm({ precio: e.target.value })}
               />
+              <ErrorCampo mensaje={erroresCampos.precio} />
+            </div>
+            <div>
+              <label className={labelClass}>{t("productForm.formatLabel")}</label>
+              <input
+                maxLength={50}
+                placeholder={t("productForm.formatPlaceholder")}
+                className={`${inputClass} ${erroresCampos.formato ? inputErrorClass : ""}`}
+                value={form.formato}
+                onChange={(e) => actualizarForm({ formato: e.target.value })}
+              />
+              <ErrorCampo mensaje={erroresCampos.formato} />
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>{t("completarComisionModal.photoLabel")}</label>
-            <div
-              onClick={() => document.getElementById("fotoEntregaInput")?.click()}
-              className="border-2 border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all border-outline-variant/50 hover:border-primary/50 hover:bg-surface-variant/20"
-            >
-              <div className="w-20 h-20 rounded-lg overflow-hidden bg-surface-container-lowest border border-outline-variant/30 shrink-0 flex items-center justify-center">
-                {fotoPreviewUrl || item.data.foto_entrega ? (
-                  <img
-                    src={fotoPreviewUrl || (item.data.foto_entrega as string)}
-                    alt={t("completarComisionModal.photoLabel")}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="material-symbols-outlined text-outline">image</span>
-                )}
-              </div>
-              <p className="font-semibold text-on-surface text-sm truncate">
-                {fotoEntrega
-                  ? fotoEntrega.name
-                  : yaTieneEntrega
-                  ? t("completarComisionModal.keepCurrentPhoto")
-                  : t("completarComisionModal.photoNone")}
-              </p>
-              <input
-                id="fotoEntregaInput"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setFotoEntrega(e.target.files?.[0] || null)}
-              />
-            </div>
-            <p className="text-on-surface-variant text-xs mt-1">{t("completarComisionModal.photoHelp")}</p>
-          </div>
-
-          <div>
-            <label className={labelClass}>{t("completarComisionModal.categoryLabel")}</label>
+            <label className={labelClass}>{t("productForm.categoryLabel")}</label>
             <div className="flex flex-wrap gap-2">
               {categorias.map((categoria) => {
                 const seleccionada = categoriaIds.includes(categoria.id);
@@ -380,112 +419,102 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
                 );
               })}
             </div>
+            {categoriaIds.length === 0 && (
+              <p className="text-on-surface-variant text-xs mt-2">{t("productForm.categoryPlaceholder")}</p>
+            )}
           </div>
 
-          {/* ---- Datos para la tienda (reventa) ---- */}
-          <fieldset className="border-t border-outline-variant/30 pt-5 flex flex-col gap-4">
-            <div>
-              <h3 className="font-semibold text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px] text-primary-fixed-dim">storefront</span>
-                {t("completarComisionModal.publishSection")}
-              </h3>
-              <p className="text-on-surface-variant text-xs mt-1">{t("completarComisionModal.publishSectionHelp")}</p>
-            </div>
+          <div>
+            <label className={labelClass}>
+              {t("productForm.youtubeLabel")}{" "}
+              <span className="normal-case font-normal text-outline">{t("motionForm.optional")}</span>
+            </label>
+            {/* type="text" (no type="url"): el navegador bloquearía en
+                silencio un link pegado sin "https://", que el backend sí
+                acepta y normaliza. */}
+            <input
+              type="text"
+              inputMode="url"
+              maxLength={500}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className={`${inputClass} ${erroresCampos.linkYoutube ? inputErrorClass : ""}`}
+              value={form.linkYoutube}
+              onChange={(e) => actualizarForm({ linkYoutube: e.target.value })}
+            />
+            <ErrorCampo mensaje={erroresCampos.linkYoutube} />
+            <p className="text-on-surface-variant text-xs mt-1">{t("completarComisionModal.videoHelp")}</p>
+          </div>
 
-            <div>
-              <label className={labelClass}>{t("productForm.titleLabel")}</label>
-              <input
-                maxLength={200}
-                className={`${inputClass} ${erroresCampos.titulo ? inputErrorClass : ""}`}
-                value={form.titulo}
-                onChange={(e) => actualizarForm({ titulo: e.target.value })}
-              />
-              <ErrorCampo mensaje={erroresCampos.titulo} />
-            </div>
-
-            <div>
-              <label className={labelClass}>{t("productForm.descriptionLabel")}</label>
-              <textarea
-                rows={3}
-                className={`${inputClass} resize-y ${erroresCampos.descripcion ? inputErrorClass : ""}`}
-                value={form.descripcion}
-                onChange={(e) => actualizarForm({ descripcion: e.target.value })}
-              />
-              <ErrorCampo mensaje={erroresCampos.descripcion} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>{t("completarComisionModal.resalePrice")}</label>
-                {/* type="text" + inputMode="decimal" (no type="number"): así
-                    una coma o un "$" no se descartan en silencio — llegan al
-                    estado y se avisa con un error claro debajo del campo. */}
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="15.00"
-                  className={`${inputClass} ${erroresCampos.precio ? inputErrorClass : ""}`}
-                  value={form.precio}
-                  onChange={(e) => actualizarForm({ precio: e.target.value })}
-                />
-                <ErrorCampo mensaje={erroresCampos.precio} />
+          {/* Foto del resultado = imagen de portada del producto (misma posición
+              y misma zona que la imagen de previsualización en ProductForm) */}
+          <div>
+            <label className={labelClass}>{t("completarComisionModal.photoLabel")}</label>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setFotoDragOver(true);
+              }}
+              onDragLeave={() => setFotoDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setFotoDragOver(false);
+                setFotoEntrega(e.dataTransfer.files?.[0] || null);
+              }}
+              onClick={() => document.getElementById("fotoEntregaInput")?.click()}
+              className={`${dropZoneClass(fotoDragOver)} p-4 flex items-center gap-4`}
+            >
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-surface-container-lowest border border-outline-variant/30 shrink-0 flex items-center justify-center">
+                {fotoPreviewUrl || item.data.foto_entrega ? (
+                  <img
+                    src={fotoPreviewUrl || (item.data.foto_entrega as string)}
+                    alt={t("completarComisionModal.photoLabel")}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-outline">image</span>
+                )}
               </div>
               <div>
-                <label className={labelClass}>{t("completarComisionModal.format")}</label>
-                <input
-                  maxLength={50}
-                  placeholder="STL, OBJ, FBX..."
-                  className={`${inputClass} ${erroresCampos.formato ? inputErrorClass : ""}`}
-                  value={form.formato}
-                  onChange={(e) => actualizarForm({ formato: e.target.value })}
-                />
-                <ErrorCampo mensaje={erroresCampos.formato} />
+                <p className="font-semibold text-on-surface mb-1">
+                  {fotoEntrega
+                    ? fotoEntrega.name
+                    : yaTieneEntrega
+                    ? t("completarComisionModal.keepCurrentPhoto")
+                    : t("completarComisionModal.photoNone")}
+                </p>
+                <p className="text-on-surface-variant text-xs font-mono">{t("productForm.imageFormats")}</p>
               </div>
-            </div>
-
-            <div>
-              <label className={labelClass}>{t("completarComisionModal.videoLabel")}</label>
-              {/* type="text" (no type="url"): el navegador bloquearía en
-                  silencio un link pegado sin "https://", que el backend sí
-                  acepta y normaliza. */}
               <input
-                type="text"
-                inputMode="url"
-                maxLength={500}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className={`${inputClass} ${erroresCampos.linkYoutube ? inputErrorClass : ""}`}
-                value={form.linkYoutube}
-                onChange={(e) => actualizarForm({ linkYoutube: e.target.value })}
+                id="fotoEntregaInput"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setFotoEntrega(e.target.files?.[0] || null)}
               />
-              <ErrorCampo mensaje={erroresCampos.linkYoutube} />
-              <p className="text-on-surface-variant text-xs mt-1">{t("completarComisionModal.videoHelp")}</p>
             </div>
+            <p className="text-on-surface-variant text-xs mt-1">{t("completarComisionModal.photoHelp")}</p>
+          </div>
 
-            <p className="text-on-surface-variant text-xs flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px]">photo_camera</span>
-              {t("completarComisionModal.autoPhotoNote")}
+          {/* Publicar al guardar — en el lugar del checkbox "Producto activo" de ProductForm */}
+          {yaPublicado ? (
+            <p className="text-on-surface-variant text-xs flex items-center gap-1.5 bg-surface-container-low rounded-lg p-3">
+              <span className="material-symbols-outlined text-[16px] text-primary-fixed-dim">check_circle</span>
+              {t("completarComisionModal.alreadyPublished", { id: item.data.producto_publicado })}
             </p>
-
-            {yaPublicado ? (
-              <p className="text-on-surface-variant text-xs flex items-center gap-1.5 bg-surface-container-low rounded-lg p-3">
-                <span className="material-symbols-outlined text-[16px] text-primary-fixed-dim">check_circle</span>
-                {t("completarComisionModal.alreadyPublished", { id: item.data.producto_publicado })}
-              </p>
-            ) : (
-              <label className="flex items-start gap-3 bg-surface-container-low rounded-lg p-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-0.5 accent-primary"
-                  checked={publicarAhora}
-                  onChange={(e) => setPublicarAhora(e.target.checked)}
-                />
-                <span>
-                  <span className="block font-semibold text-on-surface text-sm">{t("completarComisionModal.publishNow")}</span>
-                  <span className="block text-on-surface-variant text-xs mt-0.5">{t("completarComisionModal.publishNowHelp")}</span>
-                </span>
-              </label>
-            )}
-          </fieldset>
+          ) : (
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 w-4 h-4 rounded bg-surface-variant border-outline-variant text-primary focus:ring-primary"
+                checked={publicarAhora}
+                onChange={(e) => setPublicarAhora(e.target.checked)}
+              />
+              <span>
+                <span className="block text-on-surface">{t("completarComisionModal.publishNow")}</span>
+                <span className="block text-on-surface-variant text-xs mt-0.5">{t("completarComisionModal.publishNowHelp")}</span>
+              </span>
+            </label>
+          )}
 
           <div className="flex justify-end gap-4 pt-4 border-t border-outline-variant/30">
             <button
