@@ -322,14 +322,20 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
             className={`${dropZoneClass(archivoDragOver)} p-8 flex flex-col items-center justify-center text-center`}
           >
             <span className="material-symbols-outlined text-[40px] text-outline mb-2">cloud_upload</span>
+            {/* Mismos textos que la zona de archivo de ProductForm */}
             <p className="font-semibold text-on-surface mb-1">
               {archivoEntrega
                 ? archivoEntrega.name
                 : yaTieneEntrega
-                ? t("completarComisionModal.keepCurrentFile", { name: nombreDeArchivo(item.data.archivo_entrega) })
-                : t("completarComisionModal.zipNone")}
+                ? t("productForm.dropReplace")
+                : t("productForm.dropNew")}
             </p>
-            <p className="text-on-surface-variant text-xs font-mono">{t("completarComisionModal.zipLabel")}</p>
+            <p className="text-on-surface-variant text-xs font-mono">{t("productForm.supportedFormats")}</p>
+            {yaTieneEntrega && !archivoEntrega && (
+              <p className="text-on-surface-variant text-xs mt-2">
+                {t("completarComisionModal.keepCurrentFile", { name: nombreDeArchivo(item.data.archivo_entrega) })}
+              </p>
+            )}
             <input
               id="archivoEntregaInput"
               type="file"

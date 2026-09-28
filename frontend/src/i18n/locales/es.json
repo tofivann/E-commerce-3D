@@ -357,8 +357,6 @@
   "completarComisionModal": {
     "title": "Completar Comisión",
     "description": "Sube el archivo final y una foto del resultado terminado para \"{{name}}\".",
-    "zipLabel": "Archivo de entrega (.zip)",
-    "zipNone": "Selecciona el archivo final",
     "photoLabel": "Foto del resultado terminado",
     "photoNone": "Selecciona una foto",
     "photoHelp": "Esta foto se usará como portada si luego publicas este modelo en la tienda.",
@@ -367,7 +365,7 @@
     "submitting": "Guardando...",
     "submit": "Marcar como completada",
     "descriptionUpdate": "Reemplaza la entrega si hace falta y completa los datos de reventa de \"{{name}}\".",
-    "keepCurrentFile": "Actual: {{name}} — elige otro solo si quieres reemplazarlo",
+    "keepCurrentFile": "Archivo actual: {{name}}",
     "keepCurrentPhoto": "Se conserva la foto actual — elige otra solo si quieres reemplazarla",
     "resalePrice": "Precio de reventa (USD)",
     "videoHelp": "Se mostrará en la ficha del producto, igual que en los demás productos de la tienda.",

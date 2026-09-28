@@ -357,8 +357,6 @@
   "completarComisionModal": {
     "title": "Complete Commission",
     "description": "Upload the final file and a photo of the finished result for \"{{name}}\".",
-    "zipLabel": "Delivery file (.zip)",
-    "zipNone": "Select the final file",
     "photoLabel": "Photo of the finished result",
     "photoNone": "Select a photo",
     "photoHelp": "This photo will be used as the cover image if you later publish this model to the shop.",
@@ -367,7 +365,7 @@
     "submitting": "Saving...",
     "submit": "Mark as completed",
     "descriptionUpdate": "Replace the delivery if needed and fill in the resale details for \"{{name}}\".",
-    "keepCurrentFile": "Current: {{name}} — pick another only to replace it",
+    "keepCurrentFile": "Current file: {{name}}",
     "keepCurrentPhoto": "The current photo is kept — pick another only to replace it",
     "resalePrice": "Resale price (USD)",
     "videoHelp": "Shown on the product page, just like on the other shop products.",
