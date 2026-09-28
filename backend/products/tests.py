@@ -101,16 +101,33 @@ class ProductoListadoTests(APITestCase):
         respuesta = self.client.get(self.url, {'search': '   '})
         self.assertEqual(respuesta.data['count'], 2)
 
-    def test_filtro_categorias_cualquiera_y_sin_duplicados(self):
+    def test_filtro_categorias_exige_todas_y_sin_duplicados(self):
         ambos = crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])
-        solo_motion = crear_producto('Solo Motion', categorias=[self.motion])
+        crear_producto('Solo Motion', categorias=[self.motion])
+        crear_producto('Solo Modelo', categorias=[self.modelo])
         crear_producto('Solo Juego', categorias=[self.juego])
 
         respuesta = self.client.get(self.url, {'categorias': f'{self.modelo.id},{self.motion.id}'})
 
-        ids = sorted(p['id'] for p in respuesta.data['results'])
-        self.assertEqual(ids, sorted([ambos.id, solo_motion.id]))
-        self.assertEqual(respuesta.data['count'], 2)
+        # AND: solo el que tiene las dos; y una sola vez aunque haya dos joins.
+        self.assertEqual([p['id'] for p in respuesta.data['results']], [ambos.id])
+        self.assertEqual(respuesta.data['count'], 1)
+
+    def test_filtro_una_categoria_incluye_los_que_tienen_mas(self):
+        ambos = crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])
+        solo_motion = crear_producto('Solo Motion', categorias=[self.motion])
+        crear_producto('Solo Modelo', categorias=[self.modelo])
+
+        respuesta = self.client.get(self.url, {'categorias': str(self.motion.id)})
+
+        self.assertEqual(sorted(p['id'] for p in respuesta.data['results']), sorted([ambos.id, solo_motion.id]))
+
+    def test_filtro_categorias_ignora_ids_repetidos(self):
+        producto = crear_producto('Motion', categorias=[self.motion])
+
+        respuesta = self.client.get(self.url, {'categorias': f'{self.motion.id},{self.motion.id}'})
+
+        self.assertEqual([p['id'] for p in respuesta.data['results']], [producto.id])
 
     def test_filtro_categorias_ignora_valores_no_numericos(self):
         crear_producto('A', categorias=[self.modelo])

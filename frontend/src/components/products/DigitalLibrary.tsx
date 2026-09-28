@@ -20,10 +20,11 @@ export const DigitalLibrary: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [descargandoId, setDescargandoId] = useState<number | null>(null);
 
-  const comprasFiltradas = compras.filter(
-    (c) =>
-      categoriasSeleccionadas.size === 0 ||
-      c.producto.categorias.some((id) => categoriasSeleccionadas.has(id))
+  // AND: el producto tiene que estar en TODAS las categorías marcadas (misma
+  // semántica que CategoriasFilter en el backend para el catálogo). Aquí se
+  // filtra en memoria porque la biblioteca no es paginada: llega completa.
+  const comprasFiltradas = compras.filter((c) =>
+    [...categoriasSeleccionadas].every((id) => c.producto.categorias.includes(id))
   );
 
   useEffect(() => {

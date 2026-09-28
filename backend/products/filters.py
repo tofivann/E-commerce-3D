@@ -18,18 +18,23 @@ class BusquedaNormalizadaFilter(filters.SearchFilter):
 
 
 class CategoriasFilter(filters.BaseFilterBackend):
-    """Filtra por ?categorias=1,2,3 (ids separados por coma): coincide si el
-    producto pertenece a CUALQUIERA de las categorías pedidas, igual que el
-    filtro de chips del frontend. Ids no numéricos se ignoran en silencio.
+    """Filtra por ?categorias=1,2,3 (ids separados por coma): el producto
+    tiene que pertenecer a TODAS las categorías pedidas (AND) — seleccionar
+    "Motion" y "Modelo" devuelve solo lo que es ambas cosas, no lo que es
+    cualquiera de las dos. Misma semántica que aplica DigitalLibrary en el
+    navegador sobre su lista no paginada. Ids no numéricos y repetidos se
+    ignoran en silencio.
     """
     parametro = 'categorias'
 
     def filter_queryset(self, request, queryset, view):
         crudo = request.query_params.get(self.parametro, '')
-        ids = [int(x) for x in crudo.split(',') if x.strip().isdigit()]
-        if not ids:
-            return queryset
-        # El join contra el M2M devuelve una fila por cada categoría que
-        # coincide; sin distinct() un producto en dos categorías pedidas
-        # aparecería dos veces (y rompería el conteo de la paginación).
-        return queryset.filter(categorias__in=ids).distinct()
+        ids = {int(x) for x in crudo.split(',') if x.strip().isdigit()}
+        # Un .filter() encadenado por categoría: cada uno agrega su propio
+        # join al M2M, así que las condiciones se exigen a la vez. Un solo
+        # .filter(categorias__in=ids) sería OR ("alguna de estas"), y de
+        # paso, al haber un join por id, cada producto sale una sola vez —
+        # no hace falta distinct().
+        for categoria_id in ids:
+            queryset = queryset.filter(categorias=categoria_id)
+        return queryset
