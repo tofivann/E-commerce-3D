@@ -319,7 +319,9 @@
     "colNameEs": "Name (ES)",
     "colNameEn": "Name (EN)",
     "createError": "Could not create the category. Does the name already exist?",
-    "updateError": "Could not save the change."
+    "updateError": "Could not save the change.",
+    "protected": "Main category",
+    "protectedHint": "This is one of the site's main categories: it cannot be edited or deleted."
   },
   "productForm": {
     "errorNoFile": "You must attach the model's 3D file.",

@@ -319,7 +319,9 @@
     "colNameEs": "Nombre (ES)",
     "colNameEn": "Nombre (EN)",
     "createError": "No se pudo crear la categoría. ¿El nombre ya existe?",
-    "updateError": "No se pudo guardar el cambio."
+    "updateError": "No se pudo guardar el cambio.",
+    "protected": "Categoría principal",
+    "protectedHint": "Es una categoría principal del sitio: no se puede editar ni eliminar."
   },
   "productForm": {
     "errorNoFile": "Debes adjuntar el archivo 3D del modelo.",

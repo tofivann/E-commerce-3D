@@ -6,6 +6,8 @@ export interface Categoria {
   nombre: string;
   nombre_en: string;
   activo: boolean;
+  // Modelo, Motion y Juego: el backend rechaza editarlas o borrarlas.
+  protegida: boolean;
 }
 
 // 1. Interfaz para mantener el autocompletado y tipado de TypeScript

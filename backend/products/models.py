@@ -3,6 +3,14 @@ from django.db import models
 from core.text_utils import normalizar_texto
 
 
+# Categorías principales del negocio (las que crea la migración 0004). No se
+# pueden editar ni borrar desde la API: clasifican casi todo el catálogo y
+# el modal de entrega de comisiones las busca por nombre para premarcarlas.
+# Se identifican por nombre a propósito — como no se pueden renombrar, el
+# nombre es estable, y así no hace falta una columna ni una migración.
+NOMBRES_CATEGORIAS_PROTEGIDAS = frozenset({'Modelo', 'Motion', 'Juego'})
+
+
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     nombre_en = models.CharField(max_length=100, help_text="Nombre en inglés, para el sitio en modo EN.")
@@ -15,6 +23,10 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def protegida(self):
+        return self.nombre in NOMBRES_CATEGORIAS_PROTEGIDAS
 
 
 class Producto(models.Model):

@@ -73,34 +73,50 @@ export const CategoriasTable: React.FC = () => {
             {loading && (
               <tr><td colSpan={3} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
             )}
-            {!loading && categorias.map((categoria) => (
-              <tr key={categoria.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0">
-                <td className={addCellClass}>
-                  <input
-                    defaultValue={categoria.nombre}
-                    onBlur={(e) => e.target.value.trim() && e.target.value !== categoria.nombre && handleUpdate(categoria, { nombre: e.target.value.trim() })}
-                    className={inputClass}
-                  />
-                </td>
-                <td className={addCellClass}>
-                  <input
-                    defaultValue={categoria.nombre_en}
-                    onBlur={(e) => e.target.value.trim() && e.target.value !== categoria.nombre_en && handleUpdate(categoria, { nombre_en: e.target.value.trim() })}
-                    className={inputClass}
-                  />
-                </td>
-                <td className={addCellClass}>
-                  <button
-                    onClick={() => handleUpdate(categoria, { activo: !categoria.activo })}
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      categoria.activo ? "bg-primary-container/40 text-primary-fixed-dim" : "bg-surface-container-high text-on-surface-variant"
-                    }`}
-                  >
-                    {categoria.activo ? t("preciosComisiones.active") : t("preciosComisiones.inactive")}
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {!loading && categorias.map((categoria) =>
+              // Modelo, Motion y Juego: solo lectura. El backend rechaza
+              // editarlas igualmente; aquí se muestran bloqueadas para que
+              // el admin no intente un cambio que va a fallar.
+              categoria.protegida ? (
+                <tr key={categoria.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0" title={t("categoriasAdmin.protectedHint")}>
+                  <td className={`${addCellClass} text-sm text-on-surface md:py-3`}>{categoria.nombre}</td>
+                  <td className={`${addCellClass} text-sm text-on-surface md:py-3`}>{categoria.nombre_en}</td>
+                  <td className={addCellClass}>
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-surface-container-high text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[14px]">lock</span>
+                      {t("categoriasAdmin.protected")}
+                    </span>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={categoria.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0">
+                  <td className={addCellClass}>
+                    <input
+                      defaultValue={categoria.nombre}
+                      onBlur={(e) => e.target.value.trim() && e.target.value !== categoria.nombre && handleUpdate(categoria, { nombre: e.target.value.trim() })}
+                      className={inputClass}
+                    />
+                  </td>
+                  <td className={addCellClass}>
+                    <input
+                      defaultValue={categoria.nombre_en}
+                      onBlur={(e) => e.target.value.trim() && e.target.value !== categoria.nombre_en && handleUpdate(categoria, { nombre_en: e.target.value.trim() })}
+                      className={inputClass}
+                    />
+                  </td>
+                  <td className={addCellClass}>
+                    <button
+                      onClick={() => handleUpdate(categoria, { activo: !categoria.activo })}
+                      className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                        categoria.activo ? "bg-primary-container/40 text-primary-fixed-dim" : "bg-surface-container-high text-on-surface-variant"
+                      }`}
+                    >
+                      {categoria.activo ? t("preciosComisiones.active") : t("preciosComisiones.inactive")}
+                    </button>
+                  </td>
+                </tr>
+              )
+            )}
             <tr className={addRowClass}>
               <td className={addCellClass}>
                 <input

@@ -175,3 +175,51 @@ class ProductoListadoTests(APITestCase):
         # count de la paginación + productos + categorías prefetcheadas.
         with self.assertNumQueries(3):
             self.client.get(self.url)
+
+
+class CategoriasProtegidasTests(APITestCase):
+    """Modelo, Motion y Juego no se editan ni se borran, ni siendo staff."""
+
+    BASE = '/api/v1/products/categorias/'
+
+    def setUp(self):
+        staff = get_user_model().objects.create_user(
+            username='admin', email='admin@test.com', password='x', is_staff=True,
+        )
+        self.client.force_authenticate(staff)
+        self.modelo = Categoria.objects.get(nombre='Modelo')
+        self.otra = Categoria.objects.create(nombre='Bang Dream', nombre_en='Bang Dream')
+
+    def url(self, categoria):
+        return f'{self.BASE}{categoria.id}/'
+
+    def test_el_listado_marca_solo_las_principales_como_protegidas(self):
+        respuesta = self.client.get(self.BASE)
+        protegidas = {c['nombre'] for c in respuesta.data if c['protegida']}
+        self.assertEqual(protegidas, {'Modelo', 'Motion', 'Juego'})
+
+    def test_no_se_puede_renombrar_ni_desactivar_una_principal(self):
+        for cambio in ({'nombre': 'Otro'}, {'nombre_en': 'Other'}, {'activo': False}):
+            respuesta = self.client.patch(self.url(self.modelo), cambio)
+            self.assertEqual(respuesta.status_code, 403, cambio)
+        self.modelo.refresh_from_db()
+        self.assertEqual((self.modelo.nombre, self.modelo.activo), ('Modelo', True))
+
+    def test_no_se_puede_borrar_una_principal_y_los_productos_conservan_la_etiqueta(self):
+        producto = crear_producto('P', categorias=[self.modelo])
+
+        respuesta = self.client.delete(self.url(self.modelo))
+
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertEqual(list(producto.categorias.all()), [self.modelo])
+
+    def test_las_demas_categorias_siguen_siendo_editables_y_borrables(self):
+        respuesta = self.client.patch(self.url(self.otra), {'nombre': 'BanG Dream!'})
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertFalse(respuesta.data['protegida'])
+
+        self.assertEqual(self.client.delete(self.url(self.otra)).status_code, 204)
+
+    def test_otra_categoria_no_puede_tomar_el_nombre_de_una_principal(self):
+        respuesta = self.client.patch(self.url(self.otra), {'nombre': 'Modelo'})
+        self.assertEqual(respuesta.status_code, 400)

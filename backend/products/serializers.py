@@ -3,9 +3,13 @@ from .models import Categoria, Producto
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
+    # Solo lectura: le dice al panel qué filas mostrar bloqueadas. El bloqueo
+    # real está en CategoriaViewSet.
+    protegida = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = Categoria
-        fields = ['id', 'nombre', 'nombre_en', 'activo']
+        fields = ['id', 'nombre', 'nombre_en', 'activo', 'protegida']
 
 
 class ProductoSerializer(serializers.ModelSerializer):

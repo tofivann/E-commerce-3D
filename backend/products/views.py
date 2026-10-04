@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 
 from core.pagination import PaginacionEstandar
 from .filters import BusquedaNormalizadaFilter, CategoriasFilter
@@ -11,6 +12,22 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     permission_classes = [EsAdminOSoloLectura]
+
+    # Las categorías principales (Modelo, Motion, Juego) no se editan ni se
+    # borran, ni siquiera por staff: ver NOMBRES_CATEGORIAS_PROTEGIDAS.
+    def _rechazar_si_protegida(self, categoria):
+        if categoria.protegida:
+            raise PermissionDenied(
+                f'La categoría "{categoria.nombre}" es una categoría principal y no se puede editar ni eliminar.'
+            )
+
+    def perform_update(self, serializer):
+        self._rechazar_si_protegida(serializer.instance)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._rechazar_si_protegida(instance)
+        instance.delete()
 
 
 class ProductoViewSet(viewsets.ModelViewSet):
