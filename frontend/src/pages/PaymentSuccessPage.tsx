@@ -5,6 +5,7 @@ import type { Orden } from "../api/carrito.api";
 import { carritoApi } from "../api/carrito.api";
 import { descargarCompra } from "../api/biblioteca.api";
 import type { CompraDigital } from "../api/biblioteca.api";
+import { etiquetaFormato } from "../utils/formato";
 
 const MAX_INTENTOS = 10; // ~15s de espera al webhook antes de rendirnos
 const INTERVALO_MS = 1500;
@@ -165,7 +166,7 @@ export const PaymentSuccessPage: React.FC = () => {
                         </div>
                       )}
                       <div className="absolute top-2 left-2 bg-surface/85 backdrop-blur-md px-2 py-1 rounded text-primary-fixed-dim font-mono text-[10px] border border-outline-variant/40">
-                        .{compra.producto.formato_archivo || "3D"}
+                        {etiquetaFormato(compra.producto.formato_archivo)}
                       </div>
                     </div>
                     <div className="flex-1 w-full">

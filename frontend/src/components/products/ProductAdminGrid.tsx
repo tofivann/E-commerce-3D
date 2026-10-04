@@ -10,6 +10,7 @@ import { SearchInput } from "./SearchInput";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useProductosPaginados } from "../../hooks/useProductosPaginados";
+import { etiquetaFormato } from "../../utils/formato";
 
 export const ProductAdminGrid: React.FC = () => {
   const { t } = useTranslation();
@@ -115,7 +116,7 @@ export const ProductAdminGrid: React.FC = () => {
             >
               <div className="absolute top-3 right-3 z-20 flex gap-2">
                 <span className="bg-surface/80 backdrop-blur-md text-primary font-mono text-[10px] px-2 py-1 rounded-full border border-primary/30">
-                  .{producto.formato_archivo || "3D"}
+                  {etiquetaFormato(producto.formato_archivo)}
                 </span>
                 <button
                   onClick={() => handleToggleActivo(producto)}

@@ -5,6 +5,7 @@ import { nombreTramoMotion } from "../../utils/tramoMotion";
 import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
 import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import type { Item } from "./SolicitudesComisionesTable";
+import { etiquetaFormato } from "../../utils/formato";
 
 interface ComisionDetalleModalProps {
   item: Item | null;
@@ -214,7 +215,7 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
             <Campo label={t("comisionDetalle.resalePrice")}>
               {item.data.precio_publicacion == null ? "—" : `$${Number(item.data.precio_publicacion).toFixed(2)}`}
             </Campo>
-            <Campo label={t("comisionDetalle.format")}>{item.data.formato_archivo_publicacion || "—"}</Campo>
+            <Campo label={t("comisionDetalle.format")}>{etiquetaFormato(item.data.formato_archivo_publicacion, "—")}</Campo>
           </div>
           <div className="mt-4">
             <VideoCampo

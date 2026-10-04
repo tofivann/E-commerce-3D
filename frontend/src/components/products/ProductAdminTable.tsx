@@ -7,6 +7,7 @@ import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { TablaSkeleton } from "../ui/TablaSkeleton";
 import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 import { nombreCategoria } from "../../utils/categoria";
+import { etiquetaFormato } from "../../utils/formato";
 
 export const ProductAdminTable: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -133,7 +134,7 @@ export const ProductAdminTable: React.FC = () => {
                       : "—"}
                   </td>
                   <td className="py-3 px-6 font-mono text-on-surface-variant text-sm">
-                    {producto.formato_archivo || "—"}
+                    {etiquetaFormato(producto.formato_archivo, "—")}
                   </td>
                   <td className="py-3 px-6 font-mono text-primary-fixed-dim font-semibold">
                     ${Number(producto.precio).toFixed(2)}

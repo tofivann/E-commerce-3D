@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { CategoryBadge } from "./CategoryBadge";
 import { FavoritoButton } from "./FavoritoButton";
+import { etiquetaFormato } from "../../utils/formato";
 
 interface ProductCardProps {
   producto: Producto;
@@ -112,8 +113,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {producto.titulo}
             </h3>
           )}
-          <span className="font-mono text-on-secondary-container border border-secondary-container/50 px-2 rounded-full text-[10px] uppercase shrink-0">
-            .{producto.formato_archivo || "3D"}
+          <span className="font-mono text-on-secondary-container border border-secondary-container/50 px-2 rounded-full text-[10px] shrink-0">
+            {etiquetaFormato(producto.formato_archivo)}
           </span>
         </div>
 

@@ -4,6 +4,7 @@ import type { Producto } from "../../api/productos.api";
 import { extraerIdYoutube } from "../../utils/youtube";
 import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import { FavoritoButton } from "./FavoritoButton";
+import { etiquetaFormato } from "../../utils/formato";
 
 interface ProductDetailsModalProps {
   producto: Producto | null;
@@ -63,8 +64,8 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
         <div className="flex justify-between items-start gap-4 mb-2">
           <h2 className="text-2xl font-bold text-on-surface">{producto.titulo}</h2>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="font-mono text-on-secondary-container border border-secondary-container/50 px-2 py-1 rounded-full text-xs uppercase">
-              .{producto.formato_archivo || "3D"}
+            <span className="font-mono text-on-secondary-container border border-secondary-container/50 px-2 py-1 rounded-full text-xs">
+              {etiquetaFormato(producto.formato_archivo)}
             </span>
             {hasAccess && onToggleFavorito && typeof producto.id === "number" && (
               <FavoritoButton activo={isFavorito} onToggle={() => onToggleFavorito(producto)} />
