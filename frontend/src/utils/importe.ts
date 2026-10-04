@@ -10,9 +10,14 @@ export function formatearImporte(valor: number | string): string {
   return Number(valor).toFixed(2);
 }
 
-// Para mostrar dinero (no para inputs): "$1,234.50", con separadores según el idioma.
-export function formatearDinero(valor: number | string, idioma: string): string {
-  return new Intl.NumberFormat(idioma, { style: "currency", currency: "USD" }).format(Number(valor));
+// Para mostrar dinero (no para inputs): "$1,234.50". Siempre con este
+// formato, sea cual sea el idioma de la interfaz: es como se muestran los
+// precios en todo el sitio ("$100.00"), y el formato local de "es" ("1234,50
+// US$") es más largo y se corta en las tarjetas.
+const FORMATO_DINERO = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+export function formatearDinero(valor: number | string): string {
+  return FORMATO_DINERO.format(Number(valor));
 }
 
 export type EstadoMonto = "ok" | "formato" | "menorAlMinimo";

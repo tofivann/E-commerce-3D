@@ -34,7 +34,7 @@ export const EstadisticasPagos: React.FC = () => {
   const opciones = FILTROS_VENTAS.map((clave) => ({
     valor: clave,
     etiqueta: t(`estadisticas.filters.${clave}`),
-    destacado: resumen ? formatearDinero(resumen[clave].total, i18n.language) : "—",
+    destacado: resumen ? formatearDinero(resumen[clave].total) : "—",
     cargando: !resumen && !errorResumen,
     nota: resumen ? t("estadisticas.salesCount", { count: resumen[clave].cantidad }) : undefined,
   }));
@@ -64,7 +64,6 @@ export const EstadisticasPagos: React.FC = () => {
             <thead>
               <tr className="bg-surface-container-high/60 border-b border-outline-variant/30">
                 <th className={thClass}>{t("estadisticas.colDate")}</th>
-                <th className={thClass}>{t("estadisticas.colOrder")}</th>
                 <th className={thClass}>{t("estadisticas.colClient")}</th>
                 <th className={thClass}>{t("estadisticas.colConcept")}</th>
                 <th className={thClass}>{t("estadisticas.colGateway")}</th>
@@ -74,9 +73,12 @@ export const EstadisticasPagos: React.FC = () => {
             <tbody className="divide-y divide-outline-variant/20">
               {ventas.items.map((venta) => (
                 <tr key={venta.id} className="hover:bg-surface-container-highest/30 transition-colors">
-                  <td className={`${tdClass} text-on-surface-variant whitespace-nowrap`}>{fecha(venta.fecha_orden)}</td>
-                  <td className={`${tdClass} font-mono text-xs text-on-surface-variant whitespace-nowrap`}>
-                    {venta.codigo_orden}
+                  {/* Fecha y código de orden en una sola columna: con seis
+                      columnas la tabla no cabía en un portátil y "Cobrado"
+                      quedaba fuera de la vista. */}
+                  <td className={`${tdClass} whitespace-nowrap`}>
+                    <div className="text-on-surface">{fecha(venta.fecha_orden)}</div>
+                    <div className="text-on-surface-variant text-xs font-mono">{venta.codigo_orden}</div>
                   </td>
                   <td className={tdClass}>
                     <div className="text-on-surface font-medium whitespace-nowrap">{venta.cliente_nombre}</div>
@@ -100,24 +102,24 @@ export const EstadisticasPagos: React.FC = () => {
                   </td>
                   <td className={`${tdClass} text-on-surface-variant`}>{venta.pasarela_pago}</td>
                   <td className={`${tdClass} font-mono font-bold text-on-surface text-right whitespace-nowrap`}>
-                    {formatearDinero(venta.total, i18n.language)}
+                    {formatearDinero(venta.total)}
                   </td>
                 </tr>
               ))}
 
               {/* Carga inicial: una tanda de filas; al pedir más páginas, un par al final. */}
-              {ventas.cargando && <TablaSkeleton columnas={6} />}
-              {ventas.cargandoMas && <TablaSkeleton filas={4} columnas={6} />}
+              {ventas.cargando && <TablaSkeleton columnas={5} />}
+              {ventas.cargandoMas && <TablaSkeleton filas={4} columnas={5} />}
               {ventas.error && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-error">
+                  <td colSpan={5} className="py-8 text-center text-error">
                     {t("estadisticas.listError")}
                   </td>
                 </tr>
               )}
               {!ventas.cargando && !ventas.error && ventas.items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
+                  <td colSpan={5} className="py-8 text-center text-on-surface-variant">
                     {t("estadisticas.empty")}
                   </td>
                 </tr>

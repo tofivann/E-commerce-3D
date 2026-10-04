@@ -25,7 +25,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
     <div className="bg-background min-h-screen flex">
       <AdminSidebar activeView={view} onSelectView={setView} onLogout={onLogout} />
 
-      <main className="flex-1 md:ml-64 pt-20 pb-6 px-6 md:pt-10 md:pb-10 md:px-10 max-w-container-max mx-auto w-full">
+      {/* min-w-0: sin esto, un hijo flex no encoge por debajo del ancho de su
+          contenido, y una tabla ancha ensancha toda la página en vez de
+          desplazarse dentro de su propio panel (overflow-x-auto). */}
+      <main className="flex-1 min-w-0 md:ml-64 pt-20 pb-6 px-6 md:pt-10 md:pb-10 md:px-10 max-w-container-max mx-auto w-full">
         {view === "catalogo" && <ProductAdminGrid />}
 
         {view === "chat" && <ChatPanel isAdmin={true} />}
