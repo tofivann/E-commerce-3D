@@ -28,8 +28,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
         {t("sidebar.home")}
       </NavLink>
 
-      {/* Biblioteca, Comisiones y el chat solo se muestran con suscripción activa o staff;
+      {/* Favoritos, Biblioteca, Comisiones y el chat solo se muestran con suscripción activa o staff;
           una cuenta pendiente de pago/inactiva no tiene nada que mostrar ahí todavía. */}
+      {hasAccess && (
+        <NavLink to="/favoritos" className={linkClass} onClick={closeMobile}>
+          <span className="material-symbols-outlined text-[20px]">favorite</span>
+          {t("sidebar.favorites")}
+        </NavLink>
+      )}
+
       {hasAccess && (
         <NavLink to="/biblioteca" className={linkClass} onClick={closeMobile}>
           <span className="material-symbols-outlined text-[20px]">inventory_2</span>

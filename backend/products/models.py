@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from core.text_utils import normalizar_texto
@@ -82,3 +83,30 @@ class Producto(models.Model):
         if update_fields is not None:
             kwargs['update_fields'] = set(update_fields) | {'titulo_normalizado', 'descripcion_normalizada'}
         super().save(*args, **kwargs)
+
+
+class Favorito(models.Model):
+    """Producto que un usuario guardó con el corazón del catálogo.
+
+    No es una compra ni da ningún derecho sobre el producto: es solo una
+    marca personal. Por eso ambos FK son CASCADE — al borrar el producto (o
+    la cuenta) el favorito desaparece sin bloquear nada, al revés que
+    orders.ComprasDigitales, que protege al producto comprado.
+    """
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favoritos',
+    )
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='favoritos')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Favorito"
+        verbose_name_plural = "Favoritos"
+        ordering = ['-fecha_creacion', '-id']
+        constraints = [
+            # Un producto no puede estar dos veces en la lista de un usuario.
+            models.UniqueConstraint(fields=['usuario', 'producto'], name='uniq_favorito_usuario_producto'),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} ♥ {self.producto}"

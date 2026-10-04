@@ -1,10 +1,13 @@
-from rest_framework import viewsets, permissions
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, status, viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from core.pagination import PaginacionEstandar
 from .filters import BusquedaNormalizadaFilter, CategoriasFilter
-from .models import Categoria, Producto
-from .permissions import EsAdminOSoloLectura
+from .models import Categoria, Favorito, Producto
+from .permissions import EsAdminOSoloLectura, TieneAccesoAlCatalogo
 from .serializers import CategoriaSerializer, ProductoSerializer
 
 
@@ -78,3 +81,56 @@ class ProductoViewSet(viewsets.ModelViewSet):
         if user.is_authenticated and user.is_staff:
             return Producto.objects.all()
         return Producto.objects.filter(activo=True)
+
+
+# ---------------------------------------------------------------------------
+# Favoritos: productos que el usuario guardó con el corazón. Cada usuario
+# solo ve y modifica los suyos (todo se filtra por request.user). Un producto
+# desactivado no aparece en ningún listado, pero el favorito se conserva: si
+# el admin lo reactiva, vuelve a la lista de quien lo había guardado.
+# ---------------------------------------------------------------------------
+
+def _productos_favoritos(usuario):
+    return Producto.objects.filter(activo=True, favoritos__usuario=usuario)
+
+
+class FavoritosView(generics.ListAPIView):
+    """Productos favoritos del usuario, del más reciente al más antiguo,
+    paginados igual que el catálogo (página "Favoritos")."""
+    serializer_class = ProductoSerializer
+    permission_classes = [TieneAccesoAlCatalogo]
+    pagination_class = PaginacionEstandar
+
+    def get_queryset(self):
+        return (
+            _productos_favoritos(self.request.user)
+            # Un usuario tiene como mucho un Favorito por producto (constraint
+            # único), así que el join no duplica filas.
+            .order_by('-favoritos__fecha_creacion', '-id')
+            .prefetch_related('categorias')
+        )
+
+
+class FavoritosIdsView(APIView):
+    """Solo los ids de los favoritos del usuario: es lo que necesita el
+    catálogo para pintar el corazón de cada tarjeta, sin traer los productos."""
+    permission_classes = [TieneAccesoAlCatalogo]
+
+    def get(self, request):
+        return Response(list(_productos_favoritos(request.user).values_list('id', flat=True)))
+
+
+class FavoritoView(APIView):
+    """Marcar (PUT) o desmarcar (DELETE) un producto como favorito. Ambas
+    operaciones son idempotentes: repetirlas deja el mismo resultado y no da
+    error, así un doble clic o un reintento no rompen nada."""
+    permission_classes = [TieneAccesoAlCatalogo]
+
+    def put(self, request, producto_id):
+        producto = get_object_or_404(Producto, pk=producto_id, activo=True)
+        Favorito.objects.get_or_create(usuario=request.user, producto=producto)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def delete(self, request, producto_id):
+        Favorito.objects.filter(usuario=request.user, producto_id=producto_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

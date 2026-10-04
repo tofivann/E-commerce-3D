@@ -43,3 +43,10 @@ class Usuario(AbstractUser):
     @property
     def es_suscripto_activo(self):
         return self.rol == self.Rol.CLIENTE and self.estado_suscripcion == self.EstadoSuscripcion.ACTIVO
+
+    @property
+    def tiene_acceso_al_catalogo(self):
+        """Puede ver el catálogo desbloqueado: staff, o cuenta con la
+        suscripción activa. Es la misma regla que `hasAccess` en el frontend
+        (isStaff || estado_suscripcion === 'ACTIVO')."""
+        return self.is_staff or self.estado_suscripcion == self.EstadoSuscripcion.ACTIVO

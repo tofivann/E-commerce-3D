@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { CategoryBadge } from "./CategoryBadge";
+import { FavoritoButton } from "./FavoritoButton";
 
 interface ProductCardProps {
   producto: Producto;
@@ -10,18 +11,24 @@ interface ProductCardProps {
   hasAccess: boolean;
   // true si el usuario ya adquirió este producto (está en su biblioteca digital).
   isPurchased?: boolean;
+  // true si el usuario lo guardó como favorito.
+  isFavorito?: boolean;
   onSelect?: (producto: Producto) => void;
   onAddToCart?: (producto: Producto) => void;
   onGoToLibrary?: (producto: Producto) => void;
+  // Marcar/desmarcar favorito. Sin esta acción no se muestra el corazón.
+  onToggleFavorito?: (producto: Producto) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   producto,
   hasAccess,
   isPurchased = false,
+  isFavorito = false,
   onSelect,
   onAddToCart,
   onGoToLibrary,
+  onToggleFavorito,
 }) => {
   const { t } = useTranslation();
   const fallbackImage =
@@ -69,6 +76,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span className="material-symbols-outlined text-[14px]">folder_special</span>
             {t("catalog.inLibrary")}
           </div>
+        )}
+
+        {/* Corazón de favoritos: solo con acceso al catálogo. Con la tarjeta
+            bloqueada no hay nada identificable que guardar. */}
+        {hasAccess && onToggleFavorito && typeof producto.id === "number" && (
+          <FavoritoButton
+            activo={isFavorito}
+            onToggle={() => onToggleFavorito(producto)}
+            className="absolute top-2 right-2 z-20"
+          />
         )}
 
         {/* Overlay de Bloqueo: invitados, o logueados sin suscripción activa (no aplica si ya lo compró).

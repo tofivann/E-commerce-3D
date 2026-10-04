@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { categoriasApi } from "../../api/productos.api";
 import type { Producto, Categoria } from "../../api/productos.api";
-import { ProductCard } from "./ProductCard";
+import { ProductGrid } from "./ProductGrid";
 import { ProductGridSkeleton } from "./ProductGridSkeleton";
 import { CategoryFilter } from "./CategoryFilter";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
@@ -14,19 +14,24 @@ interface ProductListProps {
   // (suscripción activa, o administrador).
   hasAccess: boolean;
   // ids de productos que el usuario ya adquirió (están en su biblioteca digital).
-  purchasedIds?: Set<number>;
+  purchasedIds?: ReadonlySet<number>;
+  // ids de productos que el usuario guardó como favoritos.
+  favoritoIds?: ReadonlySet<number>;
   onSelectProducto?: (producto: Producto) => void;
   onAddToCart?: (producto: Producto) => void;
   onGoToLibrary?: (producto: Producto) => void;
+  onToggleFavorito?: (producto: Producto) => void;
   searchQuery?: string;
 }
 
 export const ProductList: React.FC<ProductListProps> = ({
   hasAccess,
   purchasedIds,
+  favoritoIds,
   onSelectProducto,
   onAddToCart,
   onGoToLibrary,
+  onToggleFavorito,
   searchQuery = "",
 }) => {
   const { t } = useTranslation();
@@ -101,19 +106,16 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* Grilla de Productos */}
       {productos.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productos.map((prod) => (
-            <ProductCard
-              key={prod.id || prod.titulo}
-              producto={prod}
-              hasAccess={hasAccess}
-              isPurchased={typeof prod.id === "number" && (purchasedIds?.has(prod.id) ?? false)}
-              onSelect={onSelectProducto}
-              onAddToCart={onAddToCart}
-              onGoToLibrary={onGoToLibrary}
-            />
-          ))}
-        </div>
+        <ProductGrid
+          productos={productos}
+          hasAccess={hasAccess}
+          purchasedIds={purchasedIds}
+          favoritoIds={favoritoIds}
+          onSelectProducto={onSelectProducto}
+          onAddToCart={onAddToCart}
+          onGoToLibrary={onGoToLibrary}
+          onToggleFavorito={onToggleFavorito}
+        />
       )}
 
       {/* Scroll infinito: siguiente página al acercarse al final */}

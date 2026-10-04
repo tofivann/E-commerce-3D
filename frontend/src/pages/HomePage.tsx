@@ -9,7 +9,9 @@ import { ProductDetailsModal } from "../components/products/ProductDetailsModal"
 import { Sidebar } from "../components/layout/Sidebar";
 import { LanguageSwitcher } from "../components/layout/LanguageSwitcher";
 import { carritoApi } from "../api/carrito.api";
-import { bibliotecaApi } from "../api/biblioteca.api";
+import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
+import { useComprasIds } from "../hooks/useComprasIds";
+import { useFavoritos } from "../hooks/useFavoritos";
 import { capturarOrdenPayPal } from "../api/paypal.api";
 import { userApi } from "../services/userApi";
 import type { Producto } from "../api/productos.api";
@@ -32,11 +34,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   onLogoutClick,
   onRegisterClick,
 }) => {
-  const [cartOpen, setCartOpen] = useState(false);
-  const [cartRefreshKey, setCartRefreshKey] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [purchasedIds, setPurchasedIds] = useState<Set<number>>(new Set());
   const [activandoPago, setActivandoPago] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [guestMenuOpen, setGuestMenuOpen] = useState(false);
@@ -47,6 +46,10 @@ export const HomePage: React.FC<HomePageProps> = ({
   const hasAccess = isLoggedIn && (isStaff || isSubscribed);
   const canSearch = isStaff || isSubscribed;
 
+  const carrito = useCarritoDrawer();
+  const purchasedIds = useComprasIds(isLoggedIn);
+  const favoritos = useFavoritos(hasAccess);
+
   useEffect(() => {
     if (!isLoggedIn) {
       setCartCount(0);
@@ -56,22 +59,6 @@ export const HomePage: React.FC<HomePageProps> = ({
       .obtener()
       .then((carrito) => setCartCount(carrito.items.length))
       .catch((err) => console.error("Error al cargar el carrito:", err));
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setPurchasedIds(new Set());
-      return;
-    }
-    bibliotecaApi
-      .listar()
-      .then((compras) => {
-        const ids = compras
-          .map((compra) => compra.producto.id)
-          .filter((id): id is number => typeof id === "number");
-        setPurchasedIds(new Set(ids));
-      })
-      .catch((err) => console.error("Error al cargar la biblioteca:", err));
   }, [isLoggedIn]);
 
   // Al redirigir a Stripe/PayPal con window.location.href, activandoPago se
@@ -91,18 +78,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     window.addEventListener("pageshow", handlePageShow);
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
-
-  const handleAddToCart = async (producto: Producto) => {
-    if (!producto.id) return;
-    try {
-      await carritoApi.agregarItem(producto.id);
-      setCartRefreshKey((k) => k + 1);
-      setCartOpen(true);
-    } catch (err) {
-      console.error("Error al agregar al carrito:", err);
-      window.alert("No se pudo agregar el producto al carrito.");
-    }
-  };
 
   const handleActivarCuenta = async () => {
     try {
@@ -169,7 +144,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <LanguageSwitcher />
                   {hasAccess && (
                     <button
-                      onClick={() => setCartOpen(true)}
+                      onClick={carrito.abrir}
                       aria-label={t("common.cart")}
                       className="relative text-on-surface-variant hover:text-primary transition-colors p-2"
                     >
@@ -396,9 +371,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             <ProductList
               hasAccess={hasAccess}
               purchasedIds={purchasedIds}
-              onAddToCart={handleAddToCart}
+              favoritoIds={favoritos.ids}
+              onAddToCart={carrito.agregar}
               onGoToLibrary={() => navigate("/biblioteca")}
               onSelectProducto={setSelectedProduct}
+              onToggleFavorito={favoritos.alternar}
               searchQuery={canSearch ? searchQuery : ""}
             />
           </div>
@@ -423,9 +400,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {isLoggedIn && (
         <CartDrawer
-          isOpen={cartOpen}
-          onClose={() => setCartOpen(false)}
-          refreshKey={cartRefreshKey}
+          isOpen={carrito.abierto}
+          onClose={carrito.cerrar}
+          refreshKey={carrito.refreshKey}
           onCartChange={(carrito) => setCartCount(carrito?.items.length ?? 0)}
         />
       )}
@@ -434,7 +411,9 @@ export const HomePage: React.FC<HomePageProps> = ({
         producto={selectedProduct}
         hasAccess={hasAccess}
         onClose={() => setSelectedProduct(null)}
-        onAddToCart={handleAddToCart}
+        onAddToCart={carrito.agregar}
+        isFavorito={typeof selectedProduct?.id === "number" && favoritos.ids.has(selectedProduct.id)}
+        onToggleFavorito={favoritos.alternar}
       />
     </div>
   );

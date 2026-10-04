@@ -11,6 +11,7 @@
   },
   "sidebar": {
     "home": "Home",
+    "favorites": "Favorites",
     "library": "My Library",
     "commissions": "Commissions",
     "support": "Chat with Mimi",
@@ -102,7 +103,18 @@
     "total": "Total",
     "checkoutRedirecting": "Redirecting to Stripe...",
     "checkoutCta": "Proceed to Payment",
-    "checkoutError": "Could not start the payment. Please try again."
+    "checkoutError": "Could not start the payment. Please try again.",
+    "addError": "Could not add the product to the cart."
+  },
+  "favoritos": {
+    "title": "Favorites",
+    "subtitle": "The products you saved with the heart.",
+    "add": "Save to favorites",
+    "remove": "Remove from favorites",
+    "empty": "You haven't saved any products yet.",
+    "emptyCta": "Browse the catalog",
+    "loadError": "Could not load your favorites. Reload the page to try again.",
+    "toggleError": "Could not update the favorite. Please try again."
   },
   "library": {
     "products": "Products",

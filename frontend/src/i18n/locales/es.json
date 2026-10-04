@@ -11,6 +11,7 @@
   },
   "sidebar": {
     "home": "Inicio",
+    "favorites": "Favoritos",
     "library": "Mi Biblioteca",
     "commissions": "Comisiones",
     "support": "Chat con Mimi",
@@ -102,7 +103,18 @@
     "total": "Total",
     "checkoutRedirecting": "Redirigiendo a Stripe...",
     "checkoutCta": "Proceder al Pago",
-    "checkoutError": "No se pudo iniciar el pago. Inténtalo de nuevo."
+    "checkoutError": "No se pudo iniciar el pago. Inténtalo de nuevo.",
+    "addError": "No se pudo agregar el producto al carrito."
+  },
+  "favoritos": {
+    "title": "Favoritos",
+    "subtitle": "Los productos que guardaste con el corazón.",
+    "add": "Guardar en favoritos",
+    "remove": "Quitar de favoritos",
+    "empty": "Todavía no has guardado ningún producto.",
+    "emptyCta": "Explorar el catálogo",
+    "loadError": "No se pudieron cargar tus favoritos. Recarga la página para intentarlo de nuevo.",
+    "toggleError": "No se pudo actualizar el favorito. Inténtalo de nuevo."
   },
   "library": {
     "products": "Productos",

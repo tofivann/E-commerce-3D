@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 
 from core.pagination import PaginacionEstandar
 from core.text_utils import normalizar_texto
-from .models import Categoria, Producto
+from .models import Categoria, Favorito, Producto
 
 
 def crear_producto(titulo, descripcion='', categorias=(), activo=True):
@@ -224,3 +224,131 @@ class CategoriasProtegidasTests(APITestCase):
     def test_otra_categoria_no_puede_tomar_el_nombre_de_una_principal(self):
         respuesta = self.client.patch(self.url(self.otra), {'nombre': 'Modelo'})
         self.assertEqual(respuesta.status_code, 400)
+
+
+class FavoritosTests(APITestCase):
+    """Favoritos: lista personal, idempotente, solo para quien ve el catálogo
+    desbloqueado, y que ignora los productos desactivados sin perderlos."""
+
+    URL = '/api/v1/products/favoritos/'
+    URL_IDS = '/api/v1/products/favoritos/ids/'
+
+    def setUp(self):
+        Usuario = get_user_model()
+        self.cliente = Usuario.objects.create_user(
+            username='cliente', email='cliente@test.com', password='x', estado_suscripcion='ACTIVO',
+        )
+        self.otro = Usuario.objects.create_user(
+            username='otro', email='otro@test.com', password='x', estado_suscripcion='ACTIVO',
+        )
+        self.modelo = Categoria.objects.get(nombre='Modelo')
+        self.aoi = crear_producto('Aoi', categorias=[self.modelo])
+        self.miku = crear_producto('Miku', categorias=[self.modelo])
+        self.client.force_authenticate(self.cliente)
+
+    def url(self, producto):
+        return f'{self.URL}{producto.id}/'
+
+    def titulos(self):
+        return [p['titulo'] for p in self.client.get(self.URL).data['results']]
+
+    def test_marcar_y_listar_del_mas_reciente_al_mas_antiguo(self):
+        self.assertEqual(self.client.put(self.url(self.aoi)).status_code, 204)
+        self.assertEqual(self.client.put(self.url(self.miku)).status_code, 204)
+
+        respuesta = self.client.get(self.URL)
+
+        self.assertEqual(respuesta.data['count'], 2)
+        self.assertEqual([p['titulo'] for p in respuesta.data['results']], ['Miku', 'Aoi'])
+        # Misma forma que el catálogo: la tarjeta de producto se reutiliza tal cual.
+        self.assertIn('categorias_detalle', respuesta.data['results'][0])
+        self.assertEqual(sorted(self.client.get(self.URL_IDS).data), sorted([self.aoi.id, self.miku.id]))
+
+    def test_marcar_dos_veces_no_duplica(self):
+        self.client.put(self.url(self.aoi))
+        self.assertEqual(self.client.put(self.url(self.aoi)).status_code, 204)
+
+        self.assertEqual(Favorito.objects.filter(usuario=self.cliente, producto=self.aoi).count(), 1)
+        self.assertEqual(self.titulos(), ['Aoi'])
+
+    def test_desmarcar_y_desmarcar_lo_que_no_estaba(self):
+        self.client.put(self.url(self.aoi))
+
+        self.assertEqual(self.client.delete(self.url(self.aoi)).status_code, 204)
+        self.assertEqual(self.client.delete(self.url(self.aoi)).status_code, 204)
+
+        self.assertEqual(self.titulos(), [])
+        self.assertEqual(self.client.get(self.URL_IDS).data, [])
+
+    def test_cada_usuario_solo_ve_y_toca_los_suyos(self):
+        self.client.put(self.url(self.aoi))
+
+        self.client.force_authenticate(self.otro)
+        self.assertEqual(self.titulos(), [])
+        self.assertEqual(self.client.get(self.URL_IDS).data, [])
+        # Desmarcar desde otra cuenta no afecta al favorito del primero.
+        self.client.delete(self.url(self.aoi))
+
+        self.client.force_authenticate(self.cliente)
+        self.assertEqual(self.titulos(), ['Aoi'])
+
+    def test_no_se_puede_marcar_un_producto_inexistente_o_inactivo(self):
+        inactivo = crear_producto('Inactivo', categorias=[self.modelo], activo=False)
+
+        self.assertEqual(self.client.put(f'{self.URL}999999/').status_code, 404)
+        self.assertEqual(self.client.put(self.url(inactivo)).status_code, 404)
+        self.assertFalse(Favorito.objects.exists())
+
+    def test_producto_desactivado_se_oculta_y_vuelve_al_reactivarlo(self):
+        self.client.put(self.url(self.aoi))
+        self.client.put(self.url(self.miku))
+
+        Producto.objects.filter(pk=self.aoi.pk).update(activo=False)
+        self.assertEqual(self.titulos(), ['Miku'])
+        self.assertEqual(self.client.get(self.URL_IDS).data, [self.miku.id])
+
+        Producto.objects.filter(pk=self.aoi.pk).update(activo=True)
+        self.assertEqual(self.titulos(), ['Miku', 'Aoi'])
+
+    def test_borrar_el_producto_lo_quita_de_favoritos_sin_bloquear_el_borrado(self):
+        self.client.put(self.url(self.aoi))
+
+        self.aoi.delete()
+
+        self.assertFalse(Favorito.objects.exists())
+        self.assertEqual(self.titulos(), [])
+
+    def test_solo_cuentas_con_acceso_al_catalogo(self):
+        Usuario = get_user_model()
+        pendiente = Usuario.objects.create_user(
+            username='pendiente', email='pendiente@test.com', password='x', estado_suscripcion='PENDIENTE_PAGO',
+        )
+        staff = Usuario.objects.create_user(username='staff', email='staff@test.com', password='x', is_staff=True)
+        peticiones = (
+            lambda: self.client.get(self.URL),
+            lambda: self.client.get(self.URL_IDS),
+            lambda: self.client.put(self.url(self.aoi)),
+            lambda: self.client.delete(self.url(self.aoi)),
+        )
+
+        self.client.force_authenticate(None)
+        for peticion in peticiones:
+            self.assertEqual(peticion().status_code, 401)
+
+        self.client.force_authenticate(pendiente)
+        for peticion in peticiones:
+            self.assertEqual(peticion().status_code, 403)
+        self.assertFalse(Favorito.objects.exists())
+
+        # El staff no tiene suscripción, pero sí acceso al catálogo.
+        self.client.force_authenticate(staff)
+        self.assertEqual(self.client.put(self.url(self.aoi)).status_code, 204)
+        self.assertEqual(self.titulos(), ['Aoi'])
+
+    def test_el_listado_no_hace_una_consulta_por_producto(self):
+        for i in range(10):
+            self.client.put(self.url(crear_producto(f'P{i}', categorias=[self.modelo])))
+
+        # count + productos + categorías prefetcheadas.
+        with self.assertNumQueries(3):
+            self.client.get(self.URL)

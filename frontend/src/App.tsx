@@ -5,6 +5,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
+import { FavoritesPage } from "./pages/FavoritesPage";
 import { SupportChatPage } from "./pages/SupportChatPage";
 import { CommissionsPage } from "./pages/CommissionsPage";
 import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
@@ -140,6 +141,18 @@ function AppRoutes() {
         element={
           isLoggedIn && isStaff ? (
             <AdminPage onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Favoritos: admins o suscriptores con cuenta activa (misma
+          regla que el backend: sin acceso al catálogo no hay favoritos) */}
+      <Route
+        path="/favoritos"
+        element={
+          isLoggedIn && (isStaff || isSubscribed) ? (
+            <FavoritesPage isStaff={isStaff} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )
