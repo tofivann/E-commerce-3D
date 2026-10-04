@@ -1,5 +1,5 @@
 import type { ComisionMotionAdmin, ComisionModeloAdmin, EstadoComision } from "../api/comisiones.api";
-import { tieneTodasLasCategorias } from "./categoria";
+import { tieneAlgunaCategoria } from "./categoria";
 
 // Mismo `Item` que arma SolicitudesComisionesTable (Motion y Modelo en una
 // sola lista). Se declara aquí para que la lógica de filtrado sea pura y
@@ -11,8 +11,8 @@ export type ItemComision =
 export interface FiltrosComisiones {
   // Sin estado = todas.
   estado: EstadoComision | null;
-  // Ids de categoría; la comisión debe tener TODAS (AND inclusivo), igual que el
-  // filtro de categorías del catálogo (tieneTodasLasCategorias). Es el
+  // Ids de categoría; la comisión debe tener AL MENOS UNA (OR), igual que el
+  // filtro de categorías del catálogo (tieneAlgunaCategoria). Es el
   // mismo Set que maneja CategoryFilter (que nunca lo muta: siempre crea uno
   // nuevo en onChange).
   categorias: Set<number>;
@@ -55,7 +55,7 @@ export function filtrarComisiones(items: ItemComision[], filtros: FiltrosComisio
     if (filtros.estado && item.data.estado !== filtros.estado) return false;
 
     // En la respuesta admin `categorias` ya son ids (ver CamposAdmin).
-    if (!tieneTodasLasCategorias(item.data.categorias, filtros.categorias)) return false;
+    if (!tieneAlgunaCategoria(item.data.categorias, filtros.categorias)) return false;
 
     if (terminos.length > 0) {
       const buscable = textoBuscable(item);

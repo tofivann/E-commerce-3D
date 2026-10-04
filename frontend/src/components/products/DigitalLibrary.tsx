@@ -7,7 +7,7 @@ import { categoriasApi } from "../../api/productos.api";
 import type { Categoria } from "../../api/productos.api";
 import { CategoryFilter } from "./CategoryFilter";
 import { CategoryBadge } from "./CategoryBadge";
-import { tieneTodasLasCategorias } from "../../utils/categoria";
+import { tieneAlgunaCategoria } from "../../utils/categoria";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
@@ -21,11 +21,11 @@ export const DigitalLibrary: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [descargandoId, setDescargandoId] = useState<number | null>(null);
 
-  // AND inclusivo de categorías (misma semántica que CategoriasFilter
+  // "Al menos una" categoría (misma semántica que CategoriasFilter
   // en el backend para el catálogo). Aquí se filtra en memoria porque la
   // biblioteca no es paginada: llega completa.
   const comprasFiltradas = compras.filter((c) =>
-    tieneTodasLasCategorias(c.producto.categorias, categoriasSeleccionadas)
+    tieneAlgunaCategoria(c.producto.categorias, categoriasSeleccionadas)
   );
 
   useEffect(() => {

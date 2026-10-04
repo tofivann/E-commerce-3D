@@ -7,13 +7,13 @@ export function nombreCategoria(categoria: Categoria, lang: string): string {
   return lang.startsWith("en") ? categoria.nombre_en : categoria.nombre;
 }
 
-// AND inclusivo: el ítem tiene TODAS las categorías marcadas, y puede tener
-// otras además — cada etiqueta marcada acota la lista ("Bang Dream" + "Motion"
-// = solo los motions de Bang Dream). Sin nada marcado no se filtra. Es el
-// espejo de CategoriasFilter en backend/products/filters.py; si cambia uno,
-// cambia el otro. Lo usan las listas que se filtran en memoria por no ser
+// "Al menos una" (OR): el ítem tiene alguna de las categorías marcadas — cada
+// etiqueta marcada amplía la lista ("Bang Dream" + "Motion" = todo lo de Bang
+// Dream más todos los motions). Sin nada marcado no se filtra. Es el espejo
+// de CategoriasFilter en backend/products/filters.py; si cambia uno, cambia
+// el otro. Lo usan las listas que se filtran en memoria por no ser
 // paginadas: la biblioteca y las comisiones del admin.
-export function tieneTodasLasCategorias(categoriasDelItem: number[], seleccionadas: Set<number>): boolean {
-  const propias = new Set(categoriasDelItem);
-  return [...seleccionadas].every((id) => propias.has(id));
+export function tieneAlgunaCategoria(categoriasDelItem: number[], seleccionadas: Set<number>): boolean {
+  if (seleccionadas.size === 0) return true;
+  return categoriasDelItem.some((id) => seleccionadas.has(id));
 }

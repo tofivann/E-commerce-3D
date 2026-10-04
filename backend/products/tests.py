@@ -101,21 +101,22 @@ class ProductoListadoTests(APITestCase):
         respuesta = self.client.get(self.url, {'search': '   '})
         self.assertEqual(respuesta.data['count'], 2)
 
-    def test_filtro_categorias_exige_todas_y_sin_duplicados(self):
+    def test_filtro_categorias_basta_con_una_y_sin_duplicados(self):
         ambos = crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])
         las_tres = crear_producto('Las tres', categorias=[self.modelo, self.motion, self.juego])
-        crear_producto('Solo Motion', categorias=[self.motion])
-        crear_producto('Solo Modelo', categorias=[self.modelo])
+        solo_motion = crear_producto('Solo Motion', categorias=[self.motion])
+        solo_modelo = crear_producto('Solo Modelo', categorias=[self.modelo])
         crear_producto('Solo Juego', categorias=[self.juego])
 
         respuesta = self.client.get(self.url, {'categorias': f'{self.modelo.id},{self.motion.id}'})
 
-        # AND inclusivo: los que tienen las dos (aunque tengan además otra),
-        # no los de una sola; y cada uno una sola vez aunque haya dos joins.
-        self.assertEqual(
-            sorted(p['id'] for p in respuesta.data['results']), sorted([ambos.id, las_tres.id]),
-        )
-        self.assertEqual(respuesta.data['count'], 2)
+        # "Al menos una": todo lo que tenga Modelo o Motion, y no lo que es
+        # solo Juego. Los que tienen las dos salen una sola vez (el join al
+        # M2M los duplicaría sin distinct(), y el count de la paginación
+        # también quedaría inflado).
+        ids = [p['id'] for p in respuesta.data['results']]
+        self.assertEqual(sorted(ids), sorted([ambos.id, las_tres.id, solo_motion.id, solo_modelo.id]))
+        self.assertEqual(respuesta.data['count'], 4)
 
     def test_filtro_una_categoria_incluye_los_que_tienen_mas(self):
         ambos = crear_producto('Modelo y Motion', categorias=[self.modelo, self.motion])

@@ -19,28 +19,28 @@ class BusquedaNormalizadaFilter(filters.SearchFilter):
 
 class CategoriasFilter(filters.BaseFilterBackend):
     """Filtra por ?categorias=1,2,3 (ids separados por coma): el producto
-    tiene que tener TODAS las categorías pedidas, y puede tener otras además
-    (AND inclusivo). Cada etiqueta marcada acota la lista: "Bang Dream"
-    devuelve todo lo de ese juego, y añadir "Motion" deja solo sus motions.
+    tiene que tener AL MENOS UNA de las categorías pedidas (OR). Cada
+    etiqueta marcada amplía la lista: "Bang Dream" devuelve todo lo de ese
+    juego, y añadir "Motion" suma todos los motions de cualquier juego.
 
-    Historial, para no repetir el ir y venir: primero fue "alguna de estas"
-    (OR), luego este mismo AND, luego coincidencia exacta (descartada: como
-    casi todo producto tiene dos etiquetas, marcar una sola no devolvía
-    nada) y de vuelta a este AND. Misma semántica que aplican DigitalLibrary
-    y el filtro de comisiones del admin en el navegador sobre sus listas no
-    paginadas (frontend/src/utils/categoria.ts::tieneTodasLasCategorias).
-    Ids no numéricos y repetidos se ignoran en silencio.
+    Historial, para no repetir el ir y venir: así fue originalmente; luego
+    se probó "todas las marcadas" (AND), después coincidencia exacta
+    (inservible: casi todo producto tiene dos etiquetas, marcar una sola no
+    devolvía nada), otra vez AND, y el cliente final pidió volver a este
+    OR. Misma semántica que aplican DigitalLibrary y el filtro de
+    comisiones del admin en el navegador sobre sus listas no paginadas
+    (frontend/src/utils/categoria.ts::tieneAlgunaCategoria). Ids no
+    numéricos y repetidos se ignoran en silencio.
     """
     parametro = 'categorias'
 
     def filter_queryset(self, request, queryset, view):
         crudo = request.query_params.get(self.parametro, '')
         ids = {int(x) for x in crudo.split(',') if x.strip().isdigit()}
-        # Un .filter() encadenado por categoría: cada uno agrega su propio
-        # join al M2M, así que las condiciones se exigen a la vez. Un solo
-        # .filter(categorias__in=ids) sería OR ("alguna de estas"), y de
-        # paso, al haber un join por id, cada producto sale una sola vez —
-        # no hace falta distinct().
-        for categoria_id in ids:
-            queryset = queryset.filter(categorias=categoria_id)
-        return queryset
+        if not ids:
+            return queryset
+        # Un solo join al M2M con IN = "alguna de estas". El distinct() es
+        # obligatorio: un producto que está en dos de las categorías pedidas
+        # sale una fila por cada una, lo que lo repetiría en la página y
+        # descuadraría el count de la paginación.
+        return queryset.filter(categorias__in=ids).distinct()
