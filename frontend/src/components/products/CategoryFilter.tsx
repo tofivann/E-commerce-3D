@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import type { Categoria } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
+import { Pildora } from "../ui/Pildora";
 
 interface CategoryFilterProps {
   categorias: Categoria[];
@@ -28,28 +29,13 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
 
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      <button
-        onClick={() => onChange(new Set())}
-        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-          seleccionadas.size === 0
-            ? "bg-primary-container text-on-primary-fixed border-primary-container"
-            : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-        }`}
-      >
+      <Pildora activa={seleccionadas.size === 0} onClick={() => onChange(new Set())}>
         {t("catalog.allCategories")}
-      </button>
+      </Pildora>
       {categorias.map((cat) => (
-        <button
-          key={cat.id}
-          onClick={() => toggle(cat.id)}
-          className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-            seleccionadas.has(cat.id)
-              ? "bg-primary-container text-on-primary-fixed border-primary-container"
-              : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-          }`}
-        >
+        <Pildora key={cat.id} activa={seleccionadas.has(cat.id)} onClick={() => toggle(cat.id)}>
           {nombreCategoria(cat, i18n.language)}
-        </button>
+        </Pildora>
       ))}
     </div>
   );

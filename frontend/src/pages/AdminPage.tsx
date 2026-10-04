@@ -7,6 +7,7 @@ import { ProductAdminTable } from "../components/products/ProductAdminTable";
 import { UserAdminTable } from "../components/users/UserAdminTable";
 import { ChatPanel } from "../components/chat/ChatPanel";
 import { ComisionesAdmin } from "../components/admin/ComisionesAdmin";
+import { EstadisticasPagos } from "../components/admin/EstadisticasPagos";
 import { CategoriasTable } from "../components/admin/CategoriasTable";
 
 type AjustesEntidad = "productos" | "categorias" | "usuarios";
@@ -30,6 +31,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
         {view === "chat" && <ChatPanel isAdmin={true} />}
 
         {view === "comisiones" && <ComisionesAdmin />}
+
+        {view === "estadisticas" && <EstadisticasPagos />}
 
         {view === "ajustes" && (
           <div>

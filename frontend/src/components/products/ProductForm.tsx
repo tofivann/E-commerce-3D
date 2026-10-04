@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Categoria, Producto } from "../../api/productos.api";
 import { categoriasApi, createProducto, patchProducto } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
+import { Pildora } from "../ui/Pildora";
 
 interface ProductFormProps {
   open: boolean;
@@ -273,9 +274,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               {categorias.map((categoria) => {
                 const seleccionada = form.categorias.includes(categoria.id);
                 return (
-                  <button
+                  <Pildora
                     key={categoria.id}
-                    type="button"
+                    activa={seleccionada}
                     onClick={() =>
                       setForm({
                         ...form,
@@ -284,14 +285,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                           : [...form.categorias, categoria.id],
                       })
                     }
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                      seleccionada
-                        ? "bg-primary-container text-on-primary-fixed border-primary-container"
-                        : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-                    }`}
                   >
                     {nombreCategoria(categoria, i18n.language)}
-                  </button>
+                  </Pildora>
                 );
               })}
             </div>

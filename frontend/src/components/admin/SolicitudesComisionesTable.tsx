@@ -10,6 +10,7 @@ import { FILTROS_COMISIONES_VACIOS, filtrarComisiones } from "../../utils/comisi
 import type { FiltrosComisiones, ItemComision } from "../../utils/comisiones";
 import { ComisionCard } from "../comisiones/ComisionCard";
 import { CategoryFilter } from "../products/CategoryFilter";
+import { FiltroChips } from "../ui/FiltroChips";
 import { SearchInput } from "../products/SearchInput";
 import { CompletarComisionModal } from "./CompletarComisionModal";
 import { ComisionDetalleModal } from "./ComisionDetalleModal";
@@ -22,12 +23,8 @@ export type Item = ItemComision;
 // "Confirmando pago", rara vez es lo que se busca.
 const ESTADOS_FILTRO: EstadoComision[] = ["EN_PROCESO", "COMPLETADO", "CANCELADO", "SOLICITADO"];
 
-const chipClass = (activo: boolean) =>
-  `text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
-    activo
-      ? "bg-primary-container text-on-primary-fixed border-primary-container"
-      : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-  }`;
+// Valor del chip "Todas" (sin filtro por estado).
+const TODOS_LOS_ESTADOS = "TODAS";
 
 export const SolicitudesComisionesTable: React.FC = () => {
   const { t } = useTranslation();
@@ -131,28 +128,18 @@ export const SolicitudesComisionesTable: React.FC = () => {
           className="max-w-sm"
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mr-1">
-            {t("comisionesAdmin.filterStatus")}
-          </span>
-          <button
-            type="button"
-            onClick={() => actualizarFiltros({ estado: null })}
-            className={chipClass(filtros.estado === null)}
-          >
-            {t("comisionesAdmin.filterAll")}
-          </button>
-          {ESTADOS_FILTRO.map((estado) => (
-            <button
-              key={estado}
-              type="button"
-              onClick={() => actualizarFiltros({ estado: filtros.estado === estado ? null : estado })}
-              className={chipClass(filtros.estado === estado)}
-            >
-              {t(claveEtiquetaEstado(estado))}
-            </button>
-          ))}
-        </div>
+        <FiltroChips<EstadoComision | typeof TODOS_LOS_ESTADOS>
+          titulo={t("comisionesAdmin.filterStatus")}
+          opciones={[
+            { valor: TODOS_LOS_ESTADOS, etiqueta: t("comisionesAdmin.filterAll") },
+            ...ESTADOS_FILTRO.map((estado) => ({ valor: estado, etiqueta: t(claveEtiquetaEstado(estado)) })),
+          ]}
+          seleccionado={filtros.estado ?? TODOS_LOS_ESTADOS}
+          // Pulsar el estado ya activo lo quita (vuelve a "Todas"), como antes.
+          onChange={(valor) =>
+            actualizarFiltros({ estado: valor === TODOS_LOS_ESTADOS || valor === filtros.estado ? null : valor })
+          }
+        />
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mr-1">

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-export type AdminView = "catalogo" | "chat" | "comisiones" | "ajustes";
+export type AdminView = "catalogo" | "chat" | "comisiones" | "estadisticas" | "ajustes";
 
 interface AdminSidebarProps {
   activeView: AdminView;
@@ -23,6 +23,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { view: "catalogo", label: t("adminSidebar.catalog"), icon: "inventory_2" },
     { view: "chat", label: t("adminSidebar.conversations"), icon: "chat" },
     { view: "comisiones", label: t("adminSidebar.commissions"), icon: "design_services" },
+    { view: "estadisticas", label: t("adminSidebar.statistics"), icon: "monitoring" },
     { view: "ajustes", label: t("adminSidebar.settings"), icon: "settings" },
   ];
 

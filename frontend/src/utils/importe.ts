@@ -10,6 +10,11 @@ export function formatearImporte(valor: number | string): string {
   return Number(valor).toFixed(2);
 }
 
+// Para mostrar dinero (no para inputs): "$1,234.50", con separadores según el idioma.
+export function formatearDinero(valor: number | string, idioma: string): string {
+  return new Intl.NumberFormat(idioma, { style: "currency", currency: "USD" }).format(Number(valor));
+}
+
 export type EstadoMonto = "ok" | "formato" | "menorAlMinimo";
 
 // Espejo de MontoComisionMixin en backend/custom_orders/serializers.py: el

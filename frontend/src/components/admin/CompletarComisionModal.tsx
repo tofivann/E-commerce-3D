@@ -4,6 +4,7 @@ import type { Categoria } from "../../api/comisiones.api";
 import { comisionesAdminApi } from "../../api/comisiones.api";
 import { categoriasApi } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
+import { Pildora } from "../ui/Pildora";
 import { extraerErroresValidacion } from "../../utils/erroresApi";
 import { formatearImporte, IMPORTE_VALIDO } from "../../utils/importe";
 import type { ErroresPorCampo } from "../../utils/erroresApi";
@@ -406,9 +407,9 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
               {categorias.map((categoria) => {
                 const seleccionada = categoriaIds.includes(categoria.id);
                 return (
-                  <button
+                  <Pildora
                     key={categoria.id}
-                    type="button"
+                    activa={seleccionada}
                     onClick={() =>
                       setCategoriaIds(
                         seleccionada
@@ -416,14 +417,9 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
                           : [...categoriaIds, categoria.id]
                       )
                     }
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
-                      seleccionada
-                        ? "bg-primary-container text-on-primary-fixed border-primary-container"
-                        : "bg-transparent text-on-surface-variant border-outline-variant/50 hover:border-primary/50"
-                    }`}
                   >
                     {nombreCategoria(categoria, i18n.language)}
-                  </button>
+                  </Pildora>
                 );
               })}
             </div>

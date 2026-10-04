@@ -285,6 +285,7 @@
     "catalog": "Catálogo",
     "conversations": "Conversaciones",
     "commissions": "Comisiones",
+    "statistics": "Estadísticas y pagos",
     "settings": "Ajustes",
     "backToShop": "Volver a la tienda",
     "logout": "Cerrar sesión"
@@ -316,6 +317,44 @@
     "editProduct": "Editar producto",
     "delete": "Eliminar",
     "defaultDescription": "Modelo 3D"
+  },
+  "estadisticas": {
+    "title": "Estadísticas y pagos",
+    "subtitle": "Todas las ventas pagadas: compras de la tienda y comisiones. Lo cancelado no cuenta.",
+    "filtersTitle": "Tipo de venta",
+    "filters": {
+      "todas": "Todas",
+      "comisiones": "Comisiones",
+      "en_proceso": "En proceso",
+      "completadas": "Completadas",
+      "tienda": "Compras de la tienda"
+    },
+    "salesCount": "Ventas: {{count}}",
+    "colDate": "Fecha",
+    "colOrder": "Orden",
+    "colClient": "Cliente",
+    "colConcept": "Qué compró",
+    "colGateway": "Pasarela",
+    "colCollected": "Cobrado",
+    "type": {
+      "CATALOGO": "Compra de la tienda",
+      "COMISION_MOTION": "Comisión de Motion",
+      "COMISION_MODELO": "Comisión de Modelo Nuevo"
+    },
+    "deletedProduct": "Producto eliminado",
+    "loading": "Cargando ventas...",
+    "empty": "No hay ventas con estos filtros.",
+    "listError": "No se pudieron cargar las ventas. Recarga la página para intentarlo de nuevo.",
+    "summaryError": "No se pudieron cargar los totales."
+  },
+  "filtroFechas": {
+    "title": "Fecha",
+    "todo": "Todo",
+    "esteMes": "Este mes",
+    "mesPasado": "Mes pasado",
+    "esteAnio": "Este año",
+    "from": "Desde",
+    "to": "Hasta"
   },
   "categoriasAdmin": {
     "title": "Categorías de Producto",
