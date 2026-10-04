@@ -20,6 +20,15 @@ from .serializers import CarritoSerializer, TASA_IMPUESTO
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
+def _etiqueta_impuestos():
+    """Nombre de la línea de impuestos que ve el comprador en Stripe, con el
+    porcentaje real de TASA_IMPUESTO ("Impuestos (8%)", "Impuestos (7.5%)").
+    Nunca un porcentaje escrito a mano: así no puede quedar desfasado si la
+    tasa cambia (pasó — la tasa bajó a 0 y la línea siguió diciendo 8%)."""
+    porcentaje = (TASA_IMPUESTO * 100).normalize()
+    return f'Impuestos ({porcentaje:f}%)'
+
+
 def _obtener_carrito(usuario):
     carrito, _ = Carrito.objects.get_or_create(usuario=usuario)
     return carrito
@@ -96,9 +105,9 @@ class CheckoutView(APIView):
                 precio_unitario=item.producto.precio,
             )
 
-        # Un line_item de Stripe por producto, más uno para el impuesto del 8%
-        # (el mismo que se muestra en el carrito) para que el monto cobrado
-        # coincida exactamente con el total mostrado al usuario.
+        # Un line_item de Stripe por producto, más uno para el impuesto cuando
+        # lo hay (el mismo que se muestra en el carrito), para que el monto
+        # cobrado coincida exactamente con el total mostrado al usuario.
         line_items = [
             {
                 'price_data': {
@@ -110,14 +119,15 @@ class CheckoutView(APIView):
             }
             for item in items
         ]
-        line_items.append({
-            'price_data': {
-                'currency': 'usd',
-                'unit_amount': int(impuestos * 100),
-                'product_data': {'name': 'Impuestos (8%)'},
-            },
-            'quantity': 1,
-        })
+        if impuestos > 0:
+            line_items.append({
+                'price_data': {
+                    'currency': 'usd',
+                    'unit_amount': int(impuestos * 100),
+                    'product_data': {'name': _etiqueta_impuestos()},
+                },
+                'quantity': 1,
+            })
 
         try:
             session = stripe.checkout.Session.create(
