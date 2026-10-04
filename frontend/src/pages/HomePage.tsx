@@ -46,7 +46,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const hasAccess = isLoggedIn && (isStaff || isSubscribed);
   const canSearch = isStaff || isSubscribed;
 
-  const carrito = useCarritoDrawer();
+  const carrito = useCarritoDrawer(hasAccess);
   const purchasedIds = useComprasIds(isLoggedIn);
   const favoritos = useFavoritos(hasAccess);
 

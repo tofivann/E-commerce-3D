@@ -3,11 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { favoritosApi } from "../api/favoritos.api";
 import type { Producto } from "../api/productos.api";
-import { CartDrawer } from "../components/products/CartDrawer";
 import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
 import { ProductGrid } from "../components/products/ProductGrid";
 import { ProductGridSkeleton } from "../components/products/ProductGridSkeleton";
-import { Sidebar } from "../components/layout/Sidebar";
+import { AppLayout } from "../components/layout/AppLayout";
 import { InfiniteScrollSentinel } from "../components/ui/InfiniteScrollSentinel";
 import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
 import { useComprasIds } from "../hooks/useComprasIds";
@@ -28,7 +27,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
   const navigate = useNavigate();
   const [seleccionado, setSeleccionado] = useState<Producto | null>(null);
 
-  const carrito = useCarritoDrawer();
+  const carrito = useCarritoDrawer(true);
   const purchasedIds = useComprasIds(true);
   const lista = useListaPaginada<Producto>({
     clave: "favoritos",
@@ -61,78 +60,50 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
   const vacia = !lista.cargando && !lista.error && lista.items.length === 0;
 
   return (
-    <div className="bg-background text-on-surface font-sans min-h-screen flex">
-      <Sidebar isStaff={isStaff} hasAccess onLogout={onLogoutClick} />
+    <>
+      <AppLayout isStaff={isStaff} hasAccess onLogout={onLogoutClick} carrito={carrito} mainClassName="flex flex-col gap-6">
+        <div className="border-b border-outline-variant/20 pb-4">
+          <h1 className="text-2xl font-bold text-on-surface">{t("favoritos.title")}</h1>
+          <p className="text-on-surface-variant text-sm mt-1">{t("favoritos.subtitle")}</p>
+        </div>
 
-      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
-        {/* BARRA SUPERIOR */}
-        <header className="fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
-          <div className="flex justify-end items-center px-gutter max-w-container-max mx-auto h-20">
-            <button
-              onClick={carrito.abrir}
-              aria-label={t("common.cart")}
-              className="text-on-surface-variant hover:text-primary transition-colors p-2"
-            >
-              <span className="material-symbols-outlined">shopping_cart</span>
-            </button>
+        {lista.cargando && <ProductGridSkeleton />}
+
+        {lista.error && (
+          <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
+            {t("favoritos.loadError")}
           </div>
-        </header>
+        )}
 
-        {/* CONTENIDO PRINCIPAL */}
-        <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-6">
-          <div className="border-b border-outline-variant/20 pb-4">
-            <h1 className="text-2xl font-bold text-on-surface">{t("favoritos.title")}</h1>
-            <p className="text-on-surface-variant text-sm mt-1">{t("favoritos.subtitle")}</p>
+        {vacia && (
+          <div className="p-10 text-center flex flex-col items-center gap-3">
+            <span className="material-symbols-outlined text-[40px] text-outline">favorite</span>
+            <p className="text-on-surface-variant">{t("favoritos.empty")}</p>
+            <Link to="/" className="text-primary font-semibold hover:underline no-underline">
+              {t("favoritos.emptyCta")}
+            </Link>
           </div>
+        )}
 
-          {lista.cargando && <ProductGridSkeleton />}
-
-          {lista.error && (
-            <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
-              {t("favoritos.loadError")}
-            </div>
-          )}
-
-          {vacia && (
-            <div className="p-10 text-center flex flex-col items-center gap-3">
-              <span className="material-symbols-outlined text-[40px] text-outline">favorite</span>
-              <p className="text-on-surface-variant">{t("favoritos.empty")}</p>
-              <Link to="/" className="text-primary font-semibold hover:underline no-underline">
-                {t("favoritos.emptyCta")}
-              </Link>
-            </div>
-          )}
-
-          {lista.items.length > 0 && (
-            <ProductGrid
-              productos={lista.items}
-              hasAccess
-              purchasedIds={purchasedIds}
-              favoritoIds={favoritoIds}
-              onSelectProducto={setSeleccionado}
-              onAddToCart={carrito.agregar}
-              onGoToLibrary={() => navigate("/biblioteca")}
-              onToggleFavorito={quitar}
-            />
-          )}
-
-          {lista.cargandoMas && <ProductGridSkeleton />}
-          <InfiniteScrollSentinel
-            onVisible={lista.cargarMas}
-            disabled={!lista.hayMas || lista.cargando || lista.cargandoMas}
+        {lista.items.length > 0 && (
+          <ProductGrid
+            productos={lista.items}
+            hasAccess
+            purchasedIds={purchasedIds}
+            favoritoIds={favoritoIds}
+            onSelectProducto={setSeleccionado}
+            onAddToCart={carrito.agregar}
+            onGoToLibrary={() => navigate("/biblioteca")}
+            onToggleFavorito={quitar}
           />
-        </main>
+        )}
 
-        {/* FOOTER */}
-        <footer className="bg-background w-full py-16 border-t border-outline-variant/20 mt-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center px-gutter max-w-container-max mx-auto gap-4">
-            <div className="text-[24px] font-bold text-primary opacity-50">{t("common.appName")}</div>
-            <div className="text-on-surface-variant text-sm">{t("home.footerRights")}</div>
-          </div>
-        </footer>
-      </div>
-
-      <CartDrawer isOpen={carrito.abierto} onClose={carrito.cerrar} refreshKey={carrito.refreshKey} />
+        {lista.cargandoMas && <ProductGridSkeleton />}
+        <InfiniteScrollSentinel
+          onVisible={lista.cargarMas}
+          disabled={!lista.hayMas || lista.cargando || lista.cargandoMas}
+        />
+      </AppLayout>
 
       <ProductDetailsModal
         producto={seleccionado}
@@ -142,6 +113,6 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
         isFavorito
         onToggleFavorito={quitar}
       />
-    </div>
+    </>
   );
 };
