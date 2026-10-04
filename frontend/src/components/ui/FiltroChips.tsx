@@ -7,6 +7,8 @@ export interface OpcionFiltro<T extends string> {
   // Opcionales: un dato destacado (p. ej. un total) y una nota debajo. Si
   // alguna opción los trae, todas se dibujan como KPI en vez de píldora.
   destacado?: string;
+  // El dato destacado todavía está cargando (se dibuja un relleno animado).
+  cargando?: boolean;
   nota?: string;
 }
 
@@ -23,7 +25,7 @@ interface FiltroChipsProps<T extends string> {
 // del admin (pastillas) y los filtros de "Estadísticas y pagos" (tarjetas
 // con el total de cada uno).
 export function FiltroChips<T extends string>({ opciones, seleccionado, onChange, titulo }: FiltroChipsProps<T>) {
-  const comoTarjetas = opciones.some((opcion) => opcion.destacado !== undefined);
+  const comoTarjetas = opciones.some((opcion) => opcion.destacado !== undefined || opcion.cargando);
 
   if (comoTarjetas) {
     return (
@@ -34,6 +36,7 @@ export function FiltroChips<T extends string>({ opciones, seleccionado, onChange
             etiqueta={opcion.etiqueta}
             valor={opcion.destacado ?? "—"}
             nota={opcion.nota}
+            cargando={opcion.cargando}
             activa={opcion.valor === seleccionado}
             onClick={() => onChange(opcion.valor)}
           />

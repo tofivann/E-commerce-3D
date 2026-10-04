@@ -10,6 +10,7 @@ import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
 import { FiltroChips } from "../ui/FiltroChips";
 import { FiltroFechas } from "../ui/FiltroFechas";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
+import { TablaSkeleton } from "../ui/TablaSkeleton";
 
 // Mismo patrón que las tablas de Ajustes (UserAdminTable, ProductAdminTable):
 // tabla real a cualquier ancho, con cabecera, que en móvil se desplaza de
@@ -33,7 +34,8 @@ export const EstadisticasPagos: React.FC = () => {
   const opciones = FILTROS_VENTAS.map((clave) => ({
     valor: clave,
     etiqueta: t(`estadisticas.filters.${clave}`),
-    destacado: resumen ? formatearDinero(resumen[clave].total, i18n.language) : errorResumen ? "—" : "…",
+    destacado: resumen ? formatearDinero(resumen[clave].total, i18n.language) : "—",
+    cargando: !resumen && !errorResumen,
     nota: resumen ? t("estadisticas.salesCount", { count: resumen[clave].cantidad }) : undefined,
   }));
 
@@ -103,13 +105,9 @@ export const EstadisticasPagos: React.FC = () => {
                 </tr>
               ))}
 
-              {(ventas.cargando || ventas.cargandoMas) && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
-                    {t("estadisticas.loading")}
-                  </td>
-                </tr>
-              )}
+              {/* Carga inicial: una tanda de filas; al pedir más páginas, un par al final. */}
+              {ventas.cargando && <TablaSkeleton filas={6} columnas={6} />}
+              {ventas.cargandoMas && <TablaSkeleton filas={2} columnas={6} />}
               {ventas.error && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-error">

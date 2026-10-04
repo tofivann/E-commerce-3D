@@ -342,7 +342,6 @@
       "COMISION_MODELO": "Comisión de Modelo Nuevo"
     },
     "deletedProduct": "Producto eliminado",
-    "loading": "Cargando ventas...",
     "empty": "No hay ventas con estos filtros.",
     "listError": "No se pudieron cargar las ventas. Recarga la página para intentarlo de nuevo.",
     "summaryError": "No se pudieron cargar los totales."

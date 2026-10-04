@@ -342,7 +342,6 @@
       "COMISION_MODELO": "New Model commission"
     },
     "deletedProduct": "Deleted product",
-    "loading": "Loading sales...",
     "empty": "No sales match these filters.",
     "listError": "Could not load the sales. Reload the page to try again.",
     "summaryError": "Could not load the totals."
