@@ -167,7 +167,13 @@
   },
   "comisiones": {
     "confirmingPayment": "Confirmando pago",
-    "orderCode": "Orden: {{code}}"
+    "orderCode": "Orden: {{code}}",
+    "amountLabel": "Monto a pagar (USD)",
+    "amountHelp": "El mínimo es ${{min}}. Si quieres, puedes pagar más.",
+    "amountPickFirst": "Elige primero una opción de arriba para ver el precio mínimo.",
+    "amountInvalid": "Escribe el monto solo con números y punto decimal, por ejemplo 40.00.",
+    "amountBelowMin": "El monto no puede ser menor al mínimo de ${{min}}.",
+    "amountConfirm": "Vas a pagar ${{monto}}, que es más que el mínimo de ${{min}}. ¿Estás seguro?"
   },
   "misComisiones": {
     "downloadError": "No se pudo descargar el archivo. Inténtalo de nuevo.",

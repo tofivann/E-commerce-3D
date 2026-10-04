@@ -47,7 +47,8 @@ class JuegoComisionViewSet(viewsets.ModelViewSet):
 def _crear_sesion_pago_comision(request, orden, tipo, nombre_producto_stripe):
     """
     Crea la Stripe Checkout Session para una comisión ya creada (Orden con
-    total ya definido por el tramo/juego elegido). Mismo patrón que
+    total ya definido: el precio del tramo/juego elegido, o más si el cliente
+    decidió pagar de más — ver MontoComisionMixin). Mismo patrón que
     shopping_cart.views.CheckoutView.
     """
     return stripe.checkout.Session.create(
@@ -106,7 +107,7 @@ class SolicitarComisionMotionView(generics.ListCreateAPIView):
         orden = Orden.objects.create(
             codigo_orden=f"MOT-{uuid.uuid4().hex[:10].upper()}",
             usuario=request.user,
-            total=tramo.precio,
+            total=datos['monto'],
             estado_pago=Orden.EstadoPago.PENDIENTE,
             tipo_orden=Orden.TipoOrden.COMISION_MOTION,
             pasarela_pago='Stripe',
@@ -157,7 +158,7 @@ class SolicitarComisionMotionPayPalView(generics.CreateAPIView):
         orden = Orden.objects.create(
             codigo_orden=f"MOT-{uuid.uuid4().hex[:10].upper()}",
             usuario=request.user,
-            total=tramo.precio,
+            total=datos['monto'],
             estado_pago=Orden.EstadoPago.PENDIENTE,
             tipo_orden=Orden.TipoOrden.COMISION_MOTION,
             pasarela_pago='PayPal',
@@ -221,7 +222,7 @@ class SolicitarComisionModeloView(generics.ListCreateAPIView):
         orden = Orden.objects.create(
             codigo_orden=f"MOD-{uuid.uuid4().hex[:10].upper()}",
             usuario=request.user,
-            total=juego.precio,
+            total=datos['monto'],
             estado_pago=Orden.EstadoPago.PENDIENTE,
             tipo_orden=Orden.TipoOrden.COMISION_MODELO,
             pasarela_pago='Stripe',
@@ -271,7 +272,7 @@ class SolicitarComisionModeloPayPalView(generics.CreateAPIView):
         orden = Orden.objects.create(
             codigo_orden=f"MOD-{uuid.uuid4().hex[:10].upper()}",
             usuario=request.user,
-            total=juego.precio,
+            total=datos['monto'],
             estado_pago=Orden.EstadoPago.PENDIENTE,
             tipo_orden=Orden.TipoOrden.COMISION_MODELO,
             pasarela_pago='PayPal',

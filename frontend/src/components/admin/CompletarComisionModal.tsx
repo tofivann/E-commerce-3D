@@ -5,6 +5,7 @@ import { comisionesAdminApi } from "../../api/comisiones.api";
 import { categoriasApi } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
 import { extraerErroresValidacion } from "../../utils/erroresApi";
+import { formatearImporte, IMPORTE_VALIDO } from "../../utils/importe";
 import type { ErroresPorCampo } from "../../utils/erroresApi";
 import type { Item } from "./SolicitudesComisionesTable";
 
@@ -47,7 +48,10 @@ function formInicial(item: Item): FormPublicacion {
   return {
     titulo: item.data.titulo_publicacion || tituloSugerido(item),
     descripcion: item.data.descripcion_publicacion || "",
-    precio: item.data.precio_publicacion == null ? "" : String(item.data.precio_publicacion),
+    // Sin precio de reventa guardado se sugiere lo que el cliente pagó por la
+    // comisión (Orden.total, que incluye lo que haya pagado de más sobre el
+    // mínimo). Es solo el valor inicial: el admin puede cambiarlo.
+    precio: formatearImporte(item.data.precio_publicacion ?? item.data.orden.total),
     formato: item.data.formato_archivo_publicacion || "",
     linkYoutube: item.data.link_youtube || "",
   };
@@ -82,15 +86,13 @@ const CAMPO_POR_ERROR: Record<string, keyof FormPublicacion> = {
 
 type ErroresForm = Partial<Record<keyof FormPublicacion, string>>;
 
-// Precio como lo entiende el backend (DecimalField): dígitos con punto
-// decimal. La coma (15,50) y el símbolo ($15) son los tropiezos típicos —
-// mejor avisar antes de mandar que recibir un 400.
-const PRECIO_VALIDO = /^\d+(\.\d{1,2})?$/;
-
+// El precio se valida con IMPORTE_VALIDO (como lo entiende el DecimalField
+// del backend): la coma (15,50) y el símbolo ($15) son los tropiezos
+// típicos — mejor avisar antes de mandar que recibir un 400.
 function validarFormulario(form: FormPublicacion, t: (clave: string) => string): ErroresForm {
   const errores: ErroresForm = {};
   const precio = form.precio.trim();
-  if (precio !== "" && !PRECIO_VALIDO.test(precio)) errores.precio = t("completarComisionModal.errorPrice");
+  if (precio !== "" && !IMPORTE_VALIDO.test(precio)) errores.precio = t("completarComisionModal.errorPrice");
   return errores;
 }
 

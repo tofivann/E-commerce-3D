@@ -5,6 +5,9 @@ import type { TramoPersonajesMotion } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
+import { extraerErroresValidacion } from "../../utils/erroresApi";
+import { useMontoComision } from "../../hooks/useMontoComision";
+import { MontoComisionInput } from "./MontoComisionInput";
 
 export const ComisionMotionForm: React.FC = () => {
   const { t } = useTranslation();
@@ -18,7 +21,20 @@ export const ComisionMotionForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [pagadoPayPal, setPagadoPayPal] = useState(false);
 
-  const formularioValido = Boolean(tramoId && nombreJuego && nombreCancion && linkVideo);
+  // El precio del tramo elegido es el mínimo; el cliente puede pagar más.
+  const tramoElegido = tramos.find((tramo) => tramo.id === tramoId) ?? null;
+  const pago = useMontoComision(tramoElegido ? Number(tramoElegido.precio) : null);
+
+  const formularioValido = Boolean(tramoId && nombreJuego && nombreCancion && linkVideo && pago.valido);
+
+  const construirSolicitud = () => ({
+    tramo_personajes: tramoId as number,
+    nombre_juego: nombreJuego,
+    nombre_cancion: nombreCancion,
+    link_video: linkVideo,
+    informacion_adicional: informacionAdicional,
+    monto: pago.monto,
+  });
 
   useEffect(() => {
     comisionesApi
@@ -35,20 +51,19 @@ export const ComisionMotionForm: React.FC = () => {
       setError(t("motionForm.errorNoTramo"));
       return;
     }
+    if (!pago.valido) {
+      setError(pago.error);
+      return;
+    }
+    if (!pago.confirmar()) return;
 
     setEnviando(true);
     try {
-      const { checkout_url } = await comisionesApi.solicitarComisionMotion({
-        tramo_personajes: tramoId,
-        nombre_juego: nombreJuego,
-        nombre_cancion: nombreCancion,
-        link_video: linkVideo,
-        informacion_adicional: informacionAdicional,
-      });
+      const { checkout_url } = await comisionesApi.solicitarComisionMotion(construirSolicitud());
       window.location.href = checkout_url;
     } catch (err) {
       console.error("Error al solicitar la comisión de motion:", err);
-      setError(t("motionForm.errorGeneric"));
+      setError(extraerErroresValidacion(err)?.monto ?? t("motionForm.errorGeneric"));
       setEnviando(false);
     }
   };
@@ -79,7 +94,10 @@ export const ComisionMotionForm: React.FC = () => {
             <button
               type="button"
               key={tramo.id}
-              onClick={() => setTramoId(tramo.id)}
+              onClick={() => {
+                setTramoId(tramo.id);
+                pago.fijarAlMinimo(tramo.precio);
+              }}
               className={`rounded-lg border p-4 text-left transition-all outline-none focus-visible:ring-1 focus-visible:ring-primary ${
                 tramoId === tramo.id
                   ? "border-primary bg-primary-container/15 ring-1 ring-primary"
@@ -95,6 +113,13 @@ export const ComisionMotionForm: React.FC = () => {
           <p className="text-on-surface-variant text-sm mt-2">{t("motionForm.noTramos")}</p>
         )}
       </div>
+
+      <MontoComisionInput
+        monto={pago.monto}
+        minimo={tramoElegido ? Number(tramoElegido.precio) : null}
+        error={pago.error}
+        onChange={pago.setMonto}
+      />
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
@@ -172,15 +197,10 @@ export const ComisionMotionForm: React.FC = () => {
       <PayPalButtons
         style={{ layout: "horizontal", height: 45 }}
         disabled={!formularioValido || enviando}
-        forceReRender={[tramoId, nombreJuego, nombreCancion, linkVideo]}
+        forceReRender={[tramoId, nombreJuego, nombreCancion, linkVideo, informacionAdicional, pago.monto]}
+        onClick={(_data, actions) => (pago.confirmar() ? actions.resolve() : actions.reject())}
         createOrder={async () => {
-          const { paypal_order_id } = await comisionesApi.solicitarComisionMotionPayPal({
-            tramo_personajes: tramoId as number,
-            nombre_juego: nombreJuego,
-            nombre_cancion: nombreCancion,
-            link_video: linkVideo,
-            informacion_adicional: informacionAdicional,
-          });
+          const { paypal_order_id } = await comisionesApi.solicitarComisionMotionPayPal(construirSolicitud());
           return paypal_order_id;
         }}
         onApprove={async (data) => {

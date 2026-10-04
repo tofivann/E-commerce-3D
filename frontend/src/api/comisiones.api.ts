@@ -65,6 +65,8 @@ export interface SolicitudComisionMotion {
   nombre_cancion: string;
   link_video: string;
   informacion_adicional?: string;
+  // Lo que paga el cliente: el precio del tramo es el mínimo, puede ser más.
+  monto: string;
 }
 
 export interface CheckoutComisionResponse<T> {

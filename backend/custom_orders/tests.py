@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 from orders.models import Orden
 from orders.services import marcar_orden_expirada
 from products.models import Categoria, Producto
-from .models import ComisionMotion, ComisionModelo, EstadoComision, TramoPersonajesMotion
+from .models import ComisionMotion, ComisionModelo, EstadoComision, JuegoComision, TramoPersonajesMotion
 from .services import marcar_comision_pagada
 
 
@@ -426,3 +426,107 @@ class PublicarProductoTests(APITestCase):
 
         self.assertEqual(respuesta.status_code, 200, respuesta.data)
         self.assertFalse(respuesta.data['publicacion_completa'])
+
+
+class MontoComisionTests(APITestCase):
+    """El precio del tramo/juego es el mínimo: el cliente puede pagar más,
+    nunca menos, y lo que se cobra en la pasarela es exactamente Orden.total."""
+
+    URL_MOTION = '/api/v1/custom-orders/comisiones/motion/'
+    URL_MODELO = '/api/v1/custom-orders/comisiones/modelo/'
+
+    def setUp(self):
+        self.client.force_authenticate(crear_usuario())
+        self.tramo = TramoPersonajesMotion.objects.create(
+            nombre='Characters', min_personajes=1, max_personajes=3, precio=Decimal('40.00'),
+        )
+        self.juego = JuegoComision.objects.create(nombre='Bang Dream', precio=Decimal('60.00'))
+
+    def datos_motion(self, **extra):
+        return {
+            'tramo_personajes': self.tramo.id, 'nombre_juego': 'Juego', 'nombre_cancion': 'Canción',
+            'link_video': 'https://youtube.com/watch?v=x', **extra,
+        }
+
+    def datos_modelo(self, **extra):
+        return {
+            'juego': self.juego.id, 'nombre_personaje': 'Aoi',
+            'foto_referencia_1': imagen_de_prueba(), **extra,
+        }
+
+    def solicitar_motion_stripe(self, **extra):
+        with patch('custom_orders.views.stripe.checkout.Session.create') as crear_sesion:
+            crear_sesion.return_value.id = 'sess_monto'
+            crear_sesion.return_value.url = 'https://stripe.test/pagar'
+            respuesta = self.client.post(self.URL_MOTION, self.datos_motion(**extra), format='json')
+        return respuesta, crear_sesion
+
+    def centavos_cobrados(self, crear_sesion):
+        return crear_sesion.call_args.kwargs['line_items'][0]['price_data']['unit_amount']
+
+    def test_sin_monto_se_cobra_el_precio_del_tramo(self):
+        respuesta, crear_sesion = self.solicitar_motion_stripe()
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(Orden.objects.get().total, Decimal('40.00'))
+        self.assertEqual(self.centavos_cobrados(crear_sesion), 4000)
+
+    def test_monto_igual_al_minimo_se_acepta(self):
+        respuesta, crear_sesion = self.solicitar_motion_stripe(monto='40.00')
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(self.centavos_cobrados(crear_sesion), 4000)
+
+    def test_monto_mayor_se_guarda_y_es_lo_que_se_cobra_en_stripe(self):
+        respuesta, crear_sesion = self.solicitar_motion_stripe(monto='65.50')
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(Orden.objects.get().total, Decimal('65.50'))
+        self.assertEqual(self.centavos_cobrados(crear_sesion), 6550)
+        self.assertEqual(Decimal(respuesta.data['comision']['orden']['total']), Decimal('65.50'))
+
+    def test_monto_menor_al_minimo_se_rechaza_sin_crear_nada_ni_llamar_a_stripe(self):
+        respuesta, crear_sesion = self.solicitar_motion_stripe(monto='39.99')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('monto', respuesta.data)
+        self.assertFalse(Orden.objects.exists())
+        self.assertFalse(ComisionMotion.objects.exists())
+        crear_sesion.assert_not_called()
+
+    def test_monto_con_formato_invalido_se_rechaza_bajo_el_campo(self):
+        for invalido in ('abc', '40,50', '40.555', '-5'):
+            respuesta, _ = self.solicitar_motion_stripe(monto=invalido)
+            self.assertEqual(respuesta.status_code, 400, invalido)
+            self.assertIn('monto', respuesta.data, invalido)
+        self.assertFalse(Orden.objects.exists())
+
+    def test_motion_por_paypal_cobra_el_monto_elegido(self):
+        with patch('custom_orders.views.paypal_utils.crear_orden', return_value={'id': 'PP-1'}) as crear_orden:
+            respuesta = self.client.post(
+                f'{self.URL_MOTION}paypal/', self.datos_motion(monto='50'), format='json',
+            )
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(Orden.objects.get().total, Decimal('50.00'))
+        self.assertEqual(crear_orden.call_args.kwargs['total'], Decimal('50.00'))
+
+    def test_modelo_por_stripe_respeta_minimo_y_monto_mayor(self):
+        with patch('custom_orders.views.stripe.checkout.Session.create') as crear_sesion:
+            crear_sesion.return_value.id = 'sess_modelo'
+            crear_sesion.return_value.url = 'https://stripe.test/pagar'
+            rechazada = self.client.post(self.URL_MODELO, self.datos_modelo(monto='59'), format='multipart')
+            aceptada = self.client.post(self.URL_MODELO, self.datos_modelo(monto='80'), format='multipart')
+
+        self.assertEqual(rechazada.status_code, 400)
+        self.assertIn('monto', rechazada.data)
+        self.assertEqual(aceptada.status_code, 201)
+        self.assertEqual(Orden.objects.get().total, Decimal('80.00'))
+        self.assertEqual(self.centavos_cobrados(crear_sesion), 8000)
+
+    def test_modelo_por_paypal_sin_monto_cobra_el_precio_del_juego(self):
+        with patch('custom_orders.views.paypal_utils.crear_orden', return_value={'id': 'PP-2'}) as crear_orden:
+            respuesta = self.client.post(f'{self.URL_MODELO}paypal/', self.datos_modelo(), format='multipart')
+
+        self.assertEqual(respuesta.status_code, 201)
+        self.assertEqual(crear_orden.call_args.kwargs['total'], Decimal('60.00'))

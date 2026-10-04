@@ -4,6 +4,9 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { JuegoComision } from "../../api/comisiones.api";
 import { comisionesApi } from "../../api/comisiones.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
+import { extraerErroresValidacion } from "../../utils/erroresApi";
+import { useMontoComision } from "../../hooks/useMontoComision";
+import { MontoComisionInput } from "./MontoComisionInput";
 
 export const ComisionModeloForm: React.FC = () => {
   const { t } = useTranslation();
@@ -16,12 +19,17 @@ export const ComisionModeloForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [pagadoPayPal, setPagadoPayPal] = useState(false);
 
-  const formularioValido = Boolean(juegoId && foto1);
+  // El precio del juego elegido es el mínimo; el cliente puede pagar más.
+  const juegoElegido = juegos.find((juego) => juego.id === juegoId) ?? null;
+  const pago = useMontoComision(juegoElegido ? Number(juegoElegido.precio) : null);
+
+  const formularioValido = Boolean(juegoId && foto1 && pago.valido);
 
   const construirFormData = () => {
     const formData = new FormData();
     formData.append("juego", String(juegoId));
     formData.append("nombre_personaje", nombrePersonaje);
+    formData.append("monto", pago.monto);
     if (foto1) formData.append("foto_referencia_1", foto1);
     if (foto2) formData.append("foto_referencia_2", foto2);
     return formData;
@@ -46,21 +54,19 @@ export const ComisionModeloForm: React.FC = () => {
       setError(t("modeloForm.errorNoFoto"));
       return;
     }
+    if (!pago.valido) {
+      setError(pago.error);
+      return;
+    }
+    if (!pago.confirmar()) return;
 
     setEnviando(true);
     try {
-      const formData = new FormData();
-      formData.append("juego", String(juegoId));
-      formData.append("nombre_personaje", nombrePersonaje);
-      formData.append("foto_referencia_1", foto1);
-      if (foto2) formData.append("foto_referencia_2", foto2);
-
-      const { checkout_url } =
-        await comisionesApi.solicitarComisionModelo(formData);
+      const { checkout_url } = await comisionesApi.solicitarComisionModelo(construirFormData());
       window.location.href = checkout_url;
     } catch (err) {
       console.error("Error al solicitar la comisión de modelo:", err);
-      setError(t("modeloForm.errorGeneric"));
+      setError(extraerErroresValidacion(err)?.monto ?? t("modeloForm.errorGeneric"));
       setEnviando(false);
     }
   };
@@ -91,7 +97,10 @@ export const ComisionModeloForm: React.FC = () => {
             <button
               type="button"
               key={juego.id}
-              onClick={() => setJuegoId(juego.id)}
+              onClick={() => {
+                setJuegoId(juego.id);
+                pago.fijarAlMinimo(juego.precio);
+              }}
               className={`rounded-lg border p-4 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 juegoId === juego.id
                   ? "border-primary bg-primary-container/15 "
@@ -113,6 +122,13 @@ export const ComisionModeloForm: React.FC = () => {
           </p>
         )}
       </div>
+
+      <MontoComisionInput
+        monto={pago.monto}
+        minimo={juegoElegido ? Number(juegoElegido.precio) : null}
+        error={pago.error}
+        onChange={pago.setMonto}
+      />
 
       <div>
         <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
@@ -179,7 +195,8 @@ export const ComisionModeloForm: React.FC = () => {
       <PayPalButtons
         style={{ layout: "horizontal", height: 45 }}
         disabled={!formularioValido || enviando}
-        forceReRender={[juegoId, foto1, foto2]}
+        forceReRender={[juegoId, nombrePersonaje, foto1, foto2, pago.monto]}
+        onClick={(_data, actions) => (pago.confirmar() ? actions.resolve() : actions.reject())}
         createOrder={async () => {
           const { paypal_order_id } = await comisionesApi.solicitarComisionModeloPayPal(construirFormData());
           return paypal_order_id;

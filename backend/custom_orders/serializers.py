@@ -31,7 +31,44 @@ class OrdenResumenSerializer(serializers.ModelSerializer):
 # la vista, no en el serializer).
 # ---------------------------------------------------------------------------
 
-class SolicitudComisionMotionSerializer(serializers.Serializer):
+class MontoComisionMixin:
+    """Monto que paga el cliente por la comisión, compartido por las dos
+    solicitudes. El precio del tramo/juego elegido es el MÍNIMO: el cliente
+    puede pagar más si quiere, nunca menos. Si no manda `monto`, se cobra
+    ese mínimo (el comportamiento de siempre).
+
+    Deja siempre `monto` resuelto en validated_data, así las vistas hacen
+    `total=datos['monto']` sin repetir la regla. No hay tope máximo: el
+    frontend pide confirmación cuando el monto supera el mínimo y la
+    pasarela muestra el total antes de cobrar.
+
+    Cada serializer declara su propio campo `monto` (los mixins que no
+    heredan de Serializer no aportan campos declarados) y en `campo_precio`
+    el nombre del campo cuyo objeto trae el `.precio` mínimo.
+    """
+    campo_precio = None
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        minimo = attrs[self.campo_precio].precio
+        monto = attrs.get('monto')
+        if monto is None:
+            attrs['monto'] = minimo
+        elif monto < minimo:
+            raise serializers.ValidationError(
+                {'monto': f'El monto no puede ser menor al precio mínimo (${minimo}).'}
+            )
+        return attrs
+
+
+def campo_monto():
+    # Mismos dígitos que Orden.total, que es donde termina guardado.
+    return serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+
+
+class SolicitudComisionMotionSerializer(MontoComisionMixin, serializers.Serializer):
+    campo_precio = 'tramo_personajes'
+
     tramo_personajes = serializers.PrimaryKeyRelatedField(
         queryset=TramoPersonajesMotion.objects.filter(activo=True)
     )
@@ -39,13 +76,17 @@ class SolicitudComisionMotionSerializer(serializers.Serializer):
     nombre_cancion = serializers.CharField(max_length=150)
     link_video = serializers.URLField(max_length=500)
     informacion_adicional = serializers.CharField(required=False, allow_blank=True, default='')
+    monto = campo_monto()
 
 
-class SolicitudComisionModeloSerializer(serializers.Serializer):
+class SolicitudComisionModeloSerializer(MontoComisionMixin, serializers.Serializer):
+    campo_precio = 'juego'
+
     juego = serializers.PrimaryKeyRelatedField(queryset=JuegoComision.objects.filter(activo=True))
     nombre_personaje = serializers.CharField(max_length=150)
     foto_referencia_1 = serializers.ImageField()
     foto_referencia_2 = serializers.ImageField(required=False)
+    monto = campo_monto()
 
 
 # ---------------------------------------------------------------------------

@@ -167,7 +167,13 @@
   },
   "comisiones": {
     "confirmingPayment": "Confirming payment",
-    "orderCode": "Order: {{code}}"
+    "orderCode": "Order: {{code}}",
+    "amountLabel": "Amount to pay (USD)",
+    "amountHelp": "The minimum is ${{min}}. You can pay more if you like.",
+    "amountPickFirst": "Pick an option above first to see the minimum price.",
+    "amountInvalid": "Enter the amount using digits and a decimal point only, e.g. 40.00.",
+    "amountBelowMin": "The amount cannot be lower than the ${{min}} minimum.",
+    "amountConfirm": "You are about to pay ${{monto}}, which is more than the ${{min}} minimum. Are you sure?"
   },
   "misComisiones": {
     "downloadError": "Could not download the file. Please try again.",
