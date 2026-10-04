@@ -342,7 +342,8 @@
       "tienda": "Shop buys"
     },
     "salesCount": "Sales: {{count}}",
-    "colDate": "Date and order",
+    "colDate": "Date",
+    "colOrder": "Order",
     "colClient": "Customer",
     "colConcept": "What they bought",
     "colGateway": "Gateway",

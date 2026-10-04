@@ -342,7 +342,8 @@
       "tienda": "Compras de la tienda"
     },
     "salesCount": "Ventas: {{count}}",
-    "colDate": "Fecha y orden",
+    "colDate": "Fecha",
+    "colOrder": "Orden",
     "colClient": "Cliente",
     "colConcept": "Qué compró",
     "colGateway": "Pasarela",
