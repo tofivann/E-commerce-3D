@@ -4,12 +4,18 @@ import { useTranslation } from "react-i18next";
 import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
 import { ComisionCardCliente } from "./ComisionCardCliente";
+import { coincideBusqueda } from "../../utils/texto";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
   | { tipo: "modelo"; data: ComisionModelo };
 
-export const ComisionesLibrary: React.FC = () => {
+interface ComisionesLibraryProps {
+  // Texto del buscador de la página: canción/personaje, juego o código de orden.
+  busqueda?: string;
+}
+
+export const ComisionesLibrary: React.FC<ComisionesLibraryProps> = ({ busqueda = "" }) => {
   const { t } = useTranslation();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,9 +91,26 @@ export const ComisionesLibrary: React.FC = () => {
     );
   }
 
+  const itemsFiltrados = items.filter((item) =>
+    coincideBusqueda(
+      busqueda,
+      item.tipo === "motion"
+        ? [item.data.nombre_cancion, item.data.nombre_juego, item.data.orden.codigo_orden]
+        : [item.data.nombre_personaje, item.data.juego.nombre, item.data.orden.codigo_orden]
+    )
+  );
+
+  if (itemsFiltrados.length === 0) {
+    return (
+      <div className="p-10 text-center text-on-surface-variant">
+        {t("library.noResultsSearch", { query: busqueda.trim() })}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {items.map((item) => {
+      {itemsFiltrados.map((item) => {
         const key = `${item.tipo}-${item.data.id}`;
         const titulo = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
         const subtitulo = item.tipo === "motion" ? item.data.nombre_juego : item.data.juego.nombre;

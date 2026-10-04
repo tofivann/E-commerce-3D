@@ -125,6 +125,8 @@
     "downloadError": "Could not download the file. Please try again.",
     "emptyMessage": "You haven't acquired any models yet.",
     "noResultsFiltered": "You don't have any models in this category.",
+    "noResultsSearch": "Nothing in your library matches \"{{query}}\".",
+    "searchPlaceholder": "Search your library...",
     "exploreCatalog": "Explore the catalog →",
     "acquired": "Acquired: {{date}}",
     "downloading": "Downloading...",

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { DigitalLibrary } from "../components/products/DigitalLibrary";
 import { ComisionesLibrary } from "../components/comisiones/ComisionesLibrary";
 import { AppLayout } from "../components/layout/AppLayout";
+import { SearchInput } from "../components/products/SearchInput";
 
 interface LibraryPageProps {
   isStaff?: boolean;
@@ -19,12 +20,26 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const [pestana, setPestana] = useState<PestanaBiblioteca>("productos");
+  // Un solo buscador para las dos pestañas: filtra la que esté abierta.
+  const [busqueda, setBusqueda] = useState("");
 
   // Misma regla de acceso que en HomePage: admins o suscriptores activos.
   const hasAccess = isStaff || isSubscribed;
 
   return (
-    <AppLayout isStaff={isStaff} hasAccess={hasAccess} onLogout={onLogoutClick}>
+    <AppLayout
+      isStaff={isStaff}
+      hasAccess={hasAccess}
+      onLogout={onLogoutClick}
+      barra={
+        <SearchInput
+          value={busqueda}
+          onChange={setBusqueda}
+          placeholder={t("library.searchPlaceholder")}
+          className="w-full max-w-40 sm:max-w-xs md:max-w-sm"
+        />
+      }
+    >
       <div className="inline-flex items-center gap-1 p-1 mb-6 rounded-lg bg-surface-container-high/60 border border-outline-variant/30">
         <button
           onClick={() => setPestana("productos")}
@@ -50,7 +65,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
         </button>
       </div>
 
-      {pestana === "productos" ? <DigitalLibrary /> : <ComisionesLibrary />}
+      {pestana === "productos" ? <DigitalLibrary busqueda={busqueda} /> : <ComisionesLibrary busqueda={busqueda} />}
     </AppLayout>
   );
 };

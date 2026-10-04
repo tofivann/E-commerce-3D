@@ -1,5 +1,6 @@
 import type { ComisionMotionAdmin, ComisionModeloAdmin, EstadoComision } from "../api/comisiones.api";
 import { tieneAlgunaCategoria } from "./categoria";
+import { coincideBusqueda } from "./texto";
 
 // Mismo `Item` que arma SolicitudesComisionesTable (Motion y Modelo en una
 // sola lista). Se declara aquí para que la lógica de filtrado sea pura y
@@ -28,40 +29,25 @@ export const FILTROS_COMISIONES_VACIOS: FiltrosComisiones = {
   texto: "",
 };
 
-// NFD + quitar marcas combinantes (acentos) + minúsculas — espejo de
-// core/text_utils.py::normalizar_texto del backend.
-export function normalizarTexto(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
 // Todo lo que el admin podría escribir para encontrar una comisión.
-function textoBuscable(item: ItemComision): string {
+function camposBuscables(item: ItemComision): (string | null | undefined)[] {
   const comun = [item.data.usuario_nombre, item.data.usuario_email, item.data.orden.codigo_orden];
   const propios =
     item.tipo === "motion"
       ? [item.data.nombre_cancion, item.data.nombre_juego]
       : [item.data.nombre_personaje, item.data.juego.nombre];
-  return normalizarTexto([...comun, ...propios].filter(Boolean).join(" "));
+  return [...comun, ...propios];
 }
 
 export function filtrarComisiones(items: ItemComision[], filtros: FiltrosComisiones): ItemComision[] {
-  const terminos = normalizarTexto(filtros.texto).split(/\s+/).filter(Boolean);
-
   return items.filter((item) => {
     if (filtros.estado && item.data.estado !== filtros.estado) return false;
 
     // En la respuesta admin `categorias` ya son ids (ver CamposAdmin).
     if (!tieneAlgunaCategoria(item.data.categorias, filtros.categorias)) return false;
 
-    if (terminos.length > 0) {
-      const buscable = textoBuscable(item);
-      // Cada palabra tiene que aparecer (AND entre términos), como DRF SearchFilter.
-      if (!terminos.every((termino) => buscable.includes(termino))) return false;
-    }
+    // Cada palabra tiene que aparecer (AND entre términos), como DRF SearchFilter.
+    if (!coincideBusqueda(filtros.texto, camposBuscables(item))) return false;
     return true;
   });
 }

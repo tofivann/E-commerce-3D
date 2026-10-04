@@ -8,11 +8,17 @@ import type { Categoria } from "../../api/productos.api";
 import { CategoryFilter } from "./CategoryFilter";
 import { CategoryBadge } from "./CategoryBadge";
 import { tieneAlgunaCategoria } from "../../utils/categoria";
+import { coincideBusqueda } from "../../utils/texto";
+
+interface DigitalLibraryProps {
+  // Texto del buscador de la página (título o descripción del producto).
+  busqueda?: string;
+}
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
-export const DigitalLibrary: React.FC = () => {
+export const DigitalLibrary: React.FC<DigitalLibraryProps> = ({ busqueda = "" }) => {
   const { t, i18n } = useTranslation();
   const [compras, setCompras] = useState<CompraDigital[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -23,9 +29,12 @@ export const DigitalLibrary: React.FC = () => {
 
   // "Al menos una" categoría (misma semántica que CategoriasFilter
   // en el backend para el catálogo). Aquí se filtra en memoria porque la
-  // biblioteca no es paginada: llega completa.
-  const comprasFiltradas = compras.filter((c) =>
-    tieneAlgunaCategoria(c.producto.categorias, categoriasSeleccionadas)
+  // biblioteca no es paginada: llega completa. El texto del buscador se
+  // combina con las categorías (deben cumplirse los dos).
+  const comprasFiltradas = compras.filter(
+    (c) =>
+      tieneAlgunaCategoria(c.producto.categorias, categoriasSeleccionadas) &&
+      coincideBusqueda(busqueda, [c.producto.titulo, c.producto.descripcion])
   );
 
   useEffect(() => {
@@ -112,7 +121,7 @@ export const DigitalLibrary: React.FC = () => {
 
       {!loading && !error && compras.length > 0 && comprasFiltradas.length === 0 && (
         <div className="p-10 text-center text-on-surface-variant">
-          {t("library.noResultsFiltered")}
+          {busqueda.trim() ? t("library.noResultsSearch", { query: busqueda.trim() }) : t("library.noResultsFiltered")}
         </div>
       )}
 

@@ -125,6 +125,8 @@
     "downloadError": "No se pudo descargar el archivo. Inténtalo de nuevo.",
     "emptyMessage": "Aún no has adquirido ningún modelo.",
     "noResultsFiltered": "No tienes modelos en esta categoría.",
+    "noResultsSearch": "No encontramos nada en tu biblioteca que coincida con \"{{query}}\".",
+    "searchPlaceholder": "Buscar en tu biblioteca...",
     "exploreCatalog": "Explorar el catálogo →",
     "acquired": "Adquirido: {{date}}",
     "downloading": "Descargando...",
