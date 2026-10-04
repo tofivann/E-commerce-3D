@@ -106,8 +106,8 @@ export const EstadisticasPagos: React.FC = () => {
               ))}
 
               {/* Carga inicial: una tanda de filas; al pedir más páginas, un par al final. */}
-              {ventas.cargando && <TablaSkeleton filas={6} columnas={6} />}
-              {ventas.cargandoMas && <TablaSkeleton filas={2} columnas={6} />}
+              {ventas.cargando && <TablaSkeleton columnas={6} />}
+              {ventas.cargandoMas && <TablaSkeleton filas={4} columnas={6} />}
               {ventas.error && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-error">

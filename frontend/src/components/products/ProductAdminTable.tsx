@@ -4,6 +4,7 @@ import type { Producto } from "../../api/productos.api";
 import { deleteProducto, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
+import { TablaSkeleton } from "../ui/TablaSkeleton";
 import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 import { nombreCategoria } from "../../utils/categoria";
 
@@ -96,13 +97,7 @@ export const ProductAdminTable: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
-              {cargando && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
-                    {t("adminProducts.loading")}
-                  </td>
-                </tr>
-              )}
+              {cargando && <TablaSkeleton columnas={6} />}
 
               {!cargando && !error && productos.length === 0 && (
                 <tr>
@@ -187,13 +182,7 @@ export const ProductAdminTable: React.FC = () => {
                 </tr>
               ))}
 
-              {cargandoMas && (
-                <tr>
-                  <td colSpan={6} className="py-4 text-center text-on-surface-variant text-sm">
-                    {t("common.loadingMore")}
-                  </td>
-                </tr>
-              )}
+              {cargandoMas && <TablaSkeleton filas={4} columnas={6} />}
             </tbody>
           </table>
         </div>

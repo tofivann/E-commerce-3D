@@ -7,8 +7,7 @@
     "close": "Close",
     "orPayWith": "Or pay with",
     "paypalError": "Could not process the PayPal payment. Please try again.",
-    "backHome": "Back to home",
-    "loadingMore": "Loading more..."
+    "backHome": "Back to home"
   },
   "sidebar": {
     "home": "Home",
@@ -307,7 +306,6 @@
     "colPrice": "Price",
     "colStatus": "Status",
     "colActions": "Actions",
-    "loading": "Loading products...",
     "empty": "No products registered.",
     "emptyGrid": "You haven't added any products yet.",
     "toggleTitle": "Click to change the status",
@@ -543,7 +541,6 @@
     "colSubscription": "Subscription",
     "colStatus": "Status",
     "colActions": "Actions",
-    "loading": "Loading users...",
     "empty": "No users registered.",
     "active": "Active",
     "suspended": "Suspended",

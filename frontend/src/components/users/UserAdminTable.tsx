@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Usuario } from "../../services/userApi";
 import { userApi } from "../../services/userApi";
 import { UserForm } from "./UserForm";
+import { TablaSkeleton } from "../ui/TablaSkeleton";
 
 export const UserAdminTable: React.FC = () => {
   const { t } = useTranslation();
@@ -99,13 +100,7 @@ export const UserAdminTable: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
-              {loading && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
-                    {t("userAdminTable.loading")}
-                  </td>
-                </tr>
-              )}
+              {loading && <TablaSkeleton columnas={6} />}
 
               {!loading && usuarios.length === 0 && (
                 <tr>

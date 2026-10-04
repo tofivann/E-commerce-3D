@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Categoria } from "../../api/productos.api";
 import { categoriasApi } from "../../api/productos.api";
+import { TablaSkeleton } from "../ui/TablaSkeleton";
 
 const inputClass =
   "w-full bg-surface-variant border border-outline-variant rounded-md py-1.5 px-2 text-on-surface text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary";
@@ -70,9 +71,7 @@ export const CategoriasTable: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20 flex flex-col md:table-row-group">
-            {loading && (
-              <tr><td colSpan={3} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
-            )}
+            {loading && <TablaSkeleton columnas={3} celdaClassName="py-2 px-4" />}
             {!loading && categorias.map((categoria) =>
               // Modelo, Motion y Juego: solo lectura. El backend rechaza
               // editarlas igualmente; aquí se muestran bloqueadas para que

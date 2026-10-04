@@ -7,8 +7,7 @@
     "close": "Cerrar",
     "orPayWith": "O paga con",
     "paypalError": "No se pudo procesar el pago con PayPal. Inténtalo de nuevo.",
-    "backHome": "Volver al inicio",
-    "loadingMore": "Cargando más..."
+    "backHome": "Volver al inicio"
   },
   "sidebar": {
     "home": "Inicio",
@@ -307,7 +306,6 @@
     "colPrice": "Precio",
     "colStatus": "Estado",
     "colActions": "Acciones",
-    "loading": "Cargando productos...",
     "empty": "No hay productos registrados.",
     "emptyGrid": "Aún no has agregado ningún producto.",
     "toggleTitle": "Clic para cambiar el estado",
@@ -543,7 +541,6 @@
     "colSubscription": "Suscripción",
     "colStatus": "Estado",
     "colActions": "Acciones",
-    "loading": "Cargando usuarios...",
     "empty": "No hay usuarios registrados.",
     "active": "Activo",
     "suspended": "Suspendido",
