@@ -99,7 +99,11 @@ export const EstadisticasPagos: React.FC = () => {
                     </div>
                     <div className="text-on-surface">{conceptos(venta)}</div>
                   </td>
-                  <td className={`${tdClass} text-on-surface-variant`}>{venta.pasarela_pago}</td>
+                  {/* En una venta pagada con MimiCoins el servidor guarda "Monedas"
+                      (un valor interno): se muestra con el nombre de cara al usuario. */}
+                  <td className={`${tdClass} text-on-surface-variant`}>
+                    {venta.total_monedas != null ? t("monedas.columna") : venta.pasarela_pago}
+                  </td>
                   <td className={`${tdClass} font-mono font-bold text-on-surface text-right whitespace-nowrap`}>
                     <ImporteOrden total={venta.total} totalMonedas={venta.total_monedas} />
                   </td>
