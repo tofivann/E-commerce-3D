@@ -11,6 +11,7 @@ import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 import { etiquetaFormato } from "../../utils/formato";
+import { miniaturaDe } from "../../utils/imagenProducto";
 
 export const ProductAdminGrid: React.FC = () => {
   const { t } = useTranslation();
@@ -137,9 +138,7 @@ export const ProductAdminGrid: React.FC = () => {
                 <img loading="lazy" decoding="async"
                   alt={producto.titulo}
                   src={
-                    typeof producto.imagen_previa === "string" && producto.imagen_previa
-                      ? producto.imagen_previa
-                      : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80"
+                    miniaturaDe(producto) ?? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80"
                   }
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />

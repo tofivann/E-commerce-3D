@@ -1,7 +1,12 @@
 from django.conf import settings
 from django.db import models
 
+from core.imagenes import ImagenInvalida, crear_miniatura
 from core.text_utils import normalizar_texto
+
+# Lado mayor de la miniatura de un producto, en px. La tarjeta más grande
+# mide ~320 px de ancho; el doble cubre las pantallas de alta densidad.
+LADO_MINIATURA = 640
 
 
 # Categorías principales del negocio (las que crea la migración 0004). No se
@@ -47,6 +52,16 @@ class Producto(models.Model):
         blank=True,
         help_text="Imagen de previsualización del producto."
     )
+    # Copia ligera de imagen_previa (WebP, LADO_MINIATURA px) para las tarjetas
+    # y listas: la portada original pesa ~1 MB y bajarla entera para verla en
+    # pequeño hacía lento el catálogo. La mantiene save(); no se edita a mano.
+    imagen_miniatura = models.ImageField(
+        upload_to='productos_miniaturas/',
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Miniatura de la imagen de previsualización; se genera sola.",
+    )
     link_youtube = models.URLField(
         max_length=500,
         null=True,
@@ -74,6 +89,48 @@ class Producto(models.Model):
     def __str__(self):
         return self.titulo
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Portada con que se cargó esta instancia: save() la compara con la
+        # actual para saber si hay que rehacer la miniatura. None si la
+        # columna no se cargó (.only()/.defer()).
+        cargada = 'imagen_previa' not in self.get_deferred_fields()
+        self._portada_cargada = self.imagen_previa.name if cargada else None
+
+    def _miniatura_desactualizada(self):
+        portada = self.imagen_previa
+        if not portada:
+            return bool(self.imagen_miniatura)          # se quitó la portada
+        if not self.imagen_miniatura:
+            return True                                 # portada sin miniatura
+        if not portada._committed:
+            return True                                 # se acaba de subir otra
+        return self._portada_cargada is not None and portada.name != self._portada_cargada
+
+    def generar_miniatura(self):
+        """Rehace `imagen_miniatura` a partir de `imagen_previa`, sin guardar
+        la fila. Devuelve el nombre de la miniatura anterior (o None), que el
+        llamador borra del disco una vez guardada la fila.
+
+        Una portada ilegible no impide guardar el producto: se queda sin
+        miniatura y las tarjetas usan la portada original.
+        """
+        anterior = self.imagen_miniatura.name or None
+        self.imagen_miniatura = None
+        if self.imagen_previa:
+            try:
+                miniatura = crear_miniatura(self.imagen_previa.file, LADO_MINIATURA)
+                self.imagen_miniatura.save(miniatura.name, miniatura, save=False)
+            except (ImagenInvalida, OSError) as e:
+                print(f"No se pudo crear la miniatura del producto {self.pk}: {e}")
+            finally:
+                # Una portada recién subida todavía tiene que guardarse entera.
+                if not self.imagen_previa._committed:
+                    self.imagen_previa.file.seek(0)
+                else:
+                    self.imagen_previa.close()
+        return anterior
+
     def save(self, *args, **kwargs):
         self.titulo_normalizado = normalizar_texto(self.titulo)
         self.descripcion_normalizada = normalizar_texto(self.descripcion)
@@ -82,7 +139,22 @@ class Producto(models.Model):
         update_fields = kwargs.get('update_fields')
         if update_fields is not None:
             kwargs['update_fields'] = set(update_fields) | {'titulo_normalizado', 'descripcion_normalizada'}
+
+        # La miniatura sigue a la portada. Si el llamador no está guardando
+        # la portada (update_fields sin ella), tampoco se toca la miniatura.
+        miniatura_anterior = None
+        guarda_portada = update_fields is None or 'imagen_previa' in update_fields
+        rehacer = guarda_portada and self._miniatura_desactualizada()
+        if rehacer:
+            miniatura_anterior = self.generar_miniatura()
+            if update_fields is not None:
+                kwargs['update_fields'] |= {'imagen_miniatura'}
+
         super().save(*args, **kwargs)
+
+        self._portada_cargada = self.imagen_previa.name
+        if miniatura_anterior and miniatura_anterior != self.imagen_miniatura.name:
+            self.imagen_miniatura.storage.delete(miniatura_anterior)
 
 
 class Favorito(models.Model):

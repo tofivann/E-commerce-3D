@@ -10,13 +10,14 @@ import uuid
 from io import BytesIO
 
 from django.core.files.base import ContentFile
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageOps
 from rest_framework import serializers
+
+from core.imagenes import ERRORES_PILLOW, ImagenDemasiadoGrande, ImagenInvalida, abrir_imagen
 
 CARPETA_FOTOS_PERFIL = 'perfiles/'
 TAMANO_MAXIMO_FOTO = 5 * 1024 * 1024       # 5 MB, lo que se le dice al usuario
 LADO_FOTO = 400                            # px; de sobra para el perfil y la cabecera
-PIXELES_MAXIMOS = 40_000_000               # una foto de móvil ronda 12-50 MP
 
 
 def preparar_foto_perfil(archivo):
@@ -25,13 +26,7 @@ def preparar_foto_perfil(archivo):
     if archivo.size > TAMANO_MAXIMO_FOTO:
         raise serializers.ValidationError('La foto no puede pesar más de 5 MB.')
     try:
-        archivo.seek(0)
-        imagen = Image.open(archivo)
-        if imagen.width * imagen.height > PIXELES_MAXIMOS:
-            raise serializers.ValidationError('La foto es demasiado grande. Usa una de menor resolución.')
-        # Respeta la orientación con que se tomó (los móviles guardan la foto
-        # "acostada" y anotan el giro en los metadatos, que luego se descartan).
-        imagen = ImageOps.exif_transpose(imagen)
+        imagen = abrir_imagen(archivo)
         if imagen.mode in ('RGBA', 'LA', 'P'):
             # JPEG no tiene transparencia: se pone sobre fondo blanco.
             imagen = imagen.convert('RGBA')
@@ -42,9 +37,9 @@ def preparar_foto_perfil(archivo):
             imagen = imagen.convert('RGB')
         # Recorte centrado a cuadrado + reducción.
         imagen = ImageOps.fit(imagen, (LADO_FOTO, LADO_FOTO), Image.Resampling.LANCZOS)
-    except serializers.ValidationError:
-        raise
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
+    except ImagenDemasiadoGrande:
+        raise serializers.ValidationError('La foto es demasiado grande. Usa una de menor resolución.')
+    except (ImagenInvalida, *ERRORES_PILLOW):
         raise serializers.ValidationError('El archivo no es una imagen válida.')
 
     salida = BytesIO()

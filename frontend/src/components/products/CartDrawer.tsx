@@ -5,6 +5,7 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { Carrito } from "../../api/carrito.api";
 import { carritoApi } from "../../api/carrito.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
+import { miniaturaDe } from "../../utils/imagenProducto";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -140,9 +141,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant/30 group hover:bg-surface-variant transition-colors"
               >
                 <div className="w-16 h-16 rounded-md overflow-hidden bg-surface-container-lowest shrink-0">
-                  {typeof item.producto.imagen_previa === "string" && item.producto.imagen_previa ? (
+                  {miniaturaDe(item.producto) ? (
                     <img loading="lazy" decoding="async"
-                      src={item.producto.imagen_previa}
+                      src={miniaturaDe(item.producto) ?? undefined}
                       alt={item.producto.titulo}
                       className="w-full h-full object-cover"
                     />

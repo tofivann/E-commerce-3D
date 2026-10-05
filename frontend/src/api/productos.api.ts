@@ -26,6 +26,9 @@ export interface Producto {
   // Nombre del archivo cargado. Solo llega para el admin; null para el resto.
   archivo_nombre?: string | null;
   imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada
+  // Solo lectura: copia ligera de la portada que genera el servidor, para
+  // tarjetas y listas (ver utils/imagenProducto.ts). null si no hay portada.
+  imagen_miniatura?: string | null;
   link_youtube?: string | null; // Video de vista previa del modelo (opcional)
   activo?: boolean;
   fecha_creacion?: string;

@@ -6,6 +6,7 @@ import { carritoApi } from "../api/carrito.api";
 import { descargarCompra } from "../api/biblioteca.api";
 import type { CompraDigital } from "../api/biblioteca.api";
 import { etiquetaFormato } from "../utils/formato";
+import { miniaturaDe } from "../utils/imagenProducto";
 
 const MAX_INTENTOS = 10; // ~15s de espera al webhook antes de rendirnos
 const INTERVALO_MS = 1500;
@@ -154,9 +155,9 @@ export const PaymentSuccessPage: React.FC = () => {
                     className="flex flex-col md:flex-row items-center gap-4 bg-surface-container-low rounded-lg p-3 border border-outline-variant/30"
                   >
                     <div className="w-full md:w-28 h-28 rounded-md overflow-hidden shrink-0 relative bg-surface-container-lowest">
-                      {typeof compra.producto.imagen_previa === "string" && compra.producto.imagen_previa ? (
+                      {miniaturaDe(compra.producto) ? (
                         <img loading="lazy" decoding="async"
-                          src={compra.producto.imagen_previa}
+                          src={miniaturaDe(compra.producto) ?? undefined}
                           alt={compra.producto.titulo}
                           className="w-full h-full object-cover"
                         />

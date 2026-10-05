@@ -34,11 +34,12 @@ class ProductoSerializer(serializers.ModelSerializer):
             'archivo_3d',
             'archivo_nombre',
             'imagen_previa',
+            'imagen_miniatura',
             'link_youtube',
             'activo',
             'fecha_creacion'
         ]
-        read_only_fields = ['fecha_creacion']
+        read_only_fields = ['fecha_creacion', 'imagen_miniatura']
         # El archivo que se vende solo ENTRA (al crear/editar el producto):
         # su dirección no se devuelve a nadie, ni en el catálogo ni anidado
         # en el carrito, las órdenes o la biblioteca. Se descarga solo por

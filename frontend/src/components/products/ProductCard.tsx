@@ -4,6 +4,7 @@ import type { Producto } from "../../api/productos.api";
 import { CategoryBadge } from "./CategoryBadge";
 import { FavoritoButton } from "./FavoritoButton";
 import { etiquetaFormato } from "../../utils/formato";
+import { miniaturaDe } from "../../utils/imagenProducto";
 
 interface ProductCardProps {
   producto: Producto;
@@ -64,9 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <img loading="lazy" decoding="async"
           alt={oculto ? "" : producto.titulo}
           src={
-            typeof producto.imagen_previa === "string"
-              ? producto.imagen_previa
-              : fallbackImage
+            miniaturaDe(producto) ?? fallbackImage
           }
           className="object-cover w-full h-full transition-transform duration-500"
         />

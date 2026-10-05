@@ -26,6 +26,7 @@ from django.views.static import serve
 # (core/tests_media.py lo comprueba contra los modelos).
 CARPETAS_PUBLICAS = (
     'productos_preview/',                 # Producto.imagen_previa
+    'productos_miniaturas/',              # Producto.imagen_miniatura
     'comisiones/motion/entrega/',         # ComisionMotion.foto_entrega (también portada al publicar)
     'comisiones/modelo/entrega/',         # ComisionModelo.foto_entrega
     'comisiones/modelo/referencias/',     # ComisionModelo.foto_referencia_1/2

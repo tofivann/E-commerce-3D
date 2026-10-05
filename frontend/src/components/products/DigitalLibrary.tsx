@@ -10,6 +10,7 @@ import { CategoryBadge } from "./CategoryBadge";
 import { tieneAlgunaCategoria } from "../../utils/categoria";
 import { coincideBusqueda } from "../../utils/texto";
 import { etiquetaFormato } from "../../utils/formato";
+import { miniaturaDe } from "../../utils/imagenProducto";
 
 interface DigitalLibraryProps {
   // Texto del buscador de la página (título o descripción del producto).
@@ -136,9 +137,7 @@ export const DigitalLibrary: React.FC<DigitalLibraryProps> = ({ busqueda = "" })
               <div className="relative h-40 w-full overflow-hidden bg-surface-container-lowest">
                 <img loading="lazy" decoding="async"
                   src={
-                    typeof compra.producto.imagen_previa === "string" && compra.producto.imagen_previa
-                      ? compra.producto.imagen_previa
-                      : fallbackImage
+                    miniaturaDe(compra.producto) ?? fallbackImage
                   }
                   alt={compra.producto.titulo}
                   className="w-full h-full object-cover transition-transform duration-500"

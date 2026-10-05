@@ -5,6 +5,7 @@ import { extraerIdYoutube } from "../../utils/youtube";
 import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import { FavoritoButton } from "./FavoritoButton";
 import { etiquetaFormato } from "../../utils/formato";
+import { portadaDe } from "../../utils/imagenProducto";
 
 interface ProductDetailsModalProps {
   producto: Producto | null;
@@ -32,9 +33,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
   const videoId = extraerIdYoutube(producto.link_youtube);
   const imagenUrl =
-    typeof producto.imagen_previa === "string" && producto.imagen_previa
-      ? producto.imagen_previa
-      : fallbackImage;
+    portadaDe(producto) ?? fallbackImage;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
