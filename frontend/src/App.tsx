@@ -6,6 +6,8 @@ import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { perfilStore } from "./stores/perfilStore";
 import { SupportChatPage } from "./pages/SupportChatPage";
 import { CommissionsPage } from "./pages/CommissionsPage";
 import { PaymentSuccessPage } from "./pages/PaymentSuccessPage";
@@ -74,6 +76,8 @@ function AppRoutes() {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("is_staff");
     localStorage.removeItem("estado_suscripcion");
+    // El perfil en memoria es de la cuenta que acaba de salir.
+    perfilStore.limpiar();
     setIsLoggedIn(false);
     setIsStaff(false);
     setIsSubscribed(false);
@@ -125,6 +129,8 @@ function AppRoutes() {
                 // 3. El navegador enviará la cookie automáticamente en cada petición HTTP al backend sin que tengas
                 //    que gestionarla manualmente aquí.
                 // =========================================================================
+                // Por si quedaba en memoria el perfil de otra cuenta.
+                perfilStore.limpiar();
                 setIsLoggedIn(true);
                 setIsStaff(isStaffUser);
                 setIsSubscribed(estadoSuscripcion === "ACTIVO");
@@ -153,6 +159,18 @@ function AppRoutes() {
         element={
           isLoggedIn && (isStaff || isSubscribed) ? (
             <FavoritesPage isStaff={isStaff} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Mi perfil: cualquier cuenta con sesión (el perfil es de la
+          cuenta, no depende de la suscripción) */}
+      <Route
+        path="/perfil"
+        element={
+          isLoggedIn ? (
+            <ProfilePage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )

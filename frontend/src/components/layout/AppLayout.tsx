@@ -1,6 +1,9 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCarritoDrawer } from "../../hooks/useCarritoDrawer";
+import { usePerfil } from "../../hooks/usePerfil";
+import { Avatar } from "../ui/Avatar";
 import type { CarritoDrawer } from "../../hooks/useCarritoDrawer";
 import { CartDrawer } from "../products/CartDrawer";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -18,8 +21,6 @@ interface AppLayoutProps {
   // Clases extra para <main> (p. ej. "flex flex-col gap-8"); el espaciado
   // base y el ancho máximo los pone el layout.
   mainClassName?: string;
-  // El chat ocupa toda la altura y no lleva pie.
-  sinPie?: boolean;
   // Carrito de la página, cuando esta necesita "agregar al carrito". Si no
   // se pasa, el layout maneja el suyo.
   carrito?: CarritoDrawer;
@@ -27,8 +28,8 @@ interface AppLayoutProps {
 }
 
 // Layout de las páginas con sesión iniciada (Inicio, Favoritos, Biblioteca,
-// Comisiones, Chat): menú lateral, barra superior con idioma y carrito, zona
-// de contenido, pie y panel del carrito. Solo dibuja: quién puede entrar a
+// Comisiones, Chat, Mi perfil): menú lateral, barra superior con idioma,
+// carrito y la miniatura del perfil, zona de contenido, pie y panel del carrito. Solo dibuja: quién puede entrar a
 // cada página lo deciden las rutas (App.tsx), no este componente.
 //
 // Fuera de este layout, a propósito: la portada de visitante (HomePage sin
@@ -40,11 +41,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   onLogout,
   barra,
   mainClassName = "",
-  sinPie = false,
   carrito: carritoDeLaPagina,
   children,
 }) => {
   const { t } = useTranslation();
+  const { perfil } = usePerfil();
   // Los hooks no pueden ser condicionales: el carrito propio existe siempre,
   // pero solo se activa (y pide datos) cuando la página no trae el suyo.
   const carritoPropio = useCarritoDrawer(hasAccess && !carritoDeLaPagina);
@@ -61,7 +62,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <div className="flex-1 min-w-0">{barra}</div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <LanguageSwitcher />
+              {/* En móvil el idioma vive en el menú (Sidebar), como en la
+                  portada de visitante: con carrito y perfil ya no cabe aquí
+                  sin aplastar el buscador. */}
+              <div className="hidden sm:block">
+                <LanguageSwitcher />
+              </div>
               {hasAccess && (
                 <button
                   onClick={carrito.abrir}
@@ -76,6 +82,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   )}
                 </button>
               )}
+              {/* Miniatura del perfil: lleva a "Mi perfil". Para cualquier
+                  cuenta con sesión, tenga o no suscripción. */}
+              <Link to="/perfil" aria-label={t("perfil.title")} title={t("perfil.title")} className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <Avatar foto={perfil?.foto_perfil} nombre={perfil?.nombre || perfil?.username} />
+              </Link>
             </div>
           </div>
         </header>
@@ -84,7 +95,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           {children}
         </main>
 
-        {!sinPie && <PieDePagina />}
+        <PieDePagina />
       </div>
 
       {hasAccess && (

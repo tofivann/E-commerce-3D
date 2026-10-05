@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Conversacion } from '../../services/chatApi';
+import { Avatar } from '../ui/Avatar';
 
 interface ConversacionListaProps {
     conversaciones: Conversacion[];
@@ -42,6 +43,10 @@ export const ConversacionLista: React.FC<ConversacionListaProps> = ({
                                             : 'hover:bg-surface-container/55'
                                 }`}
                             >
+                                <Avatar
+                                    foto={conv.usuario_info?.foto_perfil}
+                                    nombre={conv.usuario_info?.nombre || conv.usuario_info?.username}
+                                />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-1">
                                         <h3 className={`text-sm truncate ${tieneNoLeidos ? 'font-bold text-on-surface' : 'font-medium text-on-surface'}`}>

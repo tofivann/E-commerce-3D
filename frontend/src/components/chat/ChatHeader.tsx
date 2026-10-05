@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Conversacion } from '../../services/chatApi';
+import { Avatar } from '../ui/Avatar';
 
 interface ChatHeaderProps {
     isAdmin: boolean;
@@ -22,7 +23,13 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ isAdmin, conversacionAct
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
             )}
-            <div className="min-w-0">
+            {isAdmin && (
+                <Avatar
+                    foto={conversacionActiva.usuario_info?.foto_perfil}
+                    nombre={conversacionActiva.usuario_info?.nombre || conversacionActiva.usuario_info?.username}
+                />
+            )}
+            <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-on-surface truncate">
                     {isAdmin
                         ? t('chat.chatWith', { name: conversacionActiva.usuario_info?.nombre || conversacionActiva.usuario_info?.username })

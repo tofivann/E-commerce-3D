@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UsuarioViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView, RegistroView, RegistroPayPalView, ActivarCuentaPagoView, ActivarCuentaPagoPayPalView, VerificarPagoUsuarioView, GoogleLoginView, SolicitarResetPasswordView, ConfirmarResetPasswordView
+from .views import UsuarioViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView, RegistroView, RegistroPayPalView, ActivarCuentaPagoView, ActivarCuentaPagoPayPalView, VerificarPagoUsuarioView, GoogleLoginView, SolicitarResetPasswordView, ConfirmarResetPasswordView, MiPerfilView, MiFotoPerfilView
 
 router = DefaultRouter()
 router.register(r'users', UsuarioViewSet, basename='user')
@@ -13,6 +13,9 @@ urlpatterns = [
     #ruta del registro
     path('auth/register/', RegistroView.as_view(), name='token_register'),
     path('auth/register-paypal/', RegistroPayPalView.as_view(), name='token_register_paypal'),
+    # Perfil del propio usuario (nombre y foto)
+    path('me/', MiPerfilView.as_view(), name='mi-perfil'),
+    path('me/foto/', MiFotoPerfilView.as_view(), name='mi-foto-perfil'),
     # 2. Rutas automáticas CRUD de Usuarios (/users/, /users/1/, etc.)
     path('', include(router.urls)),
 

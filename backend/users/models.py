@@ -39,6 +39,10 @@ class Usuario(AbstractUser):
             "Se actualiza solo (users/authentication.py), no se edita a mano."
         ),
     )
+    foto_perfil = models.ImageField(
+        upload_to='perfiles/', null=True, blank=True,
+        help_text="Foto de perfil, ya recortada y reducida (ver users/perfil.py).",
+    )
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'

@@ -36,6 +36,8 @@ export interface Usuario {
   is_active: boolean;
   fecha_registro?: string;
   password?: string;
+  // Solo lectura: la cambia cada usuario desde "Mi perfil".
+  foto_perfil?: string | null;
 }
 
 export const userApi = {

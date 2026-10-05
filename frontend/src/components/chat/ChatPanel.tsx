@@ -21,7 +21,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ isAdmin }) => {
     const shouldScrollToBottom = useRef(true);
 
     const scrollToBottom = useCallback(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // Se desplaza SOLO la lista de mensajes (el contenedor con scroll
+        // propio), no la página. scrollIntoView() mueve también la ventana
+        // cuando la página es más alta que la pantalla (lo es desde que el
+        // chat tiene pie), y al entrar el chat quedaba tapado por la cabecera.
+        const lista = messagesEndRef.current?.parentElement;
+        lista?.scrollTo({ top: lista.scrollHeight, behavior: 'smooth' });
     }, []);
 
     const cargarMensajes = useCallback(async (id: number, hacerScroll: boolean) => {

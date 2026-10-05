@@ -29,6 +29,7 @@ CARPETAS_PUBLICAS = (
     'comisiones/motion/entrega/',         # ComisionMotion.foto_entrega (también portada al publicar)
     'comisiones/modelo/entrega/',         # ComisionModelo.foto_entrega
     'comisiones/modelo/referencias/',     # ComisionModelo.foto_referencia_1/2
+    'perfiles/',                          # Usuario.foto_perfil
 )
 
 

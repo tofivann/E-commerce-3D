@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface SidebarProps {
   isStaff: boolean;
@@ -127,6 +128,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
             >
               <span className="material-symbols-outlined">close</span>
             </button>
+          </div>
+          {/* En móvil el selector de idioma no cabe en la cabecera (ver AppLayout). */}
+          <div className="px-6 mb-6">
+            <LanguageSwitcher />
           </div>
           {navLinks}
           {logoutButton}

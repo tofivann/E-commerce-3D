@@ -5,6 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.utils import datetime_from_epoch
 from core.idiomas import IDIOMA_POR_DEFECTO
 from .models import Usuario
+from .perfil import preparar_foto_perfil
 from .tokens import (
     CLAIM_REMEMBER_ME,
     DURACION_SESION_CORTA,
@@ -18,9 +19,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
             'nombre', 'rol', 'estado_suscripcion', 'is_active',
-            'fecha_registro', 'password',
+            'fecha_registro', 'password', 'foto_perfil',
         ]
-        read_only_fields = ['fecha_registro']
+        # foto_perfil: solo lectura aquí. La cambia cada usuario desde su
+        # perfil (MiPerfilSerializer), no el admin desde la tabla de usuarios.
+        read_only_fields = ['fecha_registro', 'foto_perfil']
         extra_kwargs = {
             # 'write_only': True evita que el password viaje en la respuesta JSON al consultar
             'password': {'write_only': True, 'required': True}
@@ -58,6 +61,41 @@ class UsuarioSerializer(serializers.ModelSerializer):
 # ==========================================
 # SERIALIZER PERSONALIZADO PARA LOGIN (JWT)
 # ==========================================
+
+class MiPerfilSerializer(serializers.ModelSerializer):
+    """El perfil del propio usuario (`users/me/`). Solo puede cambiar su
+    nombre y su foto; todo lo demás —correo, rol, suscripción— es de solo
+    lectura: se cambia por otros caminos (pagos, panel admin)."""
+    foto_perfil = serializers.ImageField(required=False)
+
+    class Meta:
+        model = Usuario
+        fields = [
+            'id', 'username', 'nombre', 'email', 'rol', 'is_staff',
+            'estado_suscripcion', 'idioma', 'fecha_registro', 'foto_perfil',
+        ]
+        read_only_fields = [
+            'id', 'username', 'email', 'rol', 'is_staff', 'estado_suscripcion', 'idioma', 'fecha_registro',
+        ]
+
+    def validate_nombre(self, valor):
+        valor = valor.strip()
+        if not valor:
+            raise serializers.ValidationError('El nombre no puede estar vacío.')
+        return valor
+
+    def validate_foto_perfil(self, archivo):
+        return preparar_foto_perfil(archivo)
+
+    def update(self, instance, validated_data):
+        foto_anterior = instance.foto_perfil if 'foto_perfil' in validated_data else None
+        nombre_anterior = foto_anterior.name if foto_anterior else None
+        instance = super().update(instance, validated_data)
+        # Se borra la foto vieja solo después de guardar la nueva con éxito.
+        if nombre_anterior and nombre_anterior != instance.foto_perfil.name:
+            instance.foto_perfil.storage.delete(nombre_anterior)
+        return instance
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     # "Mantener sesión abierta" del formulario de login. Si no se marca, el
     # refresh token dura solo DURACION_SESION_CORTA en vez de los 7 días.

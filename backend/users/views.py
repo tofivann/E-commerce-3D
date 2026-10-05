@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import transaction
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenBlacklistView, TokenObtainPairView, TokenRefreshView
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
@@ -19,6 +20,7 @@ from .serializers import (
     CustomTokenObtainPairSerializer,
     CustomTokenRefreshSerializer,
     GoogleLoginSerializer,
+    MiPerfilSerializer,
     RegistroSerializer,
     UsuarioSerializer,
 )
@@ -384,3 +386,37 @@ class ConfirmarResetPasswordView(generics.GenericAPIView):
         usuario.save()
 
         return Response({"mensaje": "Contraseña actualizada exitosamente."}, status=status.HTTP_200_OK)
+
+
+# ==========================================
+# PERFIL DEL PROPIO USUARIO
+# ==========================================
+class MiPerfilView(generics.RetrieveUpdateAPIView):
+    """`users/me/`: el usuario con sesión consulta su perfil y cambia su
+    nombre o su foto (PATCH; multipart cuando viaja la foto). Cualquier cuenta
+    con sesión, tenga o no suscripción: el perfil es de la cuenta. Nunca hay
+    un id en la dirección: siempre es `request.user`, así nadie puede leer
+    ni tocar el perfil de otro."""
+    serializer_class = MiPerfilSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'patch', 'head', 'options']
+
+    def get_object(self):
+        return self.request.user
+
+
+class MiFotoPerfilView(APIView):
+    """`users/me/foto/` (DELETE): quita la foto de perfil. Va aparte del
+    PATCH porque un formulario multipart no puede mandar "sin archivo"."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        usuario = request.user
+        foto = usuario.foto_perfil
+        if foto:
+            anterior = foto.name
+            usuario.foto_perfil = None
+            usuario.save(update_fields=['foto_perfil'])
+            usuario.foto_perfil.storage.delete(anterior)
+        return Response(MiPerfilSerializer(usuario, context={'request': request}).data)
+
