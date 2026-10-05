@@ -147,10 +147,13 @@ export const ProductAdminTable: React.FC = () => {
                     {etiquetaFormato(producto.formato_archivo, "—")}
                   </td>
                   <td className="py-3 px-6 font-mono text-primary-fixed-dim font-semibold">
-                    ${Number(producto.precio).toFixed(2)}
-                    {producto.precio_monedas != null && (
-                      <Monedas cantidad={producto.precio_monedas} className="block text-xs text-on-surface-variant font-normal mt-0.5" />
-                    )}
+                    {/* Dólares a la izquierda y MimiCoins a la derecha de la celda. */}
+                    <div className="flex items-center justify-between gap-4">
+                      <span>${Number(producto.precio).toFixed(2)}</span>
+                      {producto.precio_monedas != null && (
+                        <Monedas cantidad={producto.precio_monedas} className="text-xs text-on-surface-variant font-normal" />
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-6">
                     <button
