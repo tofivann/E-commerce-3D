@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from core import paypal_utils
 from core.email_utils import enviar_email
 from core.idiomas import EN, ES
-from monedas.reglas import PASARELA_MONEDAS
+from monedas.reglas import NOMBRE_MONEDAS, PASARELA_MONEDAS
 from monedas.services import SaldoInsuficiente, revertir_por_comision_cancelada, saldo_de
 from orders.models import Orden, ComprasDigitales
 from products.models import Producto
@@ -108,7 +108,7 @@ def _pagar_comision_con_monedas(request, serializer_entrada, campo_precio, crear
     precio_monedas = datos[campo_precio].precio_monedas
     if not precio_monedas:
         return Response(
-            {"detail": "Esta comisión no se puede pagar con monedas.", "motivo": "no_pagable"},
+            {"detail": f"Esta comisión no se puede pagar con {NOMBRE_MONEDAS}.", "motivo": "no_pagable"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -120,7 +120,7 @@ def _pagar_comision_con_monedas(request, serializer_entrada, campo_precio, crear
     except SaldoInsuficiente as e:
         return Response(
             {
-                "detail": f"No tienes monedas suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
+                "detail": f"No tienes {NOMBRE_MONEDAS} suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
                 "motivo": "saldo_insuficiente",
             },
             status=status.HTTP_400_BAD_REQUEST,

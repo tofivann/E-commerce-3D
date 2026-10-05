@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core import paypal_utils
+from monedas.reglas import NOMBRE_MONEDAS
 from monedas.services import SaldoInsuficiente, saldo_de
 from orders.models import Orden, DetalleOrden
 from orders.serializers import OrdenSerializer
@@ -228,7 +229,7 @@ class CheckoutMonedasView(APIView):
         except SaldoInsuficiente as e:
             return Response(
                 {
-                    "detail": f"No tienes monedas suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
+                    "detail": f"No tienes {NOMBRE_MONEDAS} suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
                     "motivo": "saldo_insuficiente",
                 },
                 status=status.HTTP_400_BAD_REQUEST,

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from core.pagination import PaginacionEstandar
 
 from .models import MovimientoMonedas
+from .reglas import NOMBRE_MONEDAS
 from .serializers import AjusteMonedasSerializer, MovimientoMonedasSerializer
 from .services import SaldoInsuficiente, ajustar_saldo, saldo_de
 
@@ -37,7 +38,7 @@ class AjustarMonedasAdminView(APIView):
             )
         except SaldoInsuficiente as e:
             return Response(
-                {"cantidad": [f"El usuario solo tiene {e.saldo} monedas: no se le pueden quitar {e.necesarias}."]},
+                {"cantidad": [f"El usuario solo tiene {e.saldo} {NOMBRE_MONEDAS}: no se le pueden quitar {e.necesarias}."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

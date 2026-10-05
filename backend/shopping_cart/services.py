@@ -5,7 +5,7 @@ from django.db import transaction
 
 from core.email_utils import enviar_email
 from core.idiomas import EN, ES
-from monedas.reglas import PASARELA_MONEDAS
+from monedas.reglas import NOMBRE_MONEDAS, PASARELA_MONEDAS
 from monedas.services import cobrar_orden, otorgar_por_orden_pagada
 from orders.models import Orden, DetalleOrden, ComprasDigitales
 from .models import CarritoItem
@@ -80,7 +80,7 @@ def _pagar_carrito_con_monedas_db(usuario):
     sin_precio = [item.producto.titulo for item in items if not item.producto.precio_monedas]
     if sin_precio:
         raise CarritoNoPagableConMonedas(
-            'Estos productos no se pueden pagar con monedas: ' + ', '.join(sin_precio) + '.'
+            f'Estos productos no se pueden pagar con {NOMBRE_MONEDAS}: ' + ', '.join(sin_precio) + '.'
         )
 
     orden = Orden.objects.create(

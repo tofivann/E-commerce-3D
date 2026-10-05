@@ -282,7 +282,7 @@ class PagarCarritoConMonedasTests(MonedasTestsBase):
         self.client.post(URL_PAGAR_CARRITO)
 
         html = self.correo.call_args.kwargs['json']['html']
-        self.assertIn('4 monedas', html)
+        self.assertIn('4 MimiCoins', html)
         self.assertNotIn('$', html)
 
     def test_el_carrito_dice_cuanto_cuesta_en_monedas(self):
@@ -313,7 +313,7 @@ class PagarComisionConMonedasTests(MonedasTestsBase):
         )
         # No da moneda: se pagó con monedas.
         self.assertEqual(self.saldo(), 3)
-        self.assertIn('7 monedas', self.correo.call_args.kwargs['json']['html'])
+        self.assertIn('7 MimiCoins', self.correo.call_args.kwargs['json']['html'])
 
     def test_una_comision_de_modelo_tambien(self):
         juego = JuegoComision.objects.create(nombre='Genshin', precio=Decimal('30.00'), precio_monedas=12)

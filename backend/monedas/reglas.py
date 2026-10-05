@@ -9,6 +9,11 @@ Este módulo no importa modelos a propósito: lo leen products, custom_orders y
 orders para sus valores por defecto sin crear dependencias circulares.
 """
 
+# Cómo se llaman las monedas de cara al usuario (mensajes de error del
+# backend; los correos y el frontend lo escriben en sus propios textos). En
+# el código siguen siendo "monedas".
+NOMBRE_MONEDAS = 'MimiCoins'
+
 # Monedas que da cada producto comprado con dinero y cada comisión pagada con dinero.
 MONEDAS_POR_COMPRA = 1
 

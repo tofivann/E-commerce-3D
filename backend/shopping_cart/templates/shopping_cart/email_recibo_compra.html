@@ -13,13 +13,13 @@
       {{ detalle.producto.titulo|default:"Producto eliminado" }}
     </td>
     <td style="padding:8px 0; border-bottom:1px solid #f5e6ec; font-size:14px; color:#3a2e35; text-align:right; font-family: monospace;">
-      {% if total_monedas %}{{ detalle.precio_monedas }} monedas{% else %}${{ detalle.precio_unitario }}{% endif %}
+      {% if total_monedas %}{{ detalle.precio_monedas }} MimiCoin{{ detalle.precio_monedas|pluralize }}{% else %}${{ detalle.precio_unitario }}{% endif %}
     </td>
   </tr>
   {% endfor %}
   <tr>
     <td style="padding:12px 0 0; font-size:15px; font-weight:bold; color:#3a2e35;">Total</td>
-    <td style="padding:12px 0 0; font-size:15px; font-weight:bold; color:#f472a0; text-align:right; font-family: monospace;">{% if total_monedas %}{{ total_monedas }} monedas{% else %}${{ total }}{% endif %}</td>
+    <td style="padding:12px 0 0; font-size:15px; font-weight:bold; color:#f472a0; text-align:right; font-family: monospace;">{% if total_monedas %}{{ total_monedas }} MimiCoin{{ total_monedas|pluralize }}{% else %}${{ total }}{% endif %}</td>
   </tr>
 </table>
 
