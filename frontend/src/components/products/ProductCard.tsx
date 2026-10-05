@@ -5,6 +5,7 @@ import { CategoryBadge } from "./CategoryBadge";
 import { FavoritoButton } from "./FavoritoButton";
 import { etiquetaFormato } from "../../utils/formato";
 import { miniaturaDe } from "../../utils/imagenProducto";
+import { Monedas } from "../ui/Monedas";
 
 interface ProductCardProps {
   producto: Producto;
@@ -145,8 +146,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         ) : hasAccess ? (
           <div className="mt-1 flex items-center justify-between">
-            <span className="text-primary-container font-bold font-mono">
+            {/* Precio en dólares y, debajo, en monedas (si se puede pagar con
+                ellas): en la misma línea no caben junto al botón. */}
+            <span className="text-primary-container font-bold font-mono flex flex-col leading-tight min-w-0">
               ${Number(producto.precio).toFixed(2)}
+              {producto.precio_monedas != null && (
+                <Monedas cantidad={producto.precio_monedas} className="text-xs text-on-surface-variant font-normal" />
+              )}
             </span>
             <button
               onClick={(e) => {

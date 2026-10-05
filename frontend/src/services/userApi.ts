@@ -59,6 +59,8 @@ export interface Usuario {
   password?: string;
   // Solo lectura: la cambia cada usuario desde "Mi perfil".
   foto_perfil?: string | null;
+  // Solo lectura: se cambia con un ajuste (monedas.api.ts), no editando al usuario.
+  saldo_monedas?: number;
 }
 
 export const userApi = {

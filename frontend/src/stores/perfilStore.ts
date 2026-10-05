@@ -41,6 +41,23 @@ export const perfilStore = {
   },
   // Tras guardar un cambio: el backend devuelve el perfil ya actualizado.
   establecer: (perfil: Perfil) => publicar({ perfil, fase: "listo" }),
+  // Tras pagar con monedas: el servidor devuelve el saldo que queda.
+  actualizarSaldo: (saldo_monedas: number) => {
+    if (estado.perfil) publicar({ perfil: { ...estado.perfil, saldo_monedas }, fase: "listo" });
+  },
+  // Vuelve a pedir el perfil sin vaciar lo que se ve mientras llega. Para
+  // cuando el saldo pudo cambiar en el servidor (una compra con dinero que
+  // acaba de confirmarse da monedas).
+  recargar: () => {
+    if (estado.fase !== "listo") return;
+    perfilApi
+      .obtener()
+      .then((perfil) => {
+        // Solo si sigue siendo la misma sesión (pudo cerrarse entre tanto).
+        if (estado.fase === "listo" && estado.perfil?.id === perfil.id) publicar({ perfil, fase: "listo" });
+      })
+      .catch((err) => console.error("Error al actualizar el perfil:", err));
+  },
   // Al cerrar sesión o al iniciarla con otra cuenta.
   limpiar: () => publicar({ perfil: null, fase: "vacio" }),
 };

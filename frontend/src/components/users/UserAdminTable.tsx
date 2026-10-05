@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next";
 import type { Usuario } from "../../services/userApi";
 import { userApi } from "../../services/userApi";
 import { UserForm } from "./UserForm";
+import { AjustarMonedasModal } from "./AjustarMonedasModal";
+import { Monedas } from "../ui/Monedas";
+import { SearchInput } from "../products/SearchInput";
 import { TablaSkeleton } from "../ui/TablaSkeleton";
+import { perfilStore } from "../../stores/perfilStore";
+import { coincideBusqueda } from "../../utils/texto";
 
 export const UserAdminTable: React.FC = () => {
   const { t } = useTranslation();
@@ -26,6 +31,10 @@ export const UserAdminTable: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Usuario | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [ajustando, setAjustando] = useState<Usuario | null>(null);
+  // Lista sin paginar: se filtra aquí mismo, sin acentos ni mayúsculas.
+  const [busqueda, setBusqueda] = useState("");
+  const visibles = usuarios.filter((u) => coincideBusqueda(busqueda, [u.nombre, u.username, u.email]));
 
   const fetchUsuarios = async () => {
     try {
@@ -80,6 +89,8 @@ export const UserAdminTable: React.FC = () => {
         </button>
       </div>
 
+      <SearchInput value={busqueda} onChange={setBusqueda} placeholder={t("userAdminTable.search")} className="mb-4 max-w-md" />
+
       {error && (
         <div className="p-4 mb-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
           {error}
@@ -96,22 +107,23 @@ export const UserAdminTable: React.FC = () => {
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("userAdminTable.colRole")}</th>
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("userAdminTable.colSubscription")}</th>
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("userAdminTable.colStatus")}</th>
+                <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("monedas.columna")}</th>
                 <th className="py-3 px-6 text-xs uppercase tracking-wider text-on-surface-variant font-semibold text-right">{t("userAdminTable.colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
-              {loading && <TablaSkeleton columnas={6} />}
+              {loading && <TablaSkeleton columnas={7} />}
 
-              {!loading && usuarios.length === 0 && (
+              {!loading && visibles.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
-                    {t("userAdminTable.empty")}
+                  <td colSpan={7} className="py-8 text-center text-on-surface-variant">
+                    {busqueda.trim() ? t("common.noResults", { query: busqueda.trim() }) : t("userAdminTable.empty")}
                   </td>
                 </tr>
               )}
 
               {!loading &&
-                usuarios.map((usuario) => (
+                visibles.map((usuario) => (
                   <tr key={usuario.id} className="hover:bg-surface-container-highest/30 transition-colors group">
                     <td className="py-3 px-6">
                       <div className="flex items-center gap-3">
@@ -153,6 +165,18 @@ export const UserAdminTable: React.FC = () => {
                         {usuario.is_active ? t("userAdminTable.active") : t("userAdminTable.suspended")}
                       </span>
                     </td>
+                    <td className="py-3 px-6">
+                      {/* El saldo es también el botón para ajustarlo (regalo o corrección). */}
+                      <button
+                        onClick={() => setAjustando(usuario)}
+                        aria-label={t("monedas.ajusteAbrir", { usuario: usuario.username })}
+                        title={t("monedas.ajusteTitulo")}
+                        className="inline-flex items-center gap-2 rounded-full border border-outline-variant/40 px-3 py-1 text-sm text-on-surface hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
+                      >
+                        <Monedas cantidad={usuario.saldo_monedas ?? 0} />
+                        <span className="material-symbols-outlined text-[16px] text-on-surface-variant" aria-hidden="true">edit</span>
+                      </button>
+                    </td>
                     <td className="py-3 px-6 text-right">
                       <div className="flex justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                         <button
@@ -188,6 +212,18 @@ export const UserAdminTable: React.FC = () => {
         onClose={() => setFormOpen(false)}
         onSaved={fetchUsuarios}
       />
+
+      {ajustando && (
+        <AjustarMonedasModal
+          usuario={ajustando}
+          onCerrar={() => setAjustando(null)}
+          onAjustado={(saldo) => {
+            setUsuarios((prev) => prev.map((u) => (u.id === ajustando.id ? { ...u, saldo_monedas: saldo } : u)));
+            // Si el admin ajustó su propia cuenta, que la cabecera lo refleje.
+            perfilStore.recargar();
+          }}
+        />
+      )}
     </div>
   );
 };

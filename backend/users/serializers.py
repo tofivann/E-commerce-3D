@@ -4,6 +4,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.utils import datetime_from_epoch
 from core.idiomas import IDIOMA_POR_DEFECTO
+from monedas.services import saldo_de
 from .models import Usuario
 from .perfil import preparar_foto_perfil
 from .tokens import (
@@ -14,13 +15,23 @@ from .tokens import (
 )
 from .verificacion import CodigoInvalido, LONGITUD_CODIGO, comprobar_codigo, consumir_codigo, normalizar_correo
 
-class UsuarioSerializer(serializers.ModelSerializer):
+class SaldoMonedasMixin(serializers.Serializer):
+    """Añade `saldo_monedas` (solo lectura) a un serializer de usuario. El
+    saldo no es un campo de Usuario: vive en monedas.Monedero y solo cambia
+    por monedas/services.py. Declarar el campo en `Meta.fields`."""
+    saldo_monedas = serializers.SerializerMethodField()
+
+    def get_saldo_monedas(self, usuario):
+        return saldo_de(usuario)
+
+
+class UsuarioSerializer(SaldoMonedasMixin, serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
             'nombre', 'rol', 'estado_suscripcion', 'is_active',
-            'fecha_registro', 'password', 'foto_perfil',
+            'fecha_registro', 'password', 'foto_perfil', 'saldo_monedas',
         ]
         # foto_perfil: solo lectura aquí. La cambia cada usuario desde su
         # perfil (MiPerfilSerializer), no el admin desde la tabla de usuarios.
@@ -63,7 +74,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 # SERIALIZER PERSONALIZADO PARA LOGIN (JWT)
 # ==========================================
 
-class MiPerfilSerializer(serializers.ModelSerializer):
+class MiPerfilSerializer(SaldoMonedasMixin, serializers.ModelSerializer):
     """El perfil del propio usuario (`users/me/`). Solo puede cambiar su
     nombre y su foto; todo lo demás —correo, rol, suscripción— es de solo
     lectura: se cambia por otros caminos (pagos, panel admin)."""
@@ -73,7 +84,7 @@ class MiPerfilSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = [
             'id', 'username', 'nombre', 'email', 'rol', 'is_staff',
-            'estado_suscripcion', 'idioma', 'fecha_registro', 'foto_perfil',
+            'estado_suscripcion', 'idioma', 'fecha_registro', 'foto_perfil', 'saldo_monedas',
         ]
         read_only_fields = [
             'id', 'username', 'email', 'rol', 'is_staff', 'estado_suscripcion', 'idioma', 'fecha_registro',

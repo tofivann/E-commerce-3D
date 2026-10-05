@@ -13,6 +13,9 @@ export interface Carrito {
   subtotal: number;
   impuestos: number;
   total: number;
+  // Lo que cuesta el carrito entero pagado con monedas; null si no se puede
+  // pagar así (algún producto no tiene precio en monedas).
+  total_monedas: number | null;
   fecha_actualizacion: string;
 }
 
@@ -20,6 +23,8 @@ export interface DetalleOrden {
   id: number;
   producto: Producto;
   precio_unitario: number | string;
+  // Solo en una orden pagada con monedas.
+  precio_monedas: number | null;
 }
 
 export type EstadoPago = "PENDIENTE" | "COMPLETADO" | "REEMBOLSADO" | "CANCELADO";
@@ -28,6 +33,8 @@ export interface Orden {
   id: number;
   codigo_orden: string;
   total: number | string;
+  // Solo en una orden pagada con monedas (pasarela_pago "Monedas"; total es 0).
+  total_monedas: number | null;
   estado_pago: EstadoPago;
   tipo_orden: string;
   pasarela_pago: string;
@@ -81,6 +88,13 @@ export const carritoApi = {
   checkoutPayPal: async (): Promise<CheckoutPayPalResponse> => {
     const { data } = await axiosClient.post<CheckoutPayPalResponse>("cart/checkout-paypal/");
     return data;
+  },
+
+  // Paga el carrito entero con monedas. No hay pasarela: los productos quedan
+  // en la biblioteca en esta misma llamada. Devuelve el saldo que le queda.
+  checkoutMonedas: async (): Promise<number> => {
+    const { data } = await axiosClient.post<{ orden: Orden; saldo_monedas: number }>("cart/checkout-monedas/");
+    return data.saldo_monedas;
   },
 
   // Consulta el estado de una orden por el session_id que Stripe agrega a la

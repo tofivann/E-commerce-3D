@@ -13,7 +13,7 @@
   <strong>Details:</strong> {{ detalle }}
 </p>
 <p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">
-  <strong>Total paid:</strong> ${{ total }}
+  <strong>Total paid:</strong> {% if total_monedas %}{{ total_monedas }} coins{% else %}${{ total }}{% endif %}
 </p>
 
 <p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">

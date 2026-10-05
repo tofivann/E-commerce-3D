@@ -3,6 +3,7 @@ from django.db import models
 
 from core.miniaturas import LADO_MINIATURA, ConMiniaturas  # noqa: F401 (LADO_MINIATURA lo usan los tests)
 from core.text_utils import normalizar_texto
+from monedas.campos import campo_precio_en_monedas
 
 
 # Categorías principales del negocio (las que crea la migración 0004). No se
@@ -37,6 +38,8 @@ class Producto(ConMiniaturas):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    # Lo que cuesta si se paga con monedas en vez de con dinero (ver monedas/reglas.py).
+    precio_monedas = campo_precio_en_monedas()
     # Un producto puede pertenecer a varias categorías a la vez (ej. un modelo
     # que también es de Motion). Debe tener al menos una — eso se exige en el
     # serializer (allow_empty=False), no a nivel de base de datos, ya que un

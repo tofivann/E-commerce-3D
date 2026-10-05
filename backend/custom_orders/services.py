@@ -3,6 +3,7 @@ from django.db import transaction
 
 from core.email_utils import enviar_email
 from core.idiomas import EN, ES, IDIOMA_POR_DEFECTO
+from monedas.services import cobrar_orden, otorgar_por_orden_pagada
 from orders.models import Orden
 from .models import EstadoComision
 
@@ -90,7 +91,46 @@ def _marcar_comision_pagada_db(lookup):
         comision.estado = EstadoComision.EN_PROCESO
         comision.save(update_fields=['estado'])
 
+    # Una moneda por la comisión pagada con dinero (monedas/reglas.py).
+    otorgar_por_orden_pagada(orden)
     return orden
+
+
+def pagar_comision_con_monedas(orden):
+    """Cobra en monedas una comisión recién creada (`orden.total_monedas`) y
+    la deja pagada y en proceso, sin pasar por ninguna pasarela. No da
+    monedas. Lanza `monedas.services.SaldoInsuficiente`.
+
+    Se llama dentro de la transacción que crea la Orden y la comisión: si no
+    alcanzan las monedas, no queda nada creado. El correo lo manda quien
+    llama, ya fuera de esa transacción (`enviar_correo_comision_pagada`)."""
+    cobrar_orden(orden)
+    orden.estado_pago = Orden.EstadoPago.COMPLETADO
+    orden.save(update_fields=['estado_pago'])
+    comision = _comision_de_orden(orden)
+    comision.estado = EstadoComision.EN_PROCESO
+    comision.save(update_fields=['estado'])
+
+
+def enviar_correo_comision_pagada(orden):
+    idioma = orden.usuario.idioma
+    tipo_label, detalle = datos_comision_para_email(orden, idioma)
+    enviar_email(
+        to=orden.usuario.email,
+        asuntos={ES: "¡Recibimos tu pago! 🎨", EN: "We received your payment! 🎨"},
+        template_name='custom_orders/email_comision_pagada.html',
+        context={
+            'codigo_orden': orden.codigo_orden,
+            'tipo_label': tipo_label,
+            'detalle': detalle,
+            'total': orden.total,
+            # Solo en una comisión pagada con monedas: la plantilla muestra
+            # entonces monedas en vez de dólares.
+            'total_monedas': orden.total_monedas,
+            'frontend_url': settings.FRONTEND_URL,
+        },
+        idioma=idioma,
+    )
 
 
 def marcar_comision_pagada(session_id=None, paypal_order_id=None):
@@ -114,18 +154,4 @@ def marcar_comision_pagada(session_id=None, paypal_order_id=None):
     if orden is None:
         return
 
-    idioma = orden.usuario.idioma
-    tipo_label, detalle = datos_comision_para_email(orden, idioma)
-    enviar_email(
-        to=orden.usuario.email,
-        asuntos={ES: "¡Recibimos tu pago! 🎨", EN: "We received your payment! 🎨"},
-        template_name='custom_orders/email_comision_pagada.html',
-        context={
-            'codigo_orden': orden.codigo_orden,
-            'tipo_label': tipo_label,
-            'detalle': detalle,
-            'total': orden.total,
-            'frontend_url': settings.FRONTEND_URL,
-        },
-        idioma=idioma,
-    )
+    enviar_correo_comision_pagada(orden)

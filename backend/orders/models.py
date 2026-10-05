@@ -22,6 +22,10 @@ class Orden(models.Model):
     )
     productos = models.ManyToManyField(Producto, through='DetalleOrden', related_name='ordenes')
     total = models.DecimalField(max_digits=10, decimal_places=2)
+    # Solo en las órdenes pagadas con monedas (pasarela_pago = "Monedas"):
+    # cuántas costó. En esas, `total` es 0 — no se cobró dinero —, así los
+    # totales en dólares de "Estadísticas y pagos" siguen siendo dinero real.
+    total_monedas = models.PositiveIntegerField(null=True, blank=True)
     estado_pago = models.CharField(
         max_length=20, 
         choices=EstadoPago.choices, 
@@ -33,7 +37,7 @@ class Orden(models.Model):
         choices=TipoOrden.choices, 
         default=TipoOrden.CATALOGO
     )
-    pasarela_pago = models.CharField(max_length=50, help_text="Ej: Stripe, PayPal")
+    pasarela_pago = models.CharField(max_length=50, help_text="Ej: Stripe, PayPal, Monedas")
     stripe_session_id = models.CharField(
         max_length=255, blank=True, null=True, unique=True,
         help_text="ID de la Stripe Checkout Session que respalda esta orden.",
@@ -60,6 +64,9 @@ class DetalleOrden(models.Model):
     )
     producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, help_text="Precio histórico al momento de la compra")
+    # En una orden pagada con monedas: lo que costó este producto en monedas
+    # en ese momento (y precio_unitario es 0).
+    precio_monedas = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Detalle de Orden"

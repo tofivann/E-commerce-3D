@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import type { Categoria } from "../../api/productos.api";
 import { categoriasApi } from "../../api/productos.api";
 import { TablaSkeleton } from "../ui/TablaSkeleton";
+import { SearchInput } from "../products/SearchInput";
+import { coincideBusqueda } from "../../utils/texto";
 
 const inputClass =
   "w-full bg-surface-variant border border-outline-variant rounded-md py-1.5 px-2 text-on-surface text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary";
@@ -16,6 +18,9 @@ export const CategoriasTable: React.FC = () => {
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoNombreEn, setNuevoNombreEn] = useState("");
   const [guardando, setGuardando] = useState(false);
+  // Lista corta y sin paginar: se filtra aquí mismo, sin acentos ni mayúsculas.
+  const [busqueda, setBusqueda] = useState("");
+  const visibles = categorias.filter((categoria) => coincideBusqueda(busqueda, [categoria.nombre, categoria.nombre_en]));
 
   const cargar = () => {
     setLoading(true);
@@ -57,9 +62,12 @@ export const CategoriasTable: React.FC = () => {
 
   return (
     <div className="glass-panel rounded-xl overflow-hidden">
-      <div className="p-4 border-b border-outline-variant/30">
-        <h3 className="font-bold text-on-surface">{t("categoriasAdmin.title")}</h3>
-        <p className="text-on-surface-variant text-xs">{t("categoriasAdmin.subtitle")}</p>
+      <div className="p-4 border-b border-outline-variant/30 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="font-bold text-on-surface">{t("categoriasAdmin.title")}</h3>
+          <p className="text-on-surface-variant text-xs">{t("categoriasAdmin.subtitle")}</p>
+        </div>
+        <SearchInput value={busqueda} onChange={setBusqueda} placeholder={t("categoriasAdmin.search")} className="w-full sm:w-72" />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse md:table-fixed">
@@ -72,7 +80,14 @@ export const CategoriasTable: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-outline-variant/20 flex flex-col md:table-row-group">
             {loading && <TablaSkeleton columnas={3} celdaClassName="py-2 px-4" />}
-            {!loading && categorias.map((categoria) =>
+            {!loading && visibles.length === 0 && busqueda.trim() && (
+              <tr>
+                <td colSpan={3} className="py-6 px-4 text-center text-on-surface-variant text-sm">
+                  {t("common.noResults", { query: busqueda.trim() })}
+                </td>
+              </tr>
+            )}
+            {!loading && visibles.map((categoria) =>
               // Modelo, Motion y Juego: solo lectura. El backend rechaza
               // editarlas igualmente; aquí se muestran bloqueadas para que
               // el admin no intente un cambio que va a fallar.

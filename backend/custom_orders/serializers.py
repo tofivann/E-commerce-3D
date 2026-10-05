@@ -11,19 +11,24 @@ from .models import TramoPersonajesMotion, JuegoComision, ComisionMotion, Comisi
 class TramoPersonajesMotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TramoPersonajesMotion
-        fields = ['id', 'nombre', 'min_personajes', 'max_personajes', 'precio', 'activo', 'orden_visualizacion']
+        fields = [
+            'id', 'nombre', 'min_personajes', 'max_personajes', 'precio', 'precio_monedas', 'activo',
+            'orden_visualizacion',
+        ]
 
 
 class JuegoComisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = JuegoComision
-        fields = ['id', 'nombre', 'precio', 'activo']
+        fields = ['id', 'nombre', 'precio', 'precio_monedas', 'activo']
 
 
 class OrdenResumenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Orden
-        fields = ['id', 'codigo_orden', 'total', 'estado_pago', 'fecha_orden']
+        # total_monedas y pasarela_pago: para mostrar "10 monedas" en vez de
+        # "$0.00" en una comisión pagada con monedas.
+        fields = ['id', 'codigo_orden', 'total', 'total_monedas', 'pasarela_pago', 'estado_pago', 'fecha_orden']
         read_only_fields = fields
 
 
@@ -181,7 +186,7 @@ class ValidacionEntregaMixin:
 # publicar (_publicar_producto). Deliberadamente fuera del trío de
 # ValidacionEntregaMixin: se pueden completar en otro momento.
 CAMPOS_PUBLICACION = [
-    'titulo_publicacion', 'descripcion_publicacion', 'precio_publicacion',
+    'titulo_publicacion', 'descripcion_publicacion', 'precio_publicacion', 'precio_monedas_publicacion',
     'formato_archivo_publicacion', 'link_youtube',
 ]
 

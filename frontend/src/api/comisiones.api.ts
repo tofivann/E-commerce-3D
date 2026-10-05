@@ -10,6 +10,9 @@ export interface OrdenResumen {
   id: number;
   codigo_orden: string;
   total: number | string;
+  // Solo si la comisión se pagó con monedas (pasarela_pago "Monedas"; total es 0).
+  total_monedas: number | null;
+  pasarela_pago: string;
   estado_pago: string;
   fecha_orden: string;
 }
@@ -20,6 +23,8 @@ export interface TramoPersonajesMotion {
   min_personajes: number;
   max_personajes: number;
   precio: number | string;
+  // Lo que cuesta pagándolo con monedas; null = no se puede pagar con monedas.
+  precio_monedas: number | null;
   activo: boolean;
   orden_visualizacion: number;
 }
@@ -28,7 +33,15 @@ export interface JuegoComision {
   id: number;
   nombre: string;
   precio: number | string;
+  precio_monedas: number | null;
   activo: boolean;
+}
+
+// Respuesta de solicitar una comisión pagándola con monedas: queda pagada
+// en la misma llamada (no hay pasarela).
+export interface ComisionPagadaConMonedas<T> {
+  comision: T;
+  saldo_monedas: number;
 }
 
 export interface ComisionMotion {
@@ -96,6 +109,8 @@ export interface DatosPublicacion {
   titulo_publicacion: string;
   descripcion_publicacion: string;
   precio_publicacion: string | number | null;
+  // Precio en monedas que tendrá el producto; null = no se podrá pagar con monedas.
+  precio_monedas_publicacion: number | null;
   formato_archivo_publicacion: string;
   link_youtube: string | null;
   publicacion_completa: boolean;
@@ -148,6 +163,13 @@ export const comisionesApi = {
     const { data } = await axiosClient.post("custom-orders/comisiones/motion/paypal/", payload);
     return data;
   },
+  // Con monedas se cobra el precio en monedas del tramo; `monto` no aplica.
+  solicitarComisionMotionMonedas: async (
+    payload: Omit<SolicitudComisionMotion, "monto">,
+  ): Promise<ComisionPagadaConMonedas<ComisionMotion>> => {
+    const { data } = await axiosClient.post("custom-orders/comisiones/motion/monedas/", payload);
+    return data;
+  },
 
   // Comisiones de Modelo Nuevo
   misComisionesModelo: async (): Promise<ComisionModelo[]> => {
@@ -170,11 +192,21 @@ export const comisionesApi = {
     });
     return data;
   },
+  solicitarComisionModeloMonedas: async (
+    formData: FormData,
+  ): Promise<ComisionPagadaConMonedas<ComisionModelo>> => {
+    const { data } = await axiosClient.post("custom-orders/comisiones/modelo/monedas/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
 };
 
 export const comisionesAdminApi = {
   // Precios: Juegos
-  crearJuego: async (payload: { nombre: string; precio: string; activo: boolean }): Promise<JuegoComision> => {
+  crearJuego: async (
+    payload: { nombre: string; precio: string; precio_monedas: number | null; activo: boolean },
+  ): Promise<JuegoComision> => {
     const { data } = await axiosClient.post("custom-orders/juegos/", payload);
     return data;
   },

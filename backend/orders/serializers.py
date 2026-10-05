@@ -8,7 +8,7 @@ class DetalleOrdenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DetalleOrden
-        fields = ['id', 'producto', 'precio_unitario']
+        fields = ['id', 'producto', 'precio_unitario', 'precio_monedas']
 
 
 class ComprasDigitalesSerializer(serializers.ModelSerializer):
@@ -38,7 +38,7 @@ class OrdenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Orden
         fields = [
-            'id', 'codigo_orden', 'total', 'estado_pago',
+            'id', 'codigo_orden', 'total', 'total_monedas', 'estado_pago',
             'tipo_orden', 'pasarela_pago', 'fecha_orden',
             'detalles', 'compras_digitales',
         ]
@@ -60,7 +60,9 @@ class VentaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Orden
         fields = [
-            'id', 'codigo_orden', 'fecha_orden', 'total', 'tipo_orden', 'pasarela_pago',
+            # total_monedas solo viene en las ventas pagadas con monedas, donde
+            # total es 0: no entran en lo cobrado en dólares.
+            'id', 'codigo_orden', 'fecha_orden', 'total', 'total_monedas', 'tipo_orden', 'pasarela_pago',
             'cliente_nombre', 'cliente_email', 'conceptos', 'estado_comision',
         ]
         read_only_fields = fields

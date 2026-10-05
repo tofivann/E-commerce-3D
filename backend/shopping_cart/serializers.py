@@ -20,10 +20,18 @@ class CarritoSerializer(serializers.ModelSerializer):
     subtotal = serializers.SerializerMethodField()
     impuestos = serializers.SerializerMethodField()
     total = serializers.SerializerMethodField()
+    total_monedas = serializers.SerializerMethodField()
 
     class Meta:
         model = Carrito
-        fields = ['id', 'items', 'subtotal', 'impuestos', 'total', 'fecha_actualizacion']
+        fields = ['id', 'items', 'subtotal', 'impuestos', 'total', 'total_monedas', 'fecha_actualizacion']
+
+    def get_total_monedas(self, obj):
+        """Lo que cuesta el carrito entero pagado con monedas, o None si no
+        se puede pagar así (está vacío, o algún producto no tiene precio en
+        monedas): no se mezclan monedas y dinero en una misma compra."""
+        precios = [item.producto.precio_monedas for item in obj.items.all()]
+        return sum(precios) if precios and all(precios) else None
 
     def get_subtotal(self, obj):
         return sum((item.producto.precio for item in obj.items.all()), Decimal('0.00'))

@@ -188,6 +188,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
               fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
               codigoOrden={item.data.orden.codigo_orden}
               total={item.data.orden.total}
+              totalMonedas={item.data.orden.total_monedas}
               fechaOrden={item.data.orden.fecha_orden}
               footer={
                 <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>

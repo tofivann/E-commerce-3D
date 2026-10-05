@@ -7,6 +7,9 @@ import { capturarOrdenPayPal } from "../../api/paypal.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
 import { extraerErroresValidacion } from "../../utils/erroresApi";
 import { useMontoComision } from "../../hooks/useMontoComision";
+import { perfilStore } from "../../stores/perfilStore";
+import { Monedas } from "../ui/Monedas";
+import { PagarConMonedas } from "../ui/PagarConMonedas";
 import { MontoComisionInput } from "./MontoComisionInput";
 
 export const ComisionMotionForm: React.FC = () => {
@@ -19,22 +22,25 @@ export const ComisionMotionForm: React.FC = () => {
   const [informacionAdicional, setInformacionAdicional] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pagadoPayPal, setPagadoPayPal] = useState(false);
+  // Con qué se pagó, una vez pagado sin salir de la página (Stripe redirige).
+  const [pagadoCon, setPagadoCon] = useState<"paypal" | "monedas" | null>(null);
 
   // El precio del tramo elegido es el mínimo; el cliente puede pagar más.
   const tramoElegido = tramos.find((tramo) => tramo.id === tramoId) ?? null;
   const pago = useMontoComision(tramoElegido ? Number(tramoElegido.precio) : null);
 
-  const formularioValido = Boolean(tramoId && nombreJuego && nombreCancion && linkVideo && pago.valido);
+  const datosCompletos = Boolean(tramoId && nombreJuego && nombreCancion && linkVideo);
+  const formularioValido = datosCompletos && pago.valido;
 
-  const construirSolicitud = () => ({
+  const datosSolicitud = () => ({
     tramo_personajes: tramoId as number,
     nombre_juego: nombreJuego,
     nombre_cancion: nombreCancion,
     link_video: linkVideo,
     informacion_adicional: informacionAdicional,
-    monto: pago.monto,
   });
+  // Con dinero se manda además el monto (el precio del tramo o más).
+  const construirSolicitud = () => ({ ...datosSolicitud(), monto: pago.monto });
 
   useEffect(() => {
     comisionesApi
@@ -68,11 +74,13 @@ export const ComisionMotionForm: React.FC = () => {
     }
   };
 
-  if (pagadoPayPal) {
+  if (pagadoCon) {
     return (
       <div className="flex flex-col items-center gap-3 text-center py-10">
         <span className="material-symbols-outlined text-primary text-4xl">check_circle</span>
-        <p className="text-on-surface font-semibold">{t("motionForm.paypalSuccess")}</p>
+        <p className="text-on-surface font-semibold">
+          {pagadoCon === "monedas" ? t("monedas.comisionPagada") : t("motionForm.paypalSuccess")}
+        </p>
       </div>
     );
   }
@@ -106,6 +114,9 @@ export const ComisionMotionForm: React.FC = () => {
             >
               <p className="font-semibold text-on-surface">{nombreTramoMotion(tramo)}</p>
               <p className="text-primary-fixed-dim font-bold font-mono">${Number(tramo.precio).toFixed(2)}</p>
+              {tramo.precio_monedas != null && (
+                <Monedas cantidad={tramo.precio_monedas} className="text-xs text-on-surface-variant mt-1" />
+              )}
             </button>
           ))}
         </div>
@@ -205,10 +216,24 @@ export const ComisionMotionForm: React.FC = () => {
         }}
         onApprove={async (data) => {
           await capturarOrdenPayPal(data.orderID);
-          setPagadoPayPal(true);
+          // La comisión pagada con dinero acaba de dar una moneda: saldo al día.
+          perfilStore.recargar();
+          setPagadoCon("paypal");
         }}
         onError={() => setError(t("common.paypalError"))}
       />
+
+      {/* Tercera forma de pago: el precio en monedas del tramo elegido. */}
+      {tramoElegido && (
+        <div className="pt-4 border-t border-outline-variant/30">
+          <PagarConMonedas
+            precio={tramoElegido.precio_monedas}
+            deshabilitado={!datosCompletos || enviando}
+            onPagar={async () => (await comisionesApi.solicitarComisionMotionMonedas(datosSolicitud())).saldo_monedas}
+            onPagado={() => setPagadoCon("monedas")}
+          />
+        </div>
+      )}
     </form>
   );
 };

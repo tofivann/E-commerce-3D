@@ -8,6 +8,7 @@ import type { CarritoDrawer } from "../../hooks/useCarritoDrawer";
 import { CartDrawer } from "../products/CartDrawer";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
+import { SaldoMonedas } from "./SaldoMonedas";
 import { Sidebar } from "./Sidebar";
 
 interface AppLayoutProps {
@@ -68,6 +69,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               <div className="hidden sm:block">
                 <LanguageSwitcher />
               </div>
+              {/* Saldo de monedas. En móvil vive en el menú (Sidebar), como
+                  el idioma: aquí aplastaría el buscador. */}
+              {hasAccess && (
+                <div className="hidden sm:block">
+                  <SaldoMonedas />
+                </div>
+              )}
               {hasAccess && (
                 <button
                   onClick={carrito.abrir}

@@ -6,6 +6,7 @@ import { ComisionMotionForm } from "../components/comisiones/ComisionMotionForm"
 import { ComisionModeloForm } from "../components/comisiones/ComisionModeloForm";
 import { MisComisionesList } from "../components/comisiones/MisComisionesList";
 import { carritoApi } from "../api/carrito.api";
+import { perfilStore } from "../stores/perfilStore";
 
 interface CommissionsPageProps {
   isStaff?: boolean;
@@ -44,6 +45,8 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
         if (orden.estado_pago === "COMPLETADO" || intentos >= 8) {
           setConfirmandoPago(false);
           setRefreshKey((k) => k + 1);
+          // La comisión pagada acaba de dar una moneda: saldo de la cabecera al día.
+          perfilStore.recargar();
           return;
         }
         intentos += 1;

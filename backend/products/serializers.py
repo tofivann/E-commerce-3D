@@ -28,6 +28,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             'titulo',
             'descripcion',
             'precio',
+            'precio_monedas',
             'categorias',
             'categorias_detalle',
             'formato_archivo',

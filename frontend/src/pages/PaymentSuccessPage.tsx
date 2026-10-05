@@ -7,6 +7,7 @@ import { descargarCompra } from "../api/biblioteca.api";
 import type { CompraDigital } from "../api/biblioteca.api";
 import { etiquetaFormato } from "../utils/formato";
 import { miniaturaDe } from "../utils/imagenProducto";
+import { perfilStore } from "../stores/perfilStore";
 
 const MAX_INTENTOS = 10; // ~15s de espera al webhook antes de rendirnos
 const INTERVALO_MS = 1500;
@@ -37,6 +38,8 @@ export const PaymentSuccessPage: React.FC = () => {
 
         if (data.estado_pago === "COMPLETADO") {
           setEstado("listo");
+          // La compra confirmada acaba de dar monedas: saldo de la cabecera al día.
+          perfilStore.recargar();
           return;
         }
 

@@ -14,11 +14,13 @@ from rest_framework.views import APIView
 from core import paypal_utils
 from core.email_utils import enviar_email
 from core.idiomas import EN, ES
+from monedas.reglas import PASARELA_MONEDAS
+from monedas.services import SaldoInsuficiente, revertir_por_comision_cancelada, saldo_de
 from orders.models import Orden, ComprasDigitales
 from products.models import Producto
 from .models import EstadoComision, TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
 from .permissions import EsAdminOSoloLectura
-from .services import datos_comision_para_email
+from .services import datos_comision_para_email, enviar_correo_comision_pagada, pagar_comision_con_monedas
 from .serializers import (
     TramoPersonajesMotionSerializer,
     JuegoComisionSerializer,
@@ -43,6 +45,97 @@ class JuegoComisionViewSet(viewsets.ModelViewSet):
     queryset = JuegoComision.objects.all()
     serializer_class = JuegoComisionSerializer
     permission_classes = [EsAdminOSoloLectura]
+
+
+def _crear_comision_motion(usuario, datos, pasarela, total, total_monedas=None):
+    """Crea la Orden (PENDIENTE) y la ComisionMotion de una solicitud ya
+    validada. Lo comparten las tres formas de pago; cada vista decide después
+    cómo se cobra. `total` es lo que se cobra en dinero; en un pago con
+    monedas es 0 y lo cobrado va en `total_monedas`."""
+    orden = Orden.objects.create(
+        codigo_orden=f"MOT-{uuid.uuid4().hex[:10].upper()}",
+        usuario=usuario,
+        total=total,
+        total_monedas=total_monedas,
+        estado_pago=Orden.EstadoPago.PENDIENTE,
+        tipo_orden=Orden.TipoOrden.COMISION_MOTION,
+        pasarela_pago=pasarela,
+    )
+    comision = ComisionMotion.objects.create(
+        orden=orden,
+        usuario=usuario,
+        tramo_personajes=datos['tramo_personajes'],
+        nombre_juego=datos['nombre_juego'],
+        nombre_cancion=datos['nombre_cancion'],
+        link_video=datos['link_video'],
+        informacion_adicional=datos.get('informacion_adicional', ''),
+    )
+    return orden, comision
+
+
+def _crear_comision_modelo(usuario, datos, pasarela, total, total_monedas=None):
+    """Igual que `_crear_comision_motion`, para una comisión de Modelo."""
+    orden = Orden.objects.create(
+        codigo_orden=f"MOD-{uuid.uuid4().hex[:10].upper()}",
+        usuario=usuario,
+        total=total,
+        total_monedas=total_monedas,
+        estado_pago=Orden.EstadoPago.PENDIENTE,
+        tipo_orden=Orden.TipoOrden.COMISION_MODELO,
+        pasarela_pago=pasarela,
+    )
+    comision = ComisionModelo.objects.create(
+        orden=orden,
+        usuario=usuario,
+        juego=datos['juego'],
+        nombre_personaje=datos['nombre_personaje'],
+        foto_referencia_1=datos['foto_referencia_1'],
+        foto_referencia_2=datos.get('foto_referencia_2'),
+    )
+    return orden, comision
+
+
+def _pagar_comision_con_monedas(request, serializer_entrada, campo_precio, crear, serializer_salida):
+    """Solicitud de comisión pagada con monedas, común a Motion y Modelo: se
+    cobra el precio en monedas del tramo/juego elegido (no hay "pagar de
+    más" con monedas) y la comisión queda pagada en esta misma petición.
+
+    Un 400 trae `motivo` ('saldo_insuficiente' | 'no_pagable') para que el
+    frontend muestre el mensaje en su idioma."""
+    entrada = serializer_entrada(data=request.data)
+    entrada.is_valid(raise_exception=True)
+    datos = entrada.validated_data
+    precio_monedas = datos[campo_precio].precio_monedas
+    if not precio_monedas:
+        return Response(
+            {"detail": "Esta comisión no se puede pagar con monedas.", "motivo": "no_pagable"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        # Comisión y cobro, o ninguno de los dos.
+        with transaction.atomic():
+            orden, comision = crear(request.user, datos, PASARELA_MONEDAS, total=0, total_monedas=precio_monedas)
+            pagar_comision_con_monedas(orden)
+    except SaldoInsuficiente as e:
+        return Response(
+            {
+                "detail": f"No tienes monedas suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
+                "motivo": "saldo_insuficiente",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Fuera de la transacción, como el resto de correos de pago.
+    enviar_correo_comision_pagada(orden)
+    comision.refresh_from_db()
+    return Response(
+        {
+            "comision": serializer_salida(comision, context={'request': request}).data,
+            "saldo_monedas": saldo_de(request.user),
+        },
+        status=status.HTTP_201_CREATED,
+    )
 
 
 def _crear_sesion_pago_comision(request, orden, tipo, nombre_producto_stripe):
@@ -104,24 +197,7 @@ class SolicitarComisionMotionView(generics.ListCreateAPIView):
         entrada.is_valid(raise_exception=True)
         datos = entrada.validated_data
         tramo = datos['tramo_personajes']
-
-        orden = Orden.objects.create(
-            codigo_orden=f"MOT-{uuid.uuid4().hex[:10].upper()}",
-            usuario=request.user,
-            total=datos['monto'],
-            estado_pago=Orden.EstadoPago.PENDIENTE,
-            tipo_orden=Orden.TipoOrden.COMISION_MOTION,
-            pasarela_pago='Stripe',
-        )
-        comision = ComisionMotion.objects.create(
-            orden=orden,
-            usuario=request.user,
-            tramo_personajes=tramo,
-            nombre_juego=datos['nombre_juego'],
-            nombre_cancion=datos['nombre_cancion'],
-            link_video=datos['link_video'],
-            informacion_adicional=datos.get('informacion_adicional', ''),
-        )
+        orden, comision = _crear_comision_motion(request.user, datos, 'Stripe', total=datos['monto'])
 
         try:
             session = _crear_sesion_pago_comision(
@@ -155,24 +231,7 @@ class SolicitarComisionMotionPayPalView(generics.CreateAPIView):
         entrada.is_valid(raise_exception=True)
         datos = entrada.validated_data
         tramo = datos['tramo_personajes']
-
-        orden = Orden.objects.create(
-            codigo_orden=f"MOT-{uuid.uuid4().hex[:10].upper()}",
-            usuario=request.user,
-            total=datos['monto'],
-            estado_pago=Orden.EstadoPago.PENDIENTE,
-            tipo_orden=Orden.TipoOrden.COMISION_MOTION,
-            pasarela_pago='PayPal',
-        )
-        comision = ComisionMotion.objects.create(
-            orden=orden,
-            usuario=request.user,
-            tramo_personajes=tramo,
-            nombre_juego=datos['nombre_juego'],
-            nombre_cancion=datos['nombre_cancion'],
-            link_video=datos['link_video'],
-            informacion_adicional=datos.get('informacion_adicional', ''),
-        )
+        orden, comision = _crear_comision_motion(request.user, datos, 'PayPal', total=datos['monto'])
 
         try:
             orden_paypal = _crear_orden_pago_paypal_comision(
@@ -219,23 +278,7 @@ class SolicitarComisionModeloView(generics.ListCreateAPIView):
         entrada.is_valid(raise_exception=True)
         datos = entrada.validated_data
         juego = datos['juego']
-
-        orden = Orden.objects.create(
-            codigo_orden=f"MOD-{uuid.uuid4().hex[:10].upper()}",
-            usuario=request.user,
-            total=datos['monto'],
-            estado_pago=Orden.EstadoPago.PENDIENTE,
-            tipo_orden=Orden.TipoOrden.COMISION_MODELO,
-            pasarela_pago='Stripe',
-        )
-        comision = ComisionModelo.objects.create(
-            orden=orden,
-            usuario=request.user,
-            juego=juego,
-            nombre_personaje=datos['nombre_personaje'],
-            foto_referencia_1=datos['foto_referencia_1'],
-            foto_referencia_2=datos.get('foto_referencia_2'),
-        )
+        orden, comision = _crear_comision_modelo(request.user, datos, 'Stripe', total=datos['monto'])
 
         try:
             session = _crear_sesion_pago_comision(
@@ -269,23 +312,7 @@ class SolicitarComisionModeloPayPalView(generics.CreateAPIView):
         entrada.is_valid(raise_exception=True)
         datos = entrada.validated_data
         juego = datos['juego']
-
-        orden = Orden.objects.create(
-            codigo_orden=f"MOD-{uuid.uuid4().hex[:10].upper()}",
-            usuario=request.user,
-            total=datos['monto'],
-            estado_pago=Orden.EstadoPago.PENDIENTE,
-            tipo_orden=Orden.TipoOrden.COMISION_MODELO,
-            pasarela_pago='PayPal',
-        )
-        comision = ComisionModelo.objects.create(
-            orden=orden,
-            usuario=request.user,
-            juego=juego,
-            nombre_personaje=datos['nombre_personaje'],
-            foto_referencia_1=datos['foto_referencia_1'],
-            foto_referencia_2=datos.get('foto_referencia_2'),
-        )
+        orden, comision = _crear_comision_modelo(request.user, datos, 'PayPal', total=datos['monto'])
 
         try:
             orden_paypal = _crear_orden_pago_paypal_comision(
@@ -304,6 +331,28 @@ class SolicitarComisionModeloPayPalView(generics.CreateAPIView):
         return Response(
             {"paypal_order_id": orden_paypal["id"], "comision": ComisionModeloSerializer(comision, context={'request': request}).data},
             status=status.HTTP_201_CREATED,
+        )
+
+
+class SolicitarComisionMotionMonedasView(APIView):
+    """Solicita una comisión de Motion pagándola con monedas."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        return _pagar_comision_con_monedas(
+            request, SolicitudComisionMotionSerializer, 'tramo_personajes',
+            _crear_comision_motion, ComisionMotionSerializer,
+        )
+
+
+class SolicitarComisionModeloMonedasView(APIView):
+    """Solicita una comisión de Modelo pagándola con monedas."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        return _pagar_comision_con_monedas(
+            request, SolicitudComisionModeloSerializer, 'juego',
+            _crear_comision_modelo, ComisionModeloSerializer,
         )
 
 
@@ -355,7 +404,14 @@ class ComisionAdminViewSetBase(
         # correo de "comisión completada" una sola vez, no en cada cambio de
         # estado o reemplazo posterior del archivo.
         tenia_archivo_antes = bool(serializer.instance.archivo_entrega)
-        instance = serializer.save()
+        estado_antes = serializer.instance.estado
+        # El cambio de estado y su efecto en monedas, o ninguno de los dos.
+        with transaction.atomic():
+            instance = serializer.save()
+            if instance.estado == EstadoComision.CANCELADO and estado_antes != EstadoComision.CANCELADO:
+                # Cancelar una comisión ya pagada deshace sus monedas: se
+                # devuelven si se pagó con ellas, o se quitan las que dio.
+                revertir_por_comision_cancelada(instance.orden)
         # Una comisión cancelada no se completa por subirle un archivo (el
         # panel ni siquiera ofrece el botón): ni cambia de estado ni se le
         # avisa al cliente que "está lista" — sería contradictorio con lo que
@@ -433,6 +489,7 @@ class ComisionAdminViewSetBase(
             titulo=comision.titulo_publicacion,
             descripcion=comision.descripcion_publicacion,
             precio=comision.precio_publicacion,
+            precio_monedas=comision.precio_monedas_publicacion,
             formato_archivo=comision.formato_archivo_publicacion,
             archivo_3d=comision.archivo_entrega,
             imagen_previa=comision.foto_entrega,

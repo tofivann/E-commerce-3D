@@ -9,6 +9,7 @@ import { formatearDinero } from "../../utils/importe";
 import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
 import { FiltroChips } from "../ui/FiltroChips";
 import { FiltroFechas } from "../ui/FiltroFechas";
+import { ImporteOrden } from "../ui/ImporteOrden";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { TablaSkeleton } from "../ui/TablaSkeleton";
 
@@ -100,7 +101,7 @@ export const EstadisticasPagos: React.FC = () => {
                   </td>
                   <td className={`${tdClass} text-on-surface-variant`}>{venta.pasarela_pago}</td>
                   <td className={`${tdClass} font-mono font-bold text-on-surface text-right whitespace-nowrap`}>
-                    {formatearDinero(venta.total)}
+                    <ImporteOrden total={venta.total} totalMonedas={venta.total_monedas} />
                   </td>
                 </tr>
               ))}

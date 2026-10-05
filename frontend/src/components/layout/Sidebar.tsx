@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { SaldoMonedas } from "./SaldoMonedas";
 
 interface SidebarProps {
   isStaff: boolean;
@@ -129,9 +130,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
-          {/* En móvil el selector de idioma no cabe en la cabecera (ver AppLayout). */}
-          <div className="px-6 mb-6">
+          {/* En móvil el selector de idioma y el saldo de monedas no caben
+              en la cabecera (ver AppLayout). */}
+          <div className="px-6 mb-6 flex flex-wrap items-center gap-3">
             <LanguageSwitcher />
+            {hasAccess && <SaldoMonedas />}
           </div>
           {navLinks}
           {logoutButton}

@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { deleteProducto, patchProducto } from "../../api/productos.api";
 import { ProductForm } from "./ProductForm";
+import { SearchInput } from "./SearchInput";
+import { Monedas } from "../ui/Monedas";
+import { useDebounce } from "../../hooks/useDebounce";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { TablaSkeleton } from "../ui/TablaSkeleton";
 import { useProductosPaginados } from "../../hooks/useProductosPaginados";
@@ -16,6 +19,10 @@ export const ProductAdminTable: React.FC = () => {
   const [editing, setEditing] = useState<Producto | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  // La lista es paginada: buscar tiene que hacerlo el servidor (filtrar aquí
+  // solo vería las páginas ya cargadas). Una petición por pausa de escritura.
+  const [busqueda, setBusqueda] = useState("");
+  const busquedaAplicada = useDebounce(busqueda.trim());
 
   const {
     items: productos,
@@ -27,7 +34,7 @@ export const ProductAdminTable: React.FC = () => {
     recargar,
     actualizarItem,
     eliminarItem,
-  } = useProductosPaginados({ incluirInactivos: true });
+  } = useProductosPaginados({ search: busquedaAplicada, incluirInactivos: true });
 
   const handleToggleActivo = async (producto: Producto) => {
     if (!producto.id) return;
@@ -79,6 +86,8 @@ export const ProductAdminTable: React.FC = () => {
         </button>
       </div>
 
+      <SearchInput value={busqueda} onChange={setBusqueda} placeholder={t("adminProducts.search")} className="mb-4 max-w-md" />
+
       {error && (
         <div className="p-4 mb-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
           {t("adminProducts.loadError")}
@@ -104,7 +113,7 @@ export const ProductAdminTable: React.FC = () => {
               {!cargando && !error && productos.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-on-surface-variant">
-                    {t("adminProducts.empty")}
+                    {busquedaAplicada ? t("common.noResults", { query: busquedaAplicada }) : t("adminProducts.empty")}
                   </td>
                 </tr>
               )}
@@ -139,6 +148,9 @@ export const ProductAdminTable: React.FC = () => {
                   </td>
                   <td className="py-3 px-6 font-mono text-primary-fixed-dim font-semibold">
                     ${Number(producto.precio).toFixed(2)}
+                    {producto.precio_monedas != null && (
+                      <Monedas cantidad={producto.precio_monedas} className="block text-xs text-on-surface-variant font-normal mt-0.5" />
+                    )}
                   </td>
                   <td className="py-3 px-6">
                     <button

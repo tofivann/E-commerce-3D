@@ -58,7 +58,9 @@ class LogoutView(TokenBlacklistView):
 # CRUD DE USUARIOS (VIEWSET)
 # ==========================================
 class UsuarioViewSet(viewsets.ModelViewSet):
-    queryset = Usuario.objects.all()
+    # select_related: el serializer muestra el saldo de monedas de cada
+    # usuario; sin esto sería una consulta por fila de la tabla.
+    queryset = Usuario.objects.select_related('monedero')
     serializer_class = UsuarioSerializer
 
     def get_permissions(self):

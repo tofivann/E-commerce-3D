@@ -6,6 +6,9 @@ import { comisionesApi } from "../../api/comisiones.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
 import { extraerErroresValidacion } from "../../utils/erroresApi";
 import { useMontoComision } from "../../hooks/useMontoComision";
+import { perfilStore } from "../../stores/perfilStore";
+import { Monedas } from "../ui/Monedas";
+import { PagarConMonedas } from "../ui/PagarConMonedas";
 import { MontoComisionInput } from "./MontoComisionInput";
 
 export const ComisionModeloForm: React.FC = () => {
@@ -17,19 +20,23 @@ export const ComisionModeloForm: React.FC = () => {
   const [foto2, setFoto2] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pagadoPayPal, setPagadoPayPal] = useState(false);
+  // Con qué se pagó, una vez pagado sin salir de la página (Stripe redirige).
+  const [pagadoCon, setPagadoCon] = useState<"paypal" | "monedas" | null>(null);
 
   // El precio del juego elegido es el mínimo; el cliente puede pagar más.
   const juegoElegido = juegos.find((juego) => juego.id === juegoId) ?? null;
   const pago = useMontoComision(juegoElegido ? Number(juegoElegido.precio) : null);
 
+  const datosCompletos = Boolean(juegoId && foto1 && nombrePersonaje.trim());
   const formularioValido = Boolean(juegoId && foto1 && pago.valido);
 
-  const construirFormData = () => {
+  // Con dinero se manda el monto (el precio del juego o más). Con monedas
+  // no: se cobra el precio en monedas del juego.
+  const construirFormData = (conMonto = true) => {
     const formData = new FormData();
     formData.append("juego", String(juegoId));
     formData.append("nombre_personaje", nombrePersonaje);
-    formData.append("monto", pago.monto);
+    if (conMonto) formData.append("monto", pago.monto);
     if (foto1) formData.append("foto_referencia_1", foto1);
     if (foto2) formData.append("foto_referencia_2", foto2);
     return formData;
@@ -71,11 +78,13 @@ export const ComisionModeloForm: React.FC = () => {
     }
   };
 
-  if (pagadoPayPal) {
+  if (pagadoCon) {
     return (
       <div className="flex flex-col items-center gap-3 text-center py-10">
         <span className="material-symbols-outlined text-primary text-4xl">check_circle</span>
-        <p className="text-on-surface font-semibold">{t("modeloForm.paypalSuccess")}</p>
+        <p className="text-on-surface font-semibold">
+          {pagadoCon === "monedas" ? t("monedas.comisionPagada") : t("modeloForm.paypalSuccess")}
+        </p>
       </div>
     );
   }
@@ -113,6 +122,9 @@ export const ComisionModeloForm: React.FC = () => {
               <p className="text-primary-fixed-dim font-bold font-mono">
                 ${Number(juego.precio).toFixed(2)}
               </p>
+              {juego.precio_monedas != null && (
+                <Monedas cantidad={juego.precio_monedas} className="text-xs text-on-surface-variant mt-1" />
+              )}
             </button>
           ))}
         </div>
@@ -203,10 +215,24 @@ export const ComisionModeloForm: React.FC = () => {
         }}
         onApprove={async (data) => {
           await capturarOrdenPayPal(data.orderID);
-          setPagadoPayPal(true);
+          // La comisión pagada con dinero acaba de dar una moneda: saldo al día.
+          perfilStore.recargar();
+          setPagadoCon("paypal");
         }}
         onError={() => setError(t("common.paypalError"))}
       />
+
+      {/* Tercera forma de pago: el precio en monedas del juego elegido. */}
+      {juegoElegido && (
+        <div className="pt-4 border-t border-outline-variant/30">
+          <PagarConMonedas
+            precio={juegoElegido.precio_monedas}
+            deshabilitado={!datosCompletos || enviando}
+            onPagar={async () => (await comisionesApi.solicitarComisionModeloMonedas(construirFormData(false))).saldo_monedas}
+            onPagado={() => setPagadoCon("monedas")}
+          />
+        </div>
+      )}
     </form>
   );
 };

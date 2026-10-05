@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import type { Categoria, Producto } from "../../api/productos.api";
 import { categoriasApi, createProducto, descargarArchivoProducto, patchProducto } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
+import { PRECIO_EN_MONEDAS_POR_DEFECTO, precioMonedasATexto, precioMonedasValido } from "../../utils/monedas";
 import { Pildora } from "../ui/Pildora";
+import { PrecioMonedasInput } from "../ui/PrecioMonedasInput";
 
 interface ProductFormProps {
   open: boolean;
@@ -16,6 +18,9 @@ const emptyForm = {
   titulo: "",
   descripcion: "",
   precio: "",
+  // Un producto nuevo nace con el precio en monedas por defecto; el admin
+  // lo cambia o lo vacía (vacío = no se puede pagar con monedas).
+  precio_monedas: String(PRECIO_EN_MONEDAS_POR_DEFECTO),
   categorias: [] as number[],
   formato_archivo: "",
   link_youtube: "",
@@ -50,6 +55,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         titulo: producto.titulo || "",
         descripcion: producto.descripcion || "",
         precio: String(producto.precio ?? ""),
+        precio_monedas: precioMonedasATexto(producto.precio_monedas),
         categorias: producto.categorias || [],
         formato_archivo: producto.formato_archivo || "",
         link_youtube: producto.link_youtube || "",
@@ -91,6 +97,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     data.append("titulo", form.titulo);
     data.append("descripcion", form.descripcion);
     data.append("precio", form.precio);
+    // Vacío viaja como "": el backend lo guarda como "sin precio en monedas".
+    data.append("precio_monedas", form.precio_monedas.trim());
     data.append("formato_archivo", form.formato_archivo);
     data.append("link_youtube", form.link_youtube);
     data.append("activo", String(form.activo));
@@ -115,6 +123,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     if (form.categorias.length === 0) {
       setError(t("productForm.errorNoCategory"));
+      return;
+    }
+
+    if (!precioMonedasValido(form.precio_monedas)) {
+      setError(t("monedas.precioInvalido"));
       return;
     }
 
@@ -250,7 +263,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
                 {t("productForm.priceLabel")}
@@ -266,6 +279,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 onChange={(e) => setForm({ ...form, precio: e.target.value })}
               />
             </div>
+
+            <PrecioMonedasInput
+              id="productoPrecioMonedas"
+              valor={form.precio_monedas}
+              onChange={(precio_monedas) => setForm({ ...form, precio_monedas })}
+            />
 
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">

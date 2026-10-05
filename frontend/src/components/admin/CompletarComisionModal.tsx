@@ -5,6 +5,8 @@ import { comisionesAdminApi } from "../../api/comisiones.api";
 import { categoriasApi } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
 import { Pildora } from "../ui/Pildora";
+import { PrecioMonedasInput } from "../ui/PrecioMonedasInput";
+import { precioMonedasATexto, precioMonedasValido } from "../../utils/monedas";
 import { extraerErroresValidacion } from "../../utils/erroresApi";
 import { formatearImporte, IMPORTE_VALIDO } from "../../utils/importe";
 import type { ErroresPorCampo } from "../../utils/erroresApi";
@@ -34,6 +36,8 @@ interface FormPublicacion {
   titulo: string;
   descripcion: string;
   precio: string;
+  // Lo que costará el producto pagándolo con monedas (vacío = no se puede).
+  precioMonedas: string;
   formato: string;
   linkYoutube: string;
 }
@@ -53,6 +57,8 @@ function formInicial(item: Item): FormPublicacion {
     // comisión (Orden.total, que incluye lo que haya pagado de más sobre el
     // mínimo). Es solo el valor inicial: el admin puede cambiarlo.
     precio: formatearImporte(item.data.precio_publicacion ?? item.data.orden.total),
+    // El backend ya lo guarda con el valor por defecto (10) desde que se crea la comisión.
+    precioMonedas: precioMonedasATexto(item.data.precio_monedas_publicacion),
     formato: item.data.formato_archivo_publicacion || "",
     linkYoutube: item.data.link_youtube || "",
   };
@@ -76,6 +82,7 @@ const CAMPO_POR_ERROR: Record<string, keyof FormPublicacion> = {
   titulo_publicacion: "titulo",
   descripcion_publicacion: "descripcion",
   precio_publicacion: "precio",
+  precio_monedas_publicacion: "precioMonedas",
   formato_archivo_publicacion: "formato",
   link_youtube: "linkYoutube",
 };
@@ -89,6 +96,7 @@ function validarFormulario(form: FormPublicacion, t: (clave: string) => string):
   const errores: ErroresForm = {};
   const precio = form.precio.trim();
   if (precio !== "" && !IMPORTE_VALIDO.test(precio)) errores.precio = t("completarComisionModal.errorPrice");
+  if (!precioMonedasValido(form.precioMonedas)) errores.precioMonedas = t("monedas.precioInvalido");
   return errores;
 }
 
@@ -110,7 +118,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string>("");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaIds, setCategoriaIds] = useState<number[]>([]);
-  const [form, setForm] = useState<FormPublicacion>({ titulo: "", descripcion: "", precio: "", formato: "", linkYoutube: "" });
+  const [form, setForm] = useState<FormPublicacion>({ titulo: "", descripcion: "", precio: "", precioMonedas: "", formato: "", linkYoutube: "" });
   const [publicarAhora, setPublicarAhora] = useState(false);
   const [saving, setSaving] = useState(false);
   // Error general (arriba del formulario) y errores por campo (debajo de
@@ -227,6 +235,8 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     // Vacío se omite (no se manda ""): el backend lo rechazaría como
     // decimal inválido, y un precio en blanco simplemente sigue sin definir.
     if (form.precio.trim() !== "") formData.append("precio_publicacion", form.precio.trim());
+    // Este sí viaja vacío: "" significa "sin precio en monedas" y el backend lo acepta.
+    formData.append("precio_monedas_publicacion", form.precioMonedas.trim());
 
     try {
       if (item.tipo === "motion") {
@@ -367,7 +377,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
             <ErrorCampo mensaje={erroresCampos.descripcion} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className={labelClass}>{t("completarComisionModal.resalePrice")}</label>
               {/* type="text" + inputMode="decimal" (no type="number"): así
@@ -383,6 +393,12 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
               />
               <ErrorCampo mensaje={erroresCampos.precio} />
             </div>
+            <PrecioMonedasInput
+              id="comisionPrecioMonedas"
+              valor={form.precioMonedas}
+              onChange={(precioMonedas) => actualizarForm({ precioMonedas })}
+              error={erroresCampos.precioMonedas}
+            />
             <div>
               <label className={labelClass}>{t("productForm.formatLabel")}</label>
               <input

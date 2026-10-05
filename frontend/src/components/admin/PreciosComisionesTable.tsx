@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { JuegoComision, TramoPersonajesMotion } from "../../api/comisiones.api";
 import { comisionesApi, comisionesAdminApi } from "../../api/comisiones.api";
+import {
+  PRECIO_EN_MONEDAS_POR_DEFECTO,
+  precioMonedasATexto,
+  precioMonedasValido,
+  textoAPrecioMonedas,
+} from "../../utils/monedas";
 
 const inputClass =
   "w-full bg-surface-variant border border-outline-variant rounded-md py-1.5 px-2 text-on-surface text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary";
@@ -10,6 +16,56 @@ const inputClass =
 // móvil se apila en columnas (una tabla no se reacomoda sola en pantallas angostas).
 const addRowClass = "flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0 bg-surface-container-lowest/50 md:bg-transparent";
 const addCellClass = "block w-full md:table-cell md:w-auto py-0 md:py-2 px-0 md:px-4";
+
+const thClass = "py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold";
+
+// Celda "precio en monedas" de una fila ya guardada (juego o tramo): se
+// guarda al salir del campo, como el resto de la fila. Vacío = esa comisión
+// no se puede pagar con monedas. Un valor inválido se descarta y vuelve el anterior.
+const PrecioMonedasCelda: React.FC<{ valor: number | null; onGuardar: (precio: number | null) => void }> = ({
+  valor,
+  onGuardar,
+}) => {
+  const { t } = useTranslation();
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      aria-label={t("monedas.precioLabel")}
+      title={t("monedas.precioAyuda")}
+      placeholder="—"
+      defaultValue={precioMonedasATexto(valor)}
+      onBlur={(e) => {
+        if (!precioMonedasValido(e.target.value)) {
+          e.target.value = precioMonedasATexto(valor);
+          return;
+        }
+        const nuevo = textoAPrecioMonedas(e.target.value);
+        if (nuevo !== valor) onGuardar(nuevo);
+      }}
+      className={`${inputClass} md:max-w-[90px] font-mono`}
+    />
+  );
+};
+
+// La misma celda en la fila de "agregar nuevo" (todavía sin guardar).
+const PrecioMonedasNuevo: React.FC<{ valor: string; onChange: (valor: string) => void }> = ({ valor, onChange }) => {
+  const { t } = useTranslation();
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      aria-label={t("monedas.precioLabel")}
+      title={t("monedas.precioAyuda")}
+      placeholder={t("monedas.precioLabel")}
+      value={valor}
+      onChange={(e) => onChange(e.target.value)}
+      className={`${inputClass} md:max-w-[90px]`}
+    />
+  );
+};
+
+const PRECIO_MONEDAS_NUEVO = String(PRECIO_EN_MONEDAS_POR_DEFECTO);
 
 // ---------------------------------------------------------------------------
 // Juegos (Comisión de Modelo Nuevo)
@@ -21,6 +77,7 @@ const JuegosTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoPrecio, setNuevoPrecio] = useState("");
+  const [nuevoPrecioMonedas, setNuevoPrecioMonedas] = useState(PRECIO_MONEDAS_NUEVO);
   const [guardando, setGuardando] = useState(false);
 
   const cargar = () => {
@@ -36,12 +93,18 @@ const JuegosTable: React.FC = () => {
 
   const handleAgregar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nuevoNombre || !nuevoPrecio) return;
+    if (!nuevoNombre || !nuevoPrecio || !precioMonedasValido(nuevoPrecioMonedas)) return;
     setGuardando(true);
     try {
-      await comisionesAdminApi.crearJuego({ nombre: nuevoNombre, precio: nuevoPrecio, activo: true });
+      await comisionesAdminApi.crearJuego({
+        nombre: nuevoNombre,
+        precio: nuevoPrecio,
+        precio_monedas: textoAPrecioMonedas(nuevoPrecioMonedas),
+        activo: true,
+      });
       setNuevoNombre("");
       setNuevoPrecio("");
+      setNuevoPrecioMonedas(PRECIO_MONEDAS_NUEVO);
       cargar();
     } catch (err) {
       console.error("Error al crear el juego:", err);
@@ -73,12 +136,13 @@ const JuegosTable: React.FC = () => {
             <tr className="bg-surface-container-high/60 border-b border-outline-variant/30">
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold">{t("preciosComisiones.colGame")}</th>
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-32">{t("preciosComisiones.colPrice")}</th>
+              <th className={`${thClass} w-32`}>{t("monedas.columna")}</th>
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-44">{t("preciosComisiones.colActive")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20 flex flex-col md:table-row-group">
             {loading && (
-              <tr><td colSpan={3} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
+              <tr><td colSpan={4} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
             )}
             {!loading && juegos.map((juego) => (
               <tr key={juego.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0">
@@ -95,6 +159,9 @@ const JuegosTable: React.FC = () => {
                     onBlur={(e) => e.target.value !== String(juego.precio) && handleUpdate(juego, { precio: e.target.value })}
                     className={`${inputClass} md:max-w-[100px] font-mono`}
                   />
+                </td>
+                <td className={addCellClass}>
+                  <PrecioMonedasCelda valor={juego.precio_monedas} onGuardar={(precio_monedas) => handleUpdate(juego, { precio_monedas })} />
                 </td>
                 <td className={addCellClass}>
                   <button
@@ -122,6 +189,9 @@ const JuegosTable: React.FC = () => {
                 />
               </td>
               <td className={addCellClass}>
+                <PrecioMonedasNuevo valor={nuevoPrecioMonedas} onChange={setNuevoPrecioMonedas} />
+              </td>
+              <td className={addCellClass}>
                 <button
                   onClick={handleAgregar}
                   disabled={guardando}
@@ -143,7 +213,7 @@ const JuegosTable: React.FC = () => {
 // Tramos de personajes (Comisión de Motion)
 // ---------------------------------------------------------------------------
 
-const emptyTramo = { nombre: "", min_personajes: "", max_personajes: "", precio: "" };
+const emptyTramo = { nombre: "", min_personajes: "", max_personajes: "", precio: "", precio_monedas: PRECIO_MONEDAS_NUEVO };
 
 const TramosTable: React.FC = () => {
   const { t } = useTranslation();
@@ -166,6 +236,7 @@ const TramosTable: React.FC = () => {
   const handleAgregar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nuevo.nombre || !nuevo.min_personajes || !nuevo.max_personajes || !nuevo.precio) return;
+    if (!precioMonedasValido(nuevo.precio_monedas)) return;
     setGuardando(true);
     try {
       await comisionesAdminApi.crearTramo({
@@ -173,6 +244,7 @@ const TramosTable: React.FC = () => {
         min_personajes: Number(nuevo.min_personajes),
         max_personajes: Number(nuevo.max_personajes),
         precio: nuevo.precio,
+        precio_monedas: textoAPrecioMonedas(nuevo.precio_monedas),
         activo: true,
         orden_visualizacion: tramos.length,
       });
@@ -210,12 +282,13 @@ const TramosTable: React.FC = () => {
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-24">{t("preciosComisiones.colMin")}</th>
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-24">{t("preciosComisiones.colMax")}</th>
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-32">{t("preciosComisiones.colPrice")}</th>
+              <th className={`${thClass} w-32`}>{t("monedas.columna")}</th>
               <th className="py-2 px-4 text-xs uppercase tracking-wider text-on-surface-variant font-semibold w-44">{t("preciosComisiones.colActive")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20 flex flex-col md:table-row-group">
             {loading && (
-              <tr><td colSpan={5} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
+              <tr><td colSpan={6} className="py-6 text-center text-on-surface-variant">{t("preciosComisiones.loading")}</td></tr>
             )}
             {!loading && tramos.map((tramo) => (
               <tr key={tramo.id} className="flex flex-col gap-2 p-4 md:table-row md:gap-0 md:p-0">
@@ -248,6 +321,9 @@ const TramosTable: React.FC = () => {
                   />
                 </td>
                 <td className={addCellClass}>
+                  <PrecioMonedasCelda valor={tramo.precio_monedas} onGuardar={(precio_monedas) => handleUpdate(tramo, { precio_monedas })} />
+                </td>
+                <td className={addCellClass}>
                   <button
                     onClick={() => handleUpdate(tramo, { activo: !tramo.activo })}
                     className={`text-xs font-semibold px-2 py-1 rounded-full ${
@@ -275,6 +351,9 @@ const TramosTable: React.FC = () => {
               <td className={addCellClass}>
                 <input type="number" step="0.01" min="0" className={`${inputClass} md:max-w-[100px]`} placeholder="0.00" value={nuevo.precio}
                   onChange={(e) => setNuevo({ ...nuevo, precio: e.target.value })} />
+              </td>
+              <td className={addCellClass}>
+                <PrecioMonedasNuevo valor={nuevo.precio_monedas} onChange={(precio_monedas) => setNuevo({ ...nuevo, precio_monedas })} />
               </td>
               <td className={addCellClass}>
                 <button

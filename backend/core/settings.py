@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'shopping_cart',
     'orders',
     'custom_orders',
+    'monedas',
     'chat',
 ]
 

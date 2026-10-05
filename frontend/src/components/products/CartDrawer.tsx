@@ -5,7 +5,10 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import type { Carrito } from "../../api/carrito.api";
 import { carritoApi } from "../../api/carrito.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
+import { perfilStore } from "../../stores/perfilStore";
 import { miniaturaDe } from "../../utils/imagenProducto";
+import { Monedas } from "../ui/Monedas";
+import { PagarConMonedas } from "../ui/PagarConMonedas";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -155,8 +158,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-on-surface truncate">{item.producto.titulo}</h3>
-                  <p className="font-mono text-primary-fixed-dim text-sm mt-1">
+                  <p className="font-mono text-primary-fixed-dim text-sm mt-1 flex items-center gap-3">
                     ${Number(item.producto.precio).toFixed(2)}
+                    {item.producto.precio_monedas != null && (
+                      <Monedas cantidad={item.producto.precio_monedas} className="text-on-surface-variant font-normal" />
+                    )}
                   </p>
                 </div>
                 <button
@@ -217,11 +223,29 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               }}
               onApprove={async (data) => {
                 await capturarOrdenPayPal(data.orderID);
+                // La compra con dinero acaba de dar monedas: saldo al día.
+                perfilStore.recargar();
                 onClose();
                 navigate("/biblioteca");
               }}
               onError={() => setCheckoutError(t("common.paypalError"))}
             />
+
+            {/* Tercera forma de pago: el carrito entero con monedas (no se
+                mezclan con dinero). No pasa por ninguna pasarela. */}
+            <div className="mt-4 pt-4 border-t border-outline-variant/30">
+              <PagarConMonedas
+                precio={carrito?.total_monedas ?? null}
+                deshabilitado={checkingOut}
+                textoNoDisponible={t("monedas.carritoNoPagable")}
+                onPagar={carritoApi.checkoutMonedas}
+                onPagado={() => {
+                  onCartChange?.(null);
+                  onClose();
+                  navigate("/biblioteca");
+                }}
+              />
+            </div>
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { extraerIdYoutube } from "../../utils/youtube";
 import { YoutubeEmbed } from "../ui/YoutubeEmbed";
+import { Monedas } from "../ui/Monedas";
 import { FavoritoButton } from "./FavoritoButton";
 import { etiquetaFormato } from "../../utils/formato";
 import { portadaDe } from "../../utils/imagenProducto";
@@ -91,8 +92,11 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
         <div className="mt-auto pt-4 border-t border-outline-variant/30 flex items-center justify-between">
           {hasAccess ? (
             <>
-              <span className="text-primary-container font-bold font-mono text-xl">
+              <span className="text-primary-container font-bold font-mono text-xl flex flex-wrap items-center gap-x-3">
                 ${Number(producto.precio).toFixed(2)}
+                {producto.precio_monedas != null && (
+                  <Monedas cantidad={producto.precio_monedas} formato="largo" className="text-sm text-on-surface-variant" />
+                )}
               </span>
               <button
                 onClick={() => {

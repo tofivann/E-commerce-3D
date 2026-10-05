@@ -8,6 +8,7 @@ import type { Item } from "./SolicitudesComisionesTable";
 import { etiquetaFormato } from "../../utils/formato";
 import { comisionesAdminApi } from "../../api/comisiones.api";
 import { miniaturaComision } from "../../utils/imagenComision";
+import { ImporteOrden } from "../ui/ImporteOrden";
 
 interface ComisionDetalleModalProps {
   item: Item | null;
@@ -111,7 +112,9 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
         <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b border-outline-variant/30">
           <Campo label={t("comisionDetalle.order")}>{item.data.orden.codigo_orden}</Campo>
           <Campo label={t("comisionDetalle.payment")}>{item.data.orden.estado_pago}</Campo>
-          <Campo label={t("comisionDetalle.total")}>${Number(item.data.orden.total).toFixed(2)}</Campo>
+          <Campo label={t("comisionDetalle.total")}>
+            <ImporteOrden total={item.data.orden.total} totalMonedas={item.data.orden.total_monedas} />
+          </Campo>
           <Campo label={t("comisionDetalle.date")}>
             {new Date(item.data.orden.fecha_orden).toLocaleString(i18n.language, {
               year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",

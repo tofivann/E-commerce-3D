@@ -11,11 +11,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core import paypal_utils
+from monedas.services import SaldoInsuficiente, saldo_de
 from orders.models import Orden, DetalleOrden
 from orders.serializers import OrdenSerializer
 from products.models import Producto
 from .models import Carrito, CarritoItem
 from .serializers import CarritoSerializer, TASA_IMPUESTO
+from .services import CarritoNoPagableConMonedas, pagar_carrito_con_monedas
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -209,6 +211,38 @@ class CheckoutPayPalCrearView(APIView):
         orden.save(update_fields=['paypal_order_id'])
 
         return Response({"paypal_order_id": orden_paypal["id"]}, status=status.HTTP_201_CREATED)
+
+
+class CheckoutMonedasView(APIView):
+    """Paga el carrito entero con monedas. A diferencia de Stripe y PayPal no
+    hay pasarela ni espera: en esta misma petición se descuenta el saldo y
+    se entregan los productos (o no se hace ninguna de las dos cosas).
+
+    Un 400 trae `motivo` ('saldo_insuficiente' | 'no_pagable') para que el
+    frontend muestre el mensaje en su idioma."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            orden = pagar_carrito_con_monedas(request.user)
+        except SaldoInsuficiente as e:
+            return Response(
+                {
+                    "detail": f"No tienes monedas suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
+                    "motivo": "saldo_insuficiente",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except CarritoNoPagableConMonedas as e:
+            return Response({"detail": str(e), "motivo": "no_pagable"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            {
+                "orden": OrdenSerializer(orden, context={'request': request}).data,
+                "saldo_monedas": saldo_de(request.user),
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class OrdenPorSesionView(generics.RetrieveAPIView):

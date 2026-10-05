@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import type { EstadoComision } from "../../api/comisiones.api";
 import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
+import { ImporteOrden } from "../ui/ImporteOrden";
 
 export interface ComisionCardClienteProps {
   tipoLabel: string;
@@ -12,6 +13,8 @@ export interface ComisionCardClienteProps {
   fotoIconoFallback: string;
   codigoOrden: string;
   total: number | string;
+  // Si la comisión se pagó con monedas: cuántas (y `total` es 0).
+  totalMonedas?: number | null;
   // Va en la misma fila que el precio, a la derecha — un botón de ícono
   // (Descargar si está completada) o un texto corto de estado si no. Debe
   // ser compacto: no hay espacio de sobra en h-80.
@@ -33,6 +36,7 @@ export const ComisionCardCliente: React.FC<ComisionCardClienteProps> = ({
   fotoIconoFallback,
   codigoOrden,
   total,
+  totalMonedas,
   footer,
 }) => {
   const { t } = useTranslation();
@@ -77,9 +81,7 @@ export const ComisionCardCliente: React.FC<ComisionCardClienteProps> = ({
         {/* Precio y acción en la MISMA fila (como el precio+botón editar de
             ProductAdminGrid) — apilados como antes no cabían en h-80. */}
         <div className="mt-auto pt-2 flex items-center justify-between gap-2">
-          <span className="text-primary-fixed-dim font-bold font-mono text-sm shrink-0">
-            ${Number(total).toFixed(2)}
-          </span>
+          <ImporteOrden total={total} totalMonedas={totalMonedas} className="text-primary-fixed-dim font-bold font-mono text-sm shrink-0" />
           {footer}
         </div>
       </div>

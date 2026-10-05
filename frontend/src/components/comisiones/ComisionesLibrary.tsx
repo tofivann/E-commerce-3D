@@ -129,6 +129,7 @@ export const ComisionesLibrary: React.FC<ComisionesLibraryProps> = ({ busqueda =
             fotoIconoFallback={item.tipo === "motion" ? "music_note" : "view_in_ar"}
             codigoOrden={item.data.orden.codigo_orden}
             total={item.data.orden.total}
+            totalMonedas={item.data.orden.total_monedas}
             footer={
               <button
                 onClick={() => handleDescargar(item)}

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { perfilApi, TAMANO_MAXIMO_FOTO_MB } from "../api/perfil.api";
 import type { Perfil } from "../api/perfil.api";
 import { AppLayout } from "../components/layout/AppLayout";
+import { HistorialMonedas } from "../components/perfil/HistorialMonedas";
 import { RecortarFotoModal } from "../components/perfil/RecortarFotoModal";
 import { Avatar } from "../components/ui/Avatar";
 import { usePerfil } from "../hooks/usePerfil";
@@ -215,6 +216,9 @@ const FormularioPerfil: React.FC<{ perfil: Perfil }> = ({ perfil }) => {
           {new Date(perfil.fecha_registro).toLocaleDateString(i18n.language, { year: "numeric", month: "long", day: "numeric" })}
         </Dato>
       </dl>
+
+      {/* ---- Monedas: saldo e historial ---- */}
+      <HistorialMonedas saldo={perfil.saldo_monedas} />
 
       {fotoPorRecortar && (
         <RecortarFotoModal imagenUrl={fotoPorRecortar} onCancelar={cerrarRecorte} onConfirmar={subirFoto} />

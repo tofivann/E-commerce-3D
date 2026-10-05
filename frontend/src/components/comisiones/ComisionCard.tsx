@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import type { EstadoComision } from "../../api/comisiones.api";
 import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
+import { ImporteOrden } from "../ui/ImporteOrden";
 
 export interface ComisionCardProps {
   tipoLabel: string;
@@ -12,6 +13,8 @@ export interface ComisionCardProps {
   fotoIconoFallback: string;
   codigoOrden: string;
   total: number | string;
+  // Si la comisión se pagó con monedas: cuántas (y `total` es 0).
+  totalMonedas?: number | null;
   fechaOrden: string;
   onClick?: () => void;
   // Botones/acciones específicas de cada vista (Descargar en la del
@@ -28,6 +31,7 @@ export const ComisionCard: React.FC<ComisionCardProps> = ({
   fotoIconoFallback,
   codigoOrden,
   total,
+  totalMonedas,
   fechaOrden,
   onClick,
   footer,
@@ -82,7 +86,7 @@ export const ComisionCard: React.FC<ComisionCardProps> = ({
             <span className="material-symbols-outlined text-[14px]">calendar_today</span>
             {new Date(fechaOrden).toLocaleDateString(i18n.language, { year: "numeric", month: "short", day: "numeric" })}
           </span>
-          <span className="text-primary-fixed-dim font-bold shrink-0">${Number(total).toFixed(2)}</span>
+          <ImporteOrden total={total} totalMonedas={totalMonedas} className="text-primary-fixed-dim font-bold shrink-0" />
         </div>
         <p className="text-on-surface-variant/70 text-[11px] font-mono">
           {t("comisiones.orderCode", { code: codigoOrden })}

@@ -16,8 +16,10 @@ export interface Venta {
   id: number;
   codigo_orden: string;
   fecha_orden: string;
-  // Lo cobrado al cliente.
+  // Lo cobrado al cliente en dinero (0 si pagó con monedas).
   total: number | string;
+  // Solo en una venta pagada con monedas: cuántas. No suma a los totales en dólares.
+  total_monedas: number | null;
   tipo_orden: TipoOrden;
   pasarela_pago: string;
   cliente_nombre: string;

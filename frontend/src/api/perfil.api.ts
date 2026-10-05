@@ -15,6 +15,8 @@ export interface Perfil {
   fecha_registro: string;
   // Dirección de la foto (ya recortada a cuadrado por el backend), o null.
   foto_perfil: string | null;
+  // Monedas que tiene (solo lectura; el historial está en monedas.api.ts).
+  saldo_monedas: number;
 }
 
 // Mismo límite que el backend (users/perfil.py): se comprueba aquí antes de

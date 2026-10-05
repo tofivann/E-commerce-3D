@@ -1,5 +1,6 @@
 from django.db import models
 from core.miniaturas import ConMiniaturas
+from monedas.campos import campo_precio_en_monedas
 from users.models import Usuario
 from orders.models import Orden
 
@@ -22,6 +23,8 @@ class TramoPersonajesMotion(models.Model):
     min_personajes = models.PositiveIntegerField()
     max_personajes = models.PositiveIntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    # Lo que cuesta pedir este tramo pagando con monedas (ver monedas/reglas.py).
+    precio_monedas = campo_precio_en_monedas()
     activo = models.BooleanField(default=True)
     orden_visualizacion = models.PositiveIntegerField(default=0)
 
@@ -38,6 +41,8 @@ class JuegoComision(models.Model):
     """Juego disponible para pedir una Comisión de Modelo Nuevo, con su precio fijo."""
     nombre = models.CharField(max_length=100, unique=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    # Lo que cuesta pedir un modelo de este juego pagando con monedas.
+    precio_monedas = campo_precio_en_monedas()
     activo = models.BooleanField(default=True)
 
     class Meta:
@@ -66,6 +71,9 @@ class DatosPublicacion(models.Model):
     titulo_publicacion = models.CharField(max_length=200, blank=True)
     descripcion_publicacion = models.TextField(blank=True)
     precio_publicacion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    # Se copia a Producto.precio_monedas al publicar. Opcional: vacío = el
+    # producto no se podrá pagar con monedas.
+    precio_monedas_publicacion = campo_precio_en_monedas()
     formato_archivo_publicacion = models.CharField(max_length=50, blank=True, help_text="Ej: STL, OBJ, FBX")
     # Mismo nombre y definición que Producto.link_youtube: se copia tal cual
     # al publicar. Distinto de ComisionMotion.link_video, que es el video de
