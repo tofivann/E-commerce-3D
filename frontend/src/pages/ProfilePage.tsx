@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { perfilApi, TAMANO_MAXIMO_FOTO_MB } from "../api/perfil.api";
 import type { Perfil } from "../api/perfil.api";
 import { AppLayout } from "../components/layout/AppLayout";
+import { RecortarFotoModal } from "../components/perfil/RecortarFotoModal";
 import { Avatar } from "../components/ui/Avatar";
 import { usePerfil } from "../hooks/usePerfil";
 import { perfilStore } from "../stores/perfilStore";
@@ -57,11 +58,14 @@ const FormularioPerfil: React.FC<{ perfil: Perfil }> = ({ perfil }) => {
   const [ocupado, setOcupado] = useState<"foto" | "nombre" | null>(null);
   const [avisoFoto, setAvisoFoto] = useState<Aviso>(null);
   const [avisoNombre, setAvisoNombre] = useState<Aviso>(null);
+  // Foto elegida pendiente de encuadrar (dirección local del archivo).
+  const [fotoPorRecortar, setFotoPorRecortar] = useState<string | null>(null);
 
   const nombre = nombreEditado ?? perfil.nombre;
   const nombreCambio = nombre.trim() !== perfil.nombre && nombre.trim() !== "";
 
-  const subirFoto = async (archivo: File | undefined) => {
+  // Paso 1: el usuario elige un archivo → se valida y se abre el encuadre.
+  const elegirFoto = (archivo: File | undefined) => {
     if (!archivo) return;
     setAvisoFoto(null);
     if (!archivo.type.startsWith("image/")) {
@@ -72,9 +76,20 @@ const FormularioPerfil: React.FC<{ perfil: Perfil }> = ({ perfil }) => {
       setAvisoFoto({ tipo: "error", texto: t("perfil.photoTooBig", { mb: TAMANO_MAXIMO_FOTO_MB }) });
       return;
     }
+    setFotoPorRecortar(URL.createObjectURL(archivo));
+  };
+
+  const cerrarRecorte = () => {
+    if (fotoPorRecortar) URL.revokeObjectURL(fotoPorRecortar);
+    setFotoPorRecortar(null);
+  };
+
+  // Paso 2: confirma el encuadre → se sube solo esa parte.
+  const subirFoto = async (recorte: Blob) => {
+    cerrarRecorte();
     setOcupado("foto");
     try {
-      perfilStore.establecer(await perfilApi.subirFoto(archivo));
+      perfilStore.establecer(await perfilApi.subirFoto(new File([recorte], "perfil.jpg", { type: "image/jpeg" })));
       setAvisoFoto({ tipo: "ok", texto: t("perfil.photoSaved") });
     } catch (err) {
       console.error("Error al subir la foto de perfil:", err);
@@ -152,7 +167,7 @@ const FormularioPerfil: React.FC<{ perfil: Perfil }> = ({ perfil }) => {
             accept="image/*"
             className="hidden"
             onChange={(e) => {
-              subirFoto(e.target.files?.[0]);
+              elegirFoto(e.target.files?.[0]);
               // Permite volver a elegir el mismo archivo tras un error.
               e.target.value = "";
             }}
@@ -200,6 +215,10 @@ const FormularioPerfil: React.FC<{ perfil: Perfil }> = ({ perfil }) => {
           {new Date(perfil.fecha_registro).toLocaleDateString(i18n.language, { year: "numeric", month: "long", day: "numeric" })}
         </Dato>
       </dl>
+
+      {fotoPorRecortar && (
+        <RecortarFotoModal imagenUrl={fotoPorRecortar} onCancelar={cerrarRecorte} onConfirmar={subirFoto} />
+      )}
 
       {/* ---- Contraseña ---- */}
       <section className="border-t border-outline-variant/30 pt-6 flex flex-col gap-2">
