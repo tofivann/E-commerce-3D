@@ -123,7 +123,7 @@
     "uploadPhoto": "Subir foto",
     "changePhoto": "Cambiar foto",
     "removePhoto": "Quitar foto",
-    "photoHelp": "JPG, PNG o WebP. Máximo {{mb}} MB. Se recorta a un cuadrado.",
+    "photoHelp": "JPG, PNG o WebP. Máximo {{mb}} MB.",
     "photoSaved": "Foto actualizada.",
     "photoRemoved": "Foto eliminada.",
     "photoError": "No se pudo actualizar la foto. Inténtalo de nuevo.",

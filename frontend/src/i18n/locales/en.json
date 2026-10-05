@@ -123,7 +123,7 @@
     "uploadPhoto": "Upload photo",
     "changePhoto": "Change photo",
     "removePhoto": "Remove photo",
-    "photoHelp": "JPG, PNG or WebP. Up to {{mb}} MB. It will be cropped to a square.",
+    "photoHelp": "JPG, PNG or WebP. Up to {{mb}} MB.",
     "photoSaved": "Photo updated.",
     "photoRemoved": "Photo removed.",
     "photoError": "Could not update the photo. Please try again.",
