@@ -172,7 +172,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
           // se publica (el backend tampoco la completaría — ver perform_update).
           const cancelada = item.data.estado === "CANCELADO";
           const puedeEntregar = !cancelada;
-          const puedePublicar = !cancelada && Boolean(item.data.archivo_entrega) && !item.data.producto_publicado;
+          const puedePublicar = !cancelada && Boolean(item.data.archivo_entrega_nombre) && !item.data.producto_publicado;
           const puedeCancelar = item.data.estado === "EN_PROCESO" || item.data.estado === "SOLICITADO";
 
           return (
@@ -199,7 +199,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
                       className="text-xs bg-surface-container-lowest border border-outline-variant/50 px-3 py-1.5 rounded-md font-semibold cursor-pointer hover:border-primary/50 transition-colors flex items-center gap-1"
                     >
                       <span className="material-symbols-outlined text-[16px]">upload_file</span>
-                      {item.data.archivo_entrega ? t("comisionesAdmin.replaceFile") : t("comisionesAdmin.uploadDelivery")}
+                      {item.data.archivo_entrega_nombre ? t("comisionesAdmin.replaceFile") : t("comisionesAdmin.uploadDelivery")}
                     </button>
                   )}
 

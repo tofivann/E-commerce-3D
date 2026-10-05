@@ -1,3 +1,5 @@
+import os
+
 from rest_framework import serializers
 
 from orders.models import Orden
@@ -205,7 +207,19 @@ class ValidacionPublicacionMixin:
         return valor
 
 
-class ComisionMotionAdminSerializer(ValidacionPublicacionMixin, ValidacionEntregaMixin, serializers.ModelSerializer):
+# El archivo de entrega solo ENTRA por estos serializers (lo sube el admin):
+# su dirección no se devuelve, porque los archivos entregados no se sirven
+# por /media/ (core/media.py). El panel recibe el nombre del archivo —y con
+# él, si ya hay entrega— y lo baja por la acción `descargar` del viewset.
+ARCHIVO_ENTREGA_SOLO_ESCRITURA = {'archivo_entrega': {'write_only': True}}
+
+
+class NombreArchivoEntregaMixin:
+    def get_archivo_entrega_nombre(self, comision):
+        return os.path.basename(comision.archivo_entrega.name) if comision.archivo_entrega else None
+
+
+class ComisionMotionAdminSerializer(NombreArchivoEntregaMixin, ValidacionPublicacionMixin, ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
@@ -221,22 +235,24 @@ class ComisionMotionAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
     link_youtube = URLConEsquemaField(max_length=500, required=False, allow_blank=True, allow_null=True)
     # Propiedad del modelo, no columna: hay que declararla para exponerla.
     publicacion_completa = serializers.BooleanField(read_only=True)
+    archivo_entrega_nombre = serializers.SerializerMethodField()
 
     class Meta:
         model = ComisionMotion
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
             'nombre_cancion', 'link_video', 'informacion_adicional', 'estado', 'archivo_entrega',
-            'foto_entrega', 'categorias', 'categorias_detalle', 'producto_publicado',
+            'archivo_entrega_nombre', 'foto_entrega', 'categorias', 'categorias_detalle', 'producto_publicado',
             *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
             'nombre_cancion', 'link_video', 'informacion_adicional', 'producto_publicado',
         ]
+        extra_kwargs = ARCHIVO_ENTREGA_SOLO_ESCRITURA
 
 
-class ComisionModeloAdminSerializer(ValidacionPublicacionMixin, ValidacionEntregaMixin, serializers.ModelSerializer):
+class ComisionModeloAdminSerializer(NombreArchivoEntregaMixin, ValidacionPublicacionMixin, ValidacionEntregaMixin, serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     juego = JuegoComisionSerializer(read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.nombre', read_only=True)
@@ -247,12 +263,13 @@ class ComisionModeloAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
     categorias_detalle = CategoriaSerializer(source='categorias', many=True, read_only=True)
     link_youtube = URLConEsquemaField(max_length=500, required=False, allow_blank=True, allow_null=True)
     publicacion_completa = serializers.BooleanField(read_only=True)
+    archivo_entrega_nombre = serializers.SerializerMethodField()
 
     class Meta:
         model = ComisionModelo
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
-            'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'foto_entrega',
+            'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'archivo_entrega_nombre', 'foto_entrega',
             'categorias', 'categorias_detalle', 'producto_publicado',
             *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
@@ -260,4 +277,5 @@ class ComisionModeloAdminSerializer(ValidacionPublicacionMixin, ValidacionEntreg
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
             'foto_referencia_1', 'foto_referencia_2', 'producto_publicado',
         ]
+        extra_kwargs = ARCHIVO_ENTREGA_SOLO_ESCRITURA
 

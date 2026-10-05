@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { nombreCategoria } from "../../utils/categoria";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
@@ -6,6 +6,7 @@ import { TEMA_ESTADO, claveEtiquetaEstado } from "../../utils/estadoComision";
 import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import type { Item } from "./SolicitudesComisionesTable";
 import { etiquetaFormato } from "../../utils/formato";
+import { comisionesAdminApi } from "../../api/comisiones.api";
 
 interface ComisionDetalleModalProps {
   item: Item | null;
@@ -54,7 +55,21 @@ const VideoCampo: React.FC<{ label: string; url: string | null | undefined; titu
 
 export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item, onClose }) => {
   const { t, i18n } = useTranslation();
+  const [descargando, setDescargando] = useState(false);
   if (!item) return null;
+
+  const descargarEntrega = async () => {
+    if (!item.data.archivo_entrega_nombre) return;
+    setDescargando(true);
+    try {
+      await comisionesAdminApi.descargarEntrega(item.tipo, item.data.id, item.data.archivo_entrega_nombre);
+    } catch (err) {
+      console.error("Error al descargar la entrega:", err);
+      window.alert(t("misComisiones.downloadError"));
+    } finally {
+      setDescargando(false);
+    }
+  };
 
   const tema = TEMA_ESTADO[item.data.estado];
   const etiquetaEstado = t(claveEtiquetaEstado(item.data.estado));
@@ -151,16 +166,18 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
         {/* Entrega */}
         <div className="flex flex-wrap items-start gap-6">
           <Campo label={t("comisionDetalle.deliveryFile")}>
-            {item.data.archivo_entrega ? (
-              <a
-                href={item.data.archivo_entrega}
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary-fixed-dim hover:underline no-underline inline-flex items-center gap-1"
+            {item.data.archivo_entrega_nombre ? (
+              // Botón y no enlace: el archivo no tiene dirección pública, se
+              // baja con la sesión del admin.
+              <button
+                type="button"
+                onClick={descargarEntrega}
+                disabled={descargando}
+                className="text-primary-fixed-dim hover:underline inline-flex items-center gap-1 cursor-pointer disabled:opacity-50 text-left"
               >
-                <span className="material-symbols-outlined text-[16px]">download</span>
-                {t("comisionDetalle.viewUploadedFile")}
-              </a>
+                <span className={`material-symbols-outlined text-[16px] ${descargando ? "animate-pulse" : ""}`}>download</span>
+                {item.data.archivo_entrega_nombre}
+              </button>
             ) : (
               <span className="text-on-surface-variant">{t("comisionDetalle.notUploadedYet")}</span>
             )}

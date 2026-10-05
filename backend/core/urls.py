@@ -14,11 +14,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.views.static import serve as serve_static
 
+from .media import servir_media
 from .views import StripeWebhookView, PayPalCapturarOrdenView, PayPalWebhookView
 
 urlpatterns = [
@@ -47,10 +46,11 @@ urlpatterns = [
     path('api/v1/paypal/webhook/', PayPalWebhookView.as_view(), name='paypal-webhook'),
 ]
 
-# Sirve los archivos subidos (archivo_3d, imagen_previa, archivo_entrega) tanto en
-# desarrollo como en producción — el proyecto usa almacenamiento local (FileSystemStorage)
-# en ambos casos, no un bucket S3/Supabase Storage externo. El helper static() de Django
-# se auto-desactiva si DEBUG=False, así que se sirve a mano con la vista serve().
+# Sirve por dirección SOLO las imágenes subidas (ver core/media.py: los
+# archivos que se venden o entregan nunca salen por aquí, solo por las vistas
+# de descarga que comprueban sesión). Tanto en desarrollo como en producción:
+# el proyecto usa almacenamiento local (FileSystemStorage) en ambos casos, y
+# el helper static() de Django se auto-desactiva si DEBUG=False.
 urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve_static, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^media/(?P<path>.*)$', servir_media),
 ]

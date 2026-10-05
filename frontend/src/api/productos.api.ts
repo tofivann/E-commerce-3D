@@ -1,5 +1,6 @@
 import { axiosClient } from "../services/axiosClient";
 import type { RespuestaPaginada } from "./types";
+import { descargarConSesion } from "../utils/descarga";
 
 export interface Categoria {
   id: number;
@@ -19,7 +20,11 @@ export interface Producto {
   categorias: number[]; // ids de las Categorias (PrimaryKeyRelatedField many=True, tanto al leer como al escribir)
   categorias_detalle?: Categoria[]; // solo lectura, para mostrar sin tener que cruzar con la lista de categorías
   formato_archivo: string;
-  archivo_3d?: File | string; // File cuando se sube desde un input tipo file, string si es la URL
+  // Solo al crear/editar (se sube como File). El backend nunca devuelve la
+  // dirección del archivo: no es pública.
+  archivo_3d?: File;
+  // Nombre del archivo cargado. Solo llega para el admin; null para el resto.
+  archivo_nombre?: string | null;
   imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada
   link_youtube?: string | null; // Video de vista previa del modelo (opcional)
   activo?: boolean;
@@ -114,4 +119,10 @@ export function patchProducto(
 // Eliminar un producto
 export function deleteProducto(id: string | number) {
   return axiosClient.delete(`${BASE}${id}/`);
+}
+
+// Archivo 3D de un producto, para el admin (el comprador lo baja desde su
+// biblioteca: bibliotecaApi / descargarCompra).
+export function descargarArchivoProducto(producto: Producto): Promise<void> {
+  return descargarConSesion(`${BASE}${producto.id}/descargar/`, producto.archivo_nombre || `${producto.titulo}.zip`);
 }

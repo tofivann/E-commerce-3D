@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Categoria, Producto } from "../../api/productos.api";
-import { categoriasApi, createProducto, patchProducto } from "../../api/productos.api";
+import { categoriasApi, createProducto, descargarArchivoProducto, patchProducto } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
 import { Pildora } from "../ui/Pildora";
 
@@ -198,6 +198,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <p className="text-on-surface-variant text-xs font-mono">
               {t("productForm.supportedFormats")}
             </p>
+            {isEdit && producto?.archivo_nombre && !archivo3d && (
+              // El archivo no tiene dirección pública: se baja con la sesión del admin.
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  descargarArchivoProducto(producto).catch((err) => {
+                    console.error("Error al descargar el archivo:", err);
+                    window.alert(t("library.downloadError"));
+                  });
+                }}
+                className="text-primary-fixed-dim hover:underline text-xs mt-2 inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[14px]">download</span>
+                {t("productForm.currentFile", { name: producto.archivo_nombre })}
+              </button>
+            )}
             <input
               id="archivo3dInput"
               type="file"

@@ -1,5 +1,6 @@
 import { axiosClient } from "../services/axiosClient";
 import type { Categoria } from "./productos.api";
+import { descargarConSesion } from "../utils/descarga";
 
 export type { Categoria };
 
@@ -100,7 +101,9 @@ export interface DatosPublicacion {
 interface CamposAdmin extends DatosPublicacion {
   usuario_nombre: string;
   usuario_email: string;
-  archivo_entrega: string | null;
+  // Nombre del archivo entregado (null = todavía no hay entrega). El archivo
+  // en sí no tiene dirección pública: se baja con comisionesAdminApi.descargarEntrega.
+  archivo_entrega_nombre: string | null;
   categorias: number[];
   categorias_detalle: Categoria[];
 }
@@ -226,32 +229,17 @@ export const comisionesAdminApi = {
     const { data } = await axiosClient.post(`custom-orders/admin/comisiones/motion/${id}/publicar/`);
     return data;
   },
+  // Archivo entregado de una comisión, para el admin.
+  descargarEntrega: (tipo: "motion" | "modelo", id: number, nombre: string): Promise<void> =>
+    descargarConSesion(`custom-orders/admin/comisiones/${tipo}/${id}/descargar/`, nombre),
 };
-
-// Descarga autenticada del archivo de entrega (blob + JWT, mismo patrón que biblioteca.api.ts)
-async function descargar(path: string, filenameFallback: string): Promise<void> {
-  const response = await axiosClient.get(path, { responseType: "blob" });
-
-  const disposition = response.headers["content-disposition"] as string | undefined;
-  const match = disposition?.match(/filename="?([^"]+)"?/);
-  const filename = match?.[1] || filenameFallback;
-
-  const blobUrl = URL.createObjectURL(response.data as Blob);
-  const link = document.createElement("a");
-  link.href = blobUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(blobUrl);
-}
 
 export async function descargarComisionMotion(comision: ComisionMotion): Promise<void> {
   if (!comision.descarga_url) return;
-  await descargar(`custom-orders/comisiones/motion/${comision.id}/descargar/`, `${comision.nombre_cancion}.zip`);
+  await descargarConSesion(`custom-orders/comisiones/motion/${comision.id}/descargar/`, `${comision.nombre_cancion}.zip`);
 }
 
 export async function descargarComisionModelo(comision: ComisionModelo): Promise<void> {
   if (!comision.descarga_url) return;
-  await descargar(`custom-orders/comisiones/modelo/${comision.id}/descargar/`, `${comision.nombre_personaje}.zip`);
+  await descargarConSesion(`custom-orders/comisiones/modelo/${comision.id}/descargar/`, `${comision.nombre_personaje}.zip`);
 }

@@ -58,11 +58,6 @@ function formInicial(item: Item): FormPublicacion {
   };
 }
 
-function nombreDeArchivo(url: string | null): string {
-  if (!url) return "";
-  return decodeURIComponent(url.split("/").pop() ?? "");
-}
-
 // Mismas clases que ProductForm: este modal es "el formulario de producto"
 // más el bloque de entrega, y debe verse igual.
 const inputClass =
@@ -159,7 +154,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   const nombreItem = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
   // Al reabrir una comisión ya entregada (reemplazar archivo, o completar los
   // datos de reventa para publicar) no hay que volver a subir archivo y foto.
-  const yaTieneEntrega = Boolean(item.data.archivo_entrega && item.data.foto_entrega);
+  const yaTieneEntrega = Boolean(item.data.archivo_entrega_nombre && item.data.foto_entrega);
   const yaPublicado = Boolean(item.data.producto_publicado);
   const datosReventaCompletos =
     form.titulo.trim() !== "" && form.descripcion.trim() !== "" && form.precio !== "" && form.formato.trim() !== "";
@@ -336,7 +331,7 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
             <p className="text-on-surface-variant text-xs font-mono">{t("productForm.supportedFormats")}</p>
             {yaTieneEntrega && !archivoEntrega && (
               <p className="text-on-surface-variant text-xs mt-2">
-                {t("completarComisionModal.keepCurrentFile", { name: nombreDeArchivo(item.data.archivo_entrega) })}
+                {t("completarComisionModal.keepCurrentFile", { name: item.data.archivo_entrega_nombre })}
               </p>
             )}
             <input

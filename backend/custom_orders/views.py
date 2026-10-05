@@ -385,6 +385,13 @@ class ComisionAdminViewSetBase(
                 idioma=idioma,
             )
 
+    @action(detail=True, methods=['get'])
+    def descargar(self, request, pk=None):
+        """Archivo entregado de una comisión, para el admin (el viewset
+        entero es solo staff). El cliente descarga por
+        DescargarComision{Motion,Modelo}View, que comprueba que es suya."""
+        return _descargar_archivo(self.get_object().archivo_entrega)
+
     def _publicar_producto(self, comision):
         """
         Compartido por ComisionMotionAdminViewSet y ComisionModeloAdminViewSet:
