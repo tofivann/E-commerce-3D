@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UsuarioViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView, RegistroView, RegistroPayPalView, ActivarCuentaPagoView, ActivarCuentaPagoPayPalView, VerificarPagoUsuarioView, GoogleLoginView, SolicitarResetPasswordView, ConfirmarResetPasswordView, MiPerfilView, MiFotoPerfilView
+from .views import UsuarioViewSet, CustomTokenObtainPairView, CustomTokenRefreshView, LogoutView, RegistroView, RegistroPayPalView, SolicitarCodigoRegistroView, VerificarCodigoRegistroView, PrecioSuscripcionView, ActivarCuentaPagoView, ActivarCuentaPagoPayPalView, VerificarPagoUsuarioView, GoogleLoginView, SolicitarResetPasswordView, ConfirmarResetPasswordView, MiPerfilView, MiFotoPerfilView
 
 router = DefaultRouter()
 router.register(r'users', UsuarioViewSet, basename='user')
@@ -11,6 +11,9 @@ urlpatterns = [
     path('auth/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', LogoutView.as_view(), name='token_logout'),
     #ruta del registro
+    # Registro en 3 pasos: código al correo → comprobarlo → crear cuenta y pagar
+    path('auth/register/codigo/', SolicitarCodigoRegistroView.as_view(), name='registro-codigo'),
+    path('auth/register/verificar-codigo/', VerificarCodigoRegistroView.as_view(), name='registro-verificar-codigo'),
     path('auth/register/', RegistroView.as_view(), name='token_register'),
     path('auth/register-paypal/', RegistroPayPalView.as_view(), name='token_register_paypal'),
     # Perfil del propio usuario (nombre y foto)
@@ -21,6 +24,7 @@ urlpatterns = [
 
     path('activar-cuenta-pago/', ActivarCuentaPagoView.as_view(), name='activar-cuenta-pago'),
     path('activar-cuenta-pago-paypal/', ActivarCuentaPagoPayPalView.as_view(), name='activar-cuenta-pago-paypal'),
+    path('suscripcion/precio/', PrecioSuscripcionView.as_view(), name='precio-suscripcion'),
     path('verificar-pago/', VerificarPagoUsuarioView.as_view(), name='verificar-pago-usuario'),
 
     # NUEVA RUTA PARA EL LOGIN CON GOOGLE

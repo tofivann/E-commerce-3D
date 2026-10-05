@@ -1,10 +1,31 @@
 import { axiosClient } from './axiosClient';
 
-export interface RegisterData {
+// Lo que el usuario escribe en el formulario de registro.
+export interface DatosRegistro {
   username: string;
   email: string;
   nombre: string;
   password: string;
+}
+
+// El registro exige además el código que se mandó a su correo.
+export interface RegisterData extends DatosRegistro {
+  codigo: string;
+}
+
+export interface CodigoEnviado {
+  email: string;
+  vigencia_minutos: number;
+  // Tiempo mínimo antes de poder pedir otro código.
+  espera_segundos: number;
+}
+
+// Por qué el servidor rechazó un código (users/verificacion.py, MOTIVO_*).
+export type MotivoCodigoInvalido = 'incorrecto' | 'expirado' | 'demasiados_intentos';
+
+export interface PrecioSuscripcion {
+  precio: string;
+  moneda: string;
 }
 
 export interface RegisterResponse {
@@ -41,8 +62,24 @@ export interface Usuario {
 }
 
 export const userApi = {
-  // Como baseURL es http://127.0.0.1:8000/api/v1/, 
-  
+  // Registro, paso 1: valida los datos y manda un código al correo (también
+  // sirve para reenviarlo). No crea la cuenta.
+  solicitarCodigoRegistro: async (data: DatosRegistro): Promise<CodigoEnviado> => {
+    const response = await axiosClient.post<CodigoEnviado>('users/auth/register/codigo/', data);
+    return response.data;
+  },
+
+  // Registro, paso 2: comprueba el código que el usuario escribió.
+  verificarCodigoRegistro: async (email: string, codigo: string): Promise<void> => {
+    await axiosClient.post('users/auth/register/verificar-codigo/', { email, codigo });
+  },
+
+  precioSuscripcion: async (): Promise<PrecioSuscripcion> => {
+    const response = await axiosClient.get<PrecioSuscripcion>('users/suscripcion/precio/');
+    return response.data;
+  },
+
+  // Registro, paso 3: crea la cuenta y abre el pago (Stripe o PayPal).
   register: async (data: RegisterData): Promise<RegisterResponse> => {
     const response = await axiosClient.post<RegisterResponse>('users/auth/register/', data);
     return response.data;

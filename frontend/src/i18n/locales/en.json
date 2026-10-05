@@ -7,7 +7,8 @@
     "close": "Close",
     "orPayWith": "Or pay with",
     "paypalError": "Could not process the PayPal payment. Please try again.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "oneTimePayment": "One-time payment of {{precio}} {{moneda}}"
   },
   "sidebar": {
     "home": "Home",
@@ -70,7 +71,28 @@
     "errorPasswordMismatch": "Passwords do not match.",
     "errorTerms": "You must accept the Terms and Conditions.",
     "errorDuplicate": "Check your details. The email or username may already be registered.",
-    "errorGeneric": "An error occurred while registering. Please try again later."
+    "errorGeneric": "An error occurred while registering. Please try again later.",
+    "continue": "Continue",
+    "errorEmailTaken": "That email is invalid or already has an account. If you already signed up, log in.",
+    "errorUsernameTaken": "That username is already taken. Choose another one.",
+    "errorTooManyRequests": "Too many attempts. Wait a few minutes and try again.",
+    "codeTitle": "Check your email",
+    "codeBody": "We sent a 6-digit code to {{email}}. Enter it here to continue; it expires in {{minutos}} minutes.",
+    "codeLabel": "Verification code",
+    "codeVerify": "Verify code",
+    "codeResend": "Resend code",
+    "codeResendIn": "Resend code ({{segundos}} s)",
+    "codeResent": "We sent you a new code.",
+    "codeChangeEmail": "Change email",
+    "codeSpamHint": "Can't find it? Check your spam or junk folder.",
+    "codeErrorIncorrect": "The code is not correct. Check it and try again.",
+    "codeErrorExpired": "The code expired. Request a new one.",
+    "codeErrorTooManyAttempts": "Too many failed attempts. Request a new code.",
+    "codeErrorGeneric": "We couldn't verify the code. Please try again.",
+    "codeNoLongerValid": "Your code is no longer valid. Request a new one to continue.",
+    "emailVerified": "Email verified",
+    "payTitle": "Last step: activate your account",
+    "payWithCard": "Pay with card"
   },
   "catalog": {
     "title": "Explore Featured Models",

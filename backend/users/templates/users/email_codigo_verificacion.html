@@ -1,0 +1,16 @@
+{% extends "core/email_base.html" %}
+
+{% block titulo %}Tu código de verificación{% endblock %}
+
+{% block contenido %}
+<h1 style="font-size:20px; color:#3a2e35; margin:0 0 16px;">Confirma tu correo</h1>
+<p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">
+  Escribe este código en la página de registro para continuar con la creación de tu cuenta.
+</p>
+<p style="font-size:32px; font-weight:bold; letter-spacing:8px; color:#3a2e35; background-color:#fdf2f6; border-radius:8px; padding:16px; text-align:center; margin:0 0 24px; font-family:'Courier New', Courier, monospace;">
+  {{ codigo }}
+</p>
+<p style="font-size:13px; color:#8a7a82; line-height:1.6; margin:0;">
+  El código vence en {{ minutos }} minutos. Si no estás creando una cuenta en MimiMMDart, puedes ignorar este correo.
+</p>
+{% endblock %}

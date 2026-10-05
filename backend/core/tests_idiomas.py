@@ -22,6 +22,7 @@ from products.models import Categoria, Producto
 from shopping_cart.services import marcar_orden_pagada
 from users.services import activar_suscripcion_usuario
 from users.tokens import respuesta_login
+from users.verificacion import _crear_codigo
 
 PLANTILLAS = [
     'users/email_cuenta_activada.html',
@@ -160,7 +161,9 @@ class RegistroYResetTests(APITestCase):
         with patch('users.views.stripe.checkout.Session.create') as crear_sesion:
             crear_sesion.return_value.id = 'sess_registro'
             crear_sesion.return_value.url = 'https://stripe.test/pagar'
-            respuesta = self.client.post('/api/v1/users/auth/register/', self.DATOS, format='json', **extra)
+            # El registro exige el código que se manda al correo (users/verificacion.py).
+            datos = {**self.DATOS, 'codigo': _crear_codigo(self.DATOS['email'])}
+            respuesta = self.client.post('/api/v1/users/auth/register/', datos, format='json', **extra)
         self.assertEqual(respuesta.status_code, 201, respuesta.data)
         return get_user_model().objects.get(email='nuevo@test.com')
 

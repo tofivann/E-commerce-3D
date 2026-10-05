@@ -15,15 +15,20 @@ from google.oauth2 import id_token
 from core.email_utils import enviar_email
 from core.idiomas import EN, ES, idioma_de_peticion
 from core import paypal_utils
+from . import verificacion
 from .models import Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer,
     CustomTokenRefreshSerializer,
+    DatosRegistroSerializer,
     GoogleLoginSerializer,
     MiPerfilSerializer,
     RegistroSerializer,
     UsuarioSerializer,
+    VerificarCodigoSerializer,
 )
+from .suscripcion import MONEDA_SUSCRIPCION, PRECIO_SUSCRIPCION, precio_suscripcion_en_centavos
+from .throttles import ComprobacionCodigoThrottle, EnvioCodigoThrottle
 from .tokens import respuesta_login
 
 # Inicializamos Stripe con la clave secreta
@@ -63,40 +68,128 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 # ==========================================
 # VISTAS DE REGISTRO Y PAGOS / WEBHOOKS
 # ==========================================
-class RegistroView(generics.CreateAPIView):
+class PrecioSuscripcionView(APIView):
+    """`users/suscripcion/precio/` (GET, público): lo que cuesta activar una
+    cuenta. Lo muestran el formulario de registro y el aviso de cuenta
+    pendiente; sale de la misma constante que usan los cobros."""
     permission_classes = [permissions.AllowAny]
-    serializer_class = RegistroSerializer
 
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
+    def get(self, request):
+        return Response({"precio": f"{PRECIO_SUSCRIPCION:.2f}", "moneda": MONEDA_SUSCRIPCION})
+
+
+class SolicitarCodigoRegistroView(generics.GenericAPIView):
+    """Paso 1 del registro (`auth/register/codigo/`): valida los datos del
+    formulario y manda un código de 6 dígitos al correo. No crea la cuenta.
+    El mismo endpoint sirve para "reenviar código"."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [EnvioCodigoThrottle]
+    serializer_class = DatosRegistroSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            verificacion.enviar_codigo(email, idioma_de_peticion(request))
+        except verificacion.EsperaReenvio as e:
+            return Response(
+                {"detail": "Acabamos de enviarte un código. Espera un momento para pedir otro.", "espera_segundos": e.segundos},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        return Response({
+            "email": email,
+            "vigencia_minutos": int(verificacion.VIGENCIA_CODIGO.total_seconds() // 60),
+            "espera_segundos": int(verificacion.ESPERA_REENVIO.total_seconds()),
+        })
+
+
+class VerificarCodigoRegistroView(generics.GenericAPIView):
+    """Paso 2 del registro (`auth/register/verificar-codigo/`): comprueba el
+    código que el usuario escribió, para que la pantalla pueda pasar al pago.
+    No crea nada ni gasta el código: el registro lo vuelve a exigir."""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ComprobacionCodigoThrottle]
+    serializer_class = VerificarCodigoSerializer
+
+    def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # 1. Creamos el usuario (nace como PENDIENTE_PAGO), recordando el
-        #    idioma en que se registró: el correo de "cuenta activada" sale
-        #    después, desde el webhook, sin él presente.
-        usuario = serializer.save(idioma=idioma_de_peticion(request))
+        try:
+            verificacion.comprobar_codigo(serializer.validated_data['email'], serializer.validated_data['codigo'])
+        except verificacion.CodigoInvalido as e:
+            # `motivo` es estable (el mensaje no): con él traduce el frontend.
+            return Response({"codigo": [e.mensaje], "motivo": e.motivo}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 2. Definimos el monto y producto para la suscripción en Stripe
-        line_items = [
-            {
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": 500,  # $5.00 USD en centavos
-                    "product_data": {
-                        "name": "Suscripción / Registro a la Plataforma"
-                    },
-                },
-                "quantity": 1,
-            }
-        ]
+        return Response({"verificado": True})
+
+
+class PagoNoIniciado(Exception):
+    """La pasarela no pudo abrir el cobro; el mensaje va al usuario."""
+
+
+class RegistroBaseView(generics.GenericAPIView):
+    """Paso 3 del registro: crea la cuenta (nace PENDIENTE_PAGO) y abre el
+    cobro de la suscripción. Cada pasarela es una subclase que solo define
+    `iniciar_pago`.
+
+    Exige el código de verificación del correo (RegistroSerializer). Esa
+    validación va FUERA de la transacción a propósito: un código equivocado
+    cuenta un intento, y dentro del `atomic` el error lo revertiría.
+    """
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegistroSerializer
+
+    def iniciar_pago(self, usuario):
+        """Abre el cobro para `usuario` y devuelve los datos que el frontend
+        necesita para continuarlo. Lanza `PagoNoIniciado` si falla."""
+        raise NotImplementedError
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         try:
-            # 3. Creamos la sesión de pago en Stripe vinculando el ID del usuario
+            # Cuenta y cobro, o ninguno de los dos: si la pasarela falla no
+            # queda una cuenta huérfana (ni se gasta el código).
+            with transaction.atomic():
+                # Se recuerda el idioma en que se registró: el correo de
+                # "cuenta activada" sale después, desde el webhook, sin él presente.
+                usuario = serializer.save(idioma=idioma_de_peticion(request))
+                datos_pago = self.iniciar_pago(usuario)
+        except PagoNoIniciado as e:
+            return Response({"detail": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response(
+            {
+                "mensaje": "¡Registro exitoso! Por favor proceda al pago para activar su cuenta.",
+                "email": usuario.email,
+                "estado_suscripcion": usuario.estado_suscripcion,
+                **datos_pago,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class RegistroView(RegistroBaseView):
+    """Registro pagando con tarjeta: devuelve la `checkout_url` de Stripe."""
+
+    def iniciar_pago(self, usuario):
+        try:
             session = stripe.checkout.Session.create(
                 mode="payment",
                 payment_method_types=["card"],
-                line_items=line_items,
+                line_items=[{
+                    "price_data": {
+                        "currency": MONEDA_SUSCRIPCION.lower(),
+                        "unit_amount": precio_suscripcion_en_centavos(),
+                        "product_data": {"name": "Suscripción / Registro a la Plataforma"},
+                    },
+                    "quantity": 1,
+                }],
                 success_url=(
                     f"{settings.FRONTEND_URL}/registro-exitoso"
                     "?session_id={CHECKOUT_SESSION_ID}"
@@ -109,63 +202,25 @@ class RegistroView(generics.CreateAPIView):
                 },
             )
         except stripe.StripeError as e:
-            transaction.set_rollback(True)
-            return Response(
-                {
-                    "detail": f"No se pudo iniciar el pago con Stripe: {e.user_message or str(e)}"
-                },
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-
-        # 4. Retornamos la URL de pago para que el frontend redirija al usuario
-        return Response(
-            {
-                "mensaje": "¡Registro exitoso! Por favor proceda al pago para activar su cuenta.",
-                "email": usuario.email,
-                "estado_suscripcion": usuario.estado_suscripcion,
-                "checkout_url": session.url,
-            },
-            status=status.HTTP_201_CREATED,
-        )
+            raise PagoNoIniciado(f"No se pudo iniciar el pago con Stripe: {e.user_message or str(e)}")
+        return {"checkout_url": session.url}
 
 
-class RegistroPayPalView(generics.CreateAPIView):
-    """
-    Igual que RegistroView, pero crea una orden de PayPal en vez de una
-    Stripe Checkout Session — el frontend la captura con
-    core.views.PayPalCapturarOrdenView cuando el usuario aprueba el pago.
-    """
-    permission_classes = [permissions.AllowAny]
-    serializer_class = RegistroSerializer
+class RegistroPayPalView(RegistroBaseView):
+    """Registro pagando con PayPal: devuelve el `paypal_order_id`, que el
+    frontend captura con core.views.PayPalCapturarOrdenView cuando el usuario
+    aprueba el pago."""
 
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        usuario = serializer.save(idioma=idioma_de_peticion(request))
-
+    def iniciar_pago(self, usuario):
         try:
             orden_paypal = paypal_utils.crear_orden(
-                total=5,
+                total=PRECIO_SUSCRIPCION,
                 descripcion="Suscripción / Registro a la Plataforma",
                 custom_id=json.dumps({"tipo": "suscripcion_usuario", "user_id": str(usuario.id)}),
             )
         except paypal_utils.PayPalError as e:
-            transaction.set_rollback(True)
-            return Response(
-                {"detail": f"No se pudo iniciar el pago con PayPal: {e}"},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-
-        return Response(
-            {
-                "mensaje": "¡Registro exitoso! Por favor proceda al pago para activar su cuenta.",
-                "email": usuario.email,
-                "estado_suscripcion": usuario.estado_suscripcion,
-                "paypal_order_id": orden_paypal["id"],
-            },
-            status=status.HTTP_201_CREATED,
-        )
+            raise PagoNoIniciado(f"No se pudo iniciar el pago con PayPal: {e}")
+        return {"paypal_order_id": orden_paypal["id"]}
 
 
 class VerificarPagoUsuarioView(generics.GenericAPIView):
@@ -233,8 +288,8 @@ class ActivarCuentaPagoView(generics.GenericAPIView):
                 payment_method_types=["card"],
                 line_items=[{
                     "price_data": {
-                        "currency": "usd",
-                        "unit_amount": 500, # $5.00 USD en centavos
+                        "currency": MONEDA_SUSCRIPCION.lower(),
+                        "unit_amount": precio_suscripcion_en_centavos(),
                         "product_data": {"name": "Activación de Cuenta / Suscripción"},
                     },
                     "quantity": 1,
@@ -271,7 +326,7 @@ class ActivarCuentaPagoPayPalView(generics.GenericAPIView):
 
         try:
             orden_paypal = paypal_utils.crear_orden(
-                total=5,
+                total=PRECIO_SUSCRIPCION,
                 descripcion="Activación de Cuenta / Suscripción",
                 custom_id=json.dumps({"tipo": "activacion_cuenta", "user_id": str(usuario.id)}),
             )

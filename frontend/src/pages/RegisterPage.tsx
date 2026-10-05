@@ -1,67 +1,185 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { PayPalButtons } from "@paypal/react-paypal-js";
 import { userApi } from "../services/userApi";
+import type { DatosRegistro, MotivoCodigoInvalido, RegisterData } from "../services/userApi";
 import { capturarOrdenPayPal } from "../api/paypal.api";
-import { InputField } from "../components/ui/InputField";
-import { Button } from "../components/ui/Button";
+import { DatosRegistroForm } from "../components/registro/DatosRegistroForm";
+import type { FormularioRegistro } from "../components/registro/DatosRegistroForm";
+import { PagoRegistroPaso } from "../components/registro/PagoRegistroPaso";
+import { VerificarCorreoPaso } from "../components/registro/VerificarCorreoPaso";
+import { useCuentaAtras } from "../hooks/useCuentaAtras";
+import { extraerErroresValidacion } from "../utils/erroresApi";
 
-interface RegisterPageProps {
-}
+// El registro va en tres pasos, y la cuenta solo se crea en el último:
+//   datos  → se validan y se manda un código de 6 dígitos al correo
+//   codigo → el usuario lo escribe y el servidor lo comprueba
+//   pago   → con el correo verificado, se crea la cuenta y se paga
+type Paso = "datos" | "codigo" | "pago";
 
-export const RegisterPage: React.FC<RegisterPageProps> = () => {
+const FORMULARIO_VACIO: FormularioRegistro = {
+  username: "",
+  nombre: "",
+  email: "",
+  password: "",
+  passwordConfirm: "",
+  terms: false,
+};
+
+const CLAVE_ERROR_CODIGO: Record<MotivoCodigoInvalido, string> = {
+  incorrecto: "register.codeErrorIncorrect",
+  expirado: "register.codeErrorExpired",
+  demasiados_intentos: "register.codeErrorTooManyAttempts",
+};
+
+type Aviso = { tipo: "error" | "ok"; texto: string } | null;
+
+export const RegisterPage: React.FC = () => {
   const { t } = useTranslation();
-  const [username, setUsername] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [terms, setTerms] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [paso, setPaso] = useState<Paso>("datos");
+  const [formulario, setFormulario] = useState<FormularioRegistro>(FORMULARIO_VACIO);
+  const [codigo, setCodigo] = useState("");
+  const [vigenciaMinutos, setVigenciaMinutos] = useState(0);
+  const [aviso, setAviso] = useState<Aviso>(null);
+  const [ocupado, setOcupado] = useState(false);
   const [pagadoPayPal, setPagadoPayPal] = useState(false);
+  const esperaReenvio = useCuentaAtras();
 
-  const formularioValido = Boolean(
-    username && fullName && email && password && password === passwordConfirm && terms
-  );
+  // Al ir a Stripe `ocupado` se queda en true. Si el usuario vuelve con
+  // "atrás", el navegador puede restaurar la página tal cual estaba (bfcache)
+  // con el botón bloqueado: "pageshow" con persisted detecta ese caso.
+  useEffect(() => {
+    const alMostrar = (evento: PageTransitionEvent) => {
+      if (evento.persisted) setOcupado(false);
+    };
+    window.addEventListener("pageshow", alMostrar);
+    return () => window.removeEventListener("pageshow", alMostrar);
+  }, []);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const error = (clave: string) => setAviso({ tipo: "error", texto: t(clave) });
 
-    if (password !== passwordConfirm) {
-      setError(t("register.errorPasswordMismatch"));
-      return;
-    }
+  const datos: DatosRegistro = {
+    username: formulario.username.trim(),
+    nombre: formulario.nombre.trim(),
+    email: formulario.email.trim().toLowerCase(),
+    password: formulario.password,
+  };
 
-    if (!terms) {
-      setError(t("register.errorTerms"));
-      return;
-    }
+  const irA = (nuevo: Paso) => {
+    setPaso(nuevo);
+    if (nuevo !== "pago") setCodigo("");
+  };
 
-    setLoading(true);
-  
-   try {
-      const response = await userApi.register({
-        username,
-        nombre: fullName,
-        email,
-        password,
-      });
+  // Un 400 al validar los datos (aquí o al crear la cuenta): se vuelve al
+  // formulario con el motivo. Devuelve false si el error no era de datos.
+  const mostrarErrorDeDatos = (err: unknown): boolean => {
+    const errores = extraerErroresValidacion(err);
+    if (!errores) return false;
+    if (errores.email) error("register.errorEmailTaken");
+    else if (errores.username) error("register.errorUsernameTaken");
+    else error("register.errorDuplicate");
+    irA("datos");
+    return true;
+  };
 
-      if (response && response.checkout_url) {
-        window.location.href = response.checkout_url;
-      } 
-    } catch (err: any) {
-      if (err.response && err.response.status === 400) {
-        setError(t("register.errorDuplicate"));
-      } else {
-        setError(t("register.errorGeneric"));
+  // Pide un código (la primera vez y al reenviar). Devuelve si hay un código
+  // vigente esperando en el correo.
+  const pedirCodigo = async (): Promise<boolean> => {
+    try {
+      const enviado = await userApi.solicitarCodigoRegistro(datos);
+      setVigenciaMinutos(enviado.vigencia_minutos);
+      esperaReenvio.iniciar(enviado.espera_segundos);
+      return true;
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 429) {
+        // Se acaba de mandar uno a este correo: sigue sirviendo, solo hay
+        // que esperar para pedir otro. Sin ese dato es el límite por IP.
+        const espera = Number(err.response.data?.espera_segundos);
+        if (espera > 0) {
+          esperaReenvio.iniciar(espera);
+          return true;
+        }
+        error("register.errorTooManyRequests");
+      } else if (!mostrarErrorDeDatos(err)) {
+        error("register.errorGeneric");
       }
-    } finally {
-      setLoading(false);
+      return false;
     }
+  };
+
+  const continuar = async () => {
+    setAviso(null);
+    if (formulario.password !== formulario.passwordConfirm) return error("register.errorPasswordMismatch");
+    if (!formulario.terms) return error("register.errorTerms");
+
+    setOcupado(true);
+    if (await pedirCodigo()) irA("codigo");
+    setOcupado(false);
+  };
+
+  const reenviar = async () => {
+    setAviso(null);
+    setOcupado(true);
+    if (await pedirCodigo()) setAviso({ tipo: "ok", texto: t("register.codeResent") });
+    setOcupado(false);
+  };
+
+  const verificar = async (escrito: string) => {
+    setAviso(null);
+    setOcupado(true);
+    try {
+      await userApi.verificarCodigoRegistro(datos.email, escrito);
+      setCodigo(escrito);
+      setPaso("pago");
+    } catch (err) {
+      const motivo = axios.isAxiosError(err) ? (err.response?.data?.motivo as MotivoCodigoInvalido | undefined) : undefined;
+      if (axios.isAxiosError(err) && err.response?.status === 429) error("register.errorTooManyRequests");
+      else error((motivo && CLAVE_ERROR_CODIGO[motivo]) ?? "register.codeErrorGeneric");
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  // El servidor vuelve a exigir el código al crear la cuenta. Si ya no vale
+  // (venció mientras elegía cómo pagar) se regresa al paso del código.
+  const manejarErrorAlCrearCuenta = (err: unknown) => {
+    if (extraerErroresValidacion(err)?.codigo) {
+      error("register.codeNoLongerValid");
+      irA("codigo");
+    } else if (!mostrarErrorDeDatos(err)) {
+      error("register.errorGeneric");
+    }
+  };
+
+  const registro = (): RegisterData => ({ ...datos, codigo });
+
+  const pagarConTarjeta = async () => {
+    setAviso(null);
+    setOcupado(true);
+    try {
+      const respuesta = await userApi.register(registro());
+      // Se va a Stripe: `ocupado` se queda puesto hasta que la página cambie.
+      window.location.href = respuesta.checkout_url;
+    } catch (err) {
+      manejarErrorAlCrearCuenta(err);
+      setOcupado(false);
+    }
+  };
+
+  const crearOrdenPayPal = async (): Promise<string> => {
+    setAviso(null);
+    try {
+      return (await userApi.registerPayPal(registro())).paypal_order_id;
+    } catch (err) {
+      manejarErrorAlCrearCuenta(err);
+      throw err;
+    }
+  };
+
+  const payPalAprobado = async (paypalOrderId: string) => {
+    await capturarOrdenPayPal(paypalOrderId);
+    setPagadoPayPal(true);
   };
 
   return (
@@ -104,134 +222,53 @@ export const RegisterPage: React.FC<RegisterPageProps> = () => {
             </p>
           </div>
 
-          {/* Mensaje de error amigable */}
-          {error && (
-            <div className="bg-error/20 border border-error text-on-error-container p-3 rounded-md text-sm text-center mb-4">
-              {error}
+          {aviso && (
+            <div
+              role={aviso.tipo === "error" ? "alert" : "status"}
+              className={`border p-3 rounded-md text-sm text-center mb-4 ${
+                aviso.tipo === "error" ? "bg-error/20 border-error text-on-error-container" : "bg-primary/10 border-primary text-on-surface"
+              }`}
+            >
+              {aviso.texto}
             </div>
           )}
 
-          {pagadoPayPal && (
+          {pagadoPayPal ? (
             <div className="bg-primary/10 border border-primary text-on-surface p-4 rounded-md text-sm text-center mb-4">
               <p className="font-semibold mb-2">{t("register.paypalSuccess")}</p>
               <Link className="text-primary hover:underline font-bold" to="/login">
                 {t("register.login")}
               </Link>
             </div>
-          )}
-
-          {!pagadoPayPal && (
-          <form onSubmit={handleRegister} className="flex flex-col gap-3">
-            <InputField
-              id="username"
-              label={t("register.username")}
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="janedoe99"
-              icon="account_circle"
-              required
+          ) : paso === "datos" ? (
+            <DatosRegistroForm
+              valores={formulario}
+              onCambiar={(cambios) => setFormulario((actual) => ({ ...actual, ...cambios }))}
+              onContinuar={continuar}
+              enviando={ocupado}
             />
-
-            <InputField
-              id="fullName"
-              label={t("register.fullName")}
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Jane Doe"
-              icon="person"
-              required
-            />
-
-            <InputField
-              id="email"
-              label={t("register.email")}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="jane@example.com"
-              icon="mail"
-              required
-            />
-
-            <InputField
-              id="password"
-              label={t("register.password")}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              icon="lock"
-              required
-              isMono
-            />
-
-            <InputField
-              id="passwordConfirm"
-              label={t("register.passwordConfirm")}
-              type="password"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              placeholder="••••••••"
-              icon="lock_reset"
-              required
-              isMono
-            />
-
-            {/* Terms Checkbox */}
-            <div className="flex items-start my-2">
-              <div className="flex items-center h-5">
-                <input 
-                  className="w-4 h-4 rounded bg-surface border-outline-variant text-primary focus:ring-primary focus:ring-offset-background cursor-pointer" 
-                  id="terms" 
-                  name="terms" 
-                  type="checkbox"
-                  checked={terms}
-                  onChange={(e) => setTerms(e.target.checked)}
-                  required 
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label className="text-on-surface-variant cursor-pointer" htmlFor="terms">
-                  {t("register.termsPrefix")} <a className="text-primary hover:underline underline-offset-4 decoration-primary/50 transition-colors font-medium" href="/terminos" target="_blank" rel="noreferrer">{t("register.termsLink")}</a>
-                </label>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <Button type="submit" loading={loading} icon="arrow_forward" className="w-full">
-              {t("register.submit")}
-            </Button>
-
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-outline-variant/50"></div>
-              <span className="flex-shrink-0 mx-4 text-on-surface-variant font-mono text-xs">
-                {t("common.orPayWith")}
-              </span>
-              <div className="flex-grow border-t border-outline-variant/50"></div>
-            </div>
-
-            <PayPalButtons
-              style={{ layout: "horizontal", height: 45 }}
-              disabled={!formularioValido}
-              forceReRender={[username, fullName, email, password, passwordConfirm, terms]}
-              createOrder={async () => {
-                const { paypal_order_id } = await userApi.registerPayPal({
-                  username,
-                  nombre: fullName,
-                  email,
-                  password,
-                });
-                return paypal_order_id;
+          ) : paso === "codigo" ? (
+            <VerificarCorreoPaso
+              email={datos.email}
+              vigenciaMinutos={vigenciaMinutos}
+              esperaReenvio={esperaReenvio.restante}
+              ocupado={ocupado}
+              onVerificar={verificar}
+              onReenviar={reenviar}
+              onCambiarCorreo={() => {
+                setAviso(null);
+                irA("datos");
               }}
-              onApprove={async (data) => {
-                await capturarOrdenPayPal(data.orderID);
-                setPagadoPayPal(true);
-              }}
-              onError={() => setError(t("common.paypalError"))}
             />
-          </form>
+          ) : (
+            <PagoRegistroPaso
+              email={datos.email}
+              ocupado={ocupado}
+              onPagarConTarjeta={pagarConTarjeta}
+              onCrearOrdenPayPal={crearOrdenPayPal}
+              onPayPalAprobado={payPalAprobado}
+              onErrorPayPal={() => setAviso((actual) => actual ?? { tipo: "error", texto: t("common.paypalError") })}
+            />
           )}
 
           <p className="mt-5 text-center text-sm text-on-surface-variant">

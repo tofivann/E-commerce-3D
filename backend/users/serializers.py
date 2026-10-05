@@ -12,6 +12,7 @@ from .tokens import (
     crear_refresh_token,
     datos_usuario_para_login,
 )
+from .verificacion import CodigoInvalido, LONGITUD_CODIGO, comprobar_codigo, consumir_codigo, normalizar_correo
 
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -162,7 +163,11 @@ class GoogleLoginSerializer(serializers.Serializer):
 # ==========================================
 # SERIALIZADOR DE REGISTRO 
 # ==========================================
-class RegistroSerializer(serializers.ModelSerializer):
+class DatosRegistroSerializer(serializers.ModelSerializer):
+    """Los datos del formulario de registro y sus validaciones (correo y
+    usuario libres). No crea nada: lo usa tal cual el paso que manda el
+    código de verificación, para no hacer verificar un correo cuyo registro
+    luego iba a fallar por otro dato."""
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     class Meta:
@@ -170,14 +175,29 @@ class RegistroSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'nombre', 'password']
 
     def validate_email(self, value):
-        # Convertimos a minúsculas para verificar sin importar si escriben mayúsculas
-        email_lower = value.lower()
-        
-        # Verificamos si ya existe en la base de datos
-        if Usuario.objects.filter(email__iexact=email_lower).exists():
+        email = normalizar_correo(value)
+        if Usuario.objects.filter(email__iexact=email).exists():
             raise serializers.ValidationError("Ya existe un usuario registrado con este correo electrónico.")
-        
-        return email_lower
+        return email
+
+
+class RegistroSerializer(DatosRegistroSerializer):
+    """El registro en sí: los mismos datos más el código que se mandó al
+    correo. Sin un código válido no se crea la cuenta (ni se llega a cobrar),
+    aunque la petición no venga de nuestra pantalla."""
+    codigo = serializers.CharField(write_only=True, max_length=LONGITUD_CODIGO, trim_whitespace=True)
+
+    class Meta(DatosRegistroSerializer.Meta):
+        fields = DatosRegistroSerializer.Meta.fields + ['codigo']
+
+    def validate(self, datos):
+        # Va en validate() y no en validate_codigo(): necesita el correo ya
+        # normalizado, y solo debe gastar un intento si lo demás es válido.
+        try:
+            comprobar_codigo(datos['email'], datos['codigo'])
+        except CodigoInvalido as e:
+            raise serializers.ValidationError({'codigo': e.mensaje}, code=e.motivo)
+        return datos
 
     def create(self, validated_data):
         # Creamos el usuario asegurando el rol de cliente y estado pendiente de pago
@@ -192,4 +212,13 @@ class RegistroSerializer(serializers.ModelSerializer):
             # que el cliente escriba, sale del idioma en que ve el sitio.
             idioma=validated_data.get('idioma') or IDIOMA_POR_DEFECTO,
         )
+        # El código ya cumplió: no debe servir para otra cuenta. La vista
+        # crea la cuenta dentro de una transacción, así que si el pago no
+        # llega a iniciarse esto se revierte junto con la cuenta.
+        consumir_codigo(user.email)
         return user
+
+
+class VerificarCodigoSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    codigo = serializers.CharField(max_length=LONGITUD_CODIGO, trim_whitespace=True)

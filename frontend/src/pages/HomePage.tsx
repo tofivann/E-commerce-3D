@@ -5,6 +5,7 @@ import { PayPalButtons } from "@paypal/react-paypal-js";
 import { ProductList } from "../components/products/ProductList";
 import { SearchInput } from "../components/products/SearchInput";
 import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
+import { PrecioSuscripcion } from "../components/ui/PrecioSuscripcion";
 import { AppLayout } from "../components/layout/AppLayout";
 import { GuestLayout } from "../components/layout/GuestLayout";
 import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
@@ -106,6 +107,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <p className="text-sm text-on-error-container/80 mt-1">
               {t("home.pendingBody")}
             </p>
+            <PrecioSuscripcion className="text-error mt-3" />
           </div>
           <div className="flex flex-col gap-2 items-stretch w-full md:w-56">
             <button

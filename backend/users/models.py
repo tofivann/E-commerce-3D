@@ -65,3 +65,29 @@ class Usuario(AbstractUser):
         suscripción activa. Es la misma regla que `hasAccess` en el frontend
         (isStaff || estado_suscripcion === 'ACTIVO')."""
         return self.is_staff or self.estado_suscripcion == self.EstadoSuscripcion.ACTIVO
+
+
+class CodigoVerificacionCorreo(models.Model):
+    """Código que se manda a un correo para comprobar, antes de crear la
+    cuenta, que quien se registra lo recibe. Una fila por correo: pedir otro
+    código reemplaza al anterior. Toda la lógica (vigencia, intentos, envío)
+    vive en users/verificacion.py; aquí solo se guarda el estado.
+
+    No apunta a `Usuario` porque en este momento la cuenta todavía no existe.
+    """
+    email = models.EmailField(unique=True)
+    codigo_hash = models.CharField(
+        max_length=64,
+        help_text="Huella (HMAC-SHA256) del código; el código en claro nunca se guarda.",
+    )
+    enviado_en = models.DateTimeField()
+    expira_en = models.DateTimeField(db_index=True)
+    intentos = models.PositiveSmallIntegerField(default=0, help_text="Intentos fallidos con este código.")
+    verificado = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Código de verificación de correo"
+        verbose_name_plural = "Códigos de verificación de correo"
+
+    def __str__(self):
+        return f"{self.email} ({'verificado' if self.verificado else 'pendiente'})"
