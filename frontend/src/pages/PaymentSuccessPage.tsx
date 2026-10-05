@@ -155,7 +155,7 @@ export const PaymentSuccessPage: React.FC = () => {
                   >
                     <div className="w-full md:w-28 h-28 rounded-md overflow-hidden shrink-0 relative bg-surface-container-lowest">
                       {typeof compra.producto.imagen_previa === "string" && compra.producto.imagen_previa ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={compra.producto.imagen_previa}
                           alt={compra.producto.titulo}
                           className="w-full h-full object-cover"

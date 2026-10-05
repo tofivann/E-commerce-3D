@@ -141,7 +141,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               >
                 <div className="w-16 h-16 rounded-md overflow-hidden bg-surface-container-lowest shrink-0">
                   {typeof item.producto.imagen_previa === "string" && item.producto.imagen_previa ? (
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={item.producto.imagen_previa}
                       alt={item.producto.titulo}
                       className="w-full h-full object-cover"

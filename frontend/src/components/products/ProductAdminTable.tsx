@@ -114,7 +114,7 @@ export const ProductAdminTable: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-md overflow-hidden border border-outline-variant/30 bg-surface-container-lowest shrink-0">
                         {typeof producto.imagen_previa === "string" && producto.imagen_previa ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={producto.imagen_previa}
                             alt={producto.titulo}
                             className="w-full h-full object-cover"

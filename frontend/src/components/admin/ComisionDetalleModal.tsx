@@ -151,7 +151,7 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
               <div className="flex gap-3 mt-1">
                 {[item.data.foto_referencia_1, item.data.foto_referencia_2].filter(Boolean).map((foto, i) => (
                   <a key={i} href={foto as string} target="_blank" rel="noreferrer">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={foto as string}
                       alt={t("comisionDetalle.referenceAlt", { n: i + 1 })}
                       className="w-28 h-28 object-cover rounded-lg border border-outline-variant/30 hover:opacity-80 transition-opacity"
@@ -185,7 +185,7 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
           {item.data.foto_entrega && (
             <Campo label={t("comisionDetalle.deliveryPhoto")}>
               <a href={item.data.foto_entrega} target="_blank" rel="noreferrer">
-                <img
+                <img loading="lazy" decoding="async"
                   src={item.data.foto_entrega}
                   alt={t("comisionDetalle.deliveryPhoto")}
                   className="w-20 h-20 object-cover rounded-lg border border-outline-variant/30 hover:opacity-80 transition-opacity mt-1"

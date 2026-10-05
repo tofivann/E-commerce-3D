@@ -28,7 +28,7 @@ export const Avatar: React.FC<AvatarProps> = ({ foto, nombre, tamano = "sm", cla
 
   if (foto && foto !== fotoRota) {
     return (
-      <img
+      <img loading="lazy" decoding="async"
         src={foto}
         alt={nombre || ""}
         onError={() => setFotoRota(foto)}

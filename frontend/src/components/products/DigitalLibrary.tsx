@@ -134,7 +134,7 @@ export const DigitalLibrary: React.FC<DigitalLibraryProps> = ({ busqueda = "" })
               className="card-hover bg-surface-container-low rounded-lg border border-outline-variant/30 overflow-hidden flex flex-col h-full"
             >
               <div className="relative h-40 w-full overflow-hidden bg-surface-container-lowest">
-                <img
+                <img loading="lazy" decoding="async"
                   src={
                     typeof compra.producto.imagen_previa === "string" && compra.producto.imagen_previa
                       ? compra.producto.imagen_previa

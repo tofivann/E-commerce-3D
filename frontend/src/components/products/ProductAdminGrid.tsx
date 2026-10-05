@@ -134,7 +134,7 @@ export const ProductAdminGrid: React.FC = () => {
 
               <div className="h-48 w-full overflow-hidden bg-surface-container-lowest relative">
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent z-10 opacity-60" />
-                <img
+                <img loading="lazy" decoding="async"
                   alt={producto.titulo}
                   src={
                     typeof producto.imagen_previa === "string" && producto.imagen_previa

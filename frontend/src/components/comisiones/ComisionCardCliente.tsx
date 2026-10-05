@@ -45,7 +45,7 @@ export const ComisionCardCliente: React.FC<ComisionCardClienteProps> = ({
     >
       <div className="h-48 w-full overflow-hidden bg-surface-container-lowest relative shrink-0">
         {foto ? (
-          <img
+          <img loading="lazy" decoding="async"
             src={foto}
             alt={titulo}
             className="w-full h-full object-cover object-top transition-transform duration-500"

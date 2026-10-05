@@ -61,7 +61,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Zona de Imagen */}
       <div className="relative grow h-48 overflow-hidden bg-surface-container-lowest">
-        <img
+        <img loading="lazy" decoding="async"
           alt={oculto ? "" : producto.titulo}
           src={
             typeof producto.imagen_previa === "string"
