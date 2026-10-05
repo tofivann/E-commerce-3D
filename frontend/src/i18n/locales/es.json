@@ -418,6 +418,7 @@
   },
   "adminProducts": {
     "search": "Buscar productos...",
+    "emptyFiltered": "No hay productos en las categorías elegidas.",
     "loadError": "No se pudieron cargar los productos del servidor.",
     "toggleError": "No se pudo cambiar el estado del producto.",
     "deleteError": "No se pudo eliminar el producto.",

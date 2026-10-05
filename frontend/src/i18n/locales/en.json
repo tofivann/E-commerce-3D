@@ -418,6 +418,7 @@
   },
   "adminProducts": {
     "search": "Search products...",
+    "emptyFiltered": "There are no products in the selected categories.",
     "loadError": "Could not load products from the server.",
     "toggleError": "Could not change the product's status.",
     "deleteError": "Could not delete the product.",

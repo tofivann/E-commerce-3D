@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Producto } from "../../api/productos.api";
-import { deleteProducto, patchProducto } from "../../api/productos.api";
+import type { Categoria, Producto } from "../../api/productos.api";
+import { categoriasApi, deleteProducto, patchProducto } from "../../api/productos.api";
+import { CategoryFilter } from "./CategoryFilter";
 import { ProductForm } from "./ProductForm";
 import { SearchInput } from "./SearchInput";
 import { Monedas } from "../ui/Monedas";
@@ -23,6 +24,17 @@ export const ProductAdminTable: React.FC = () => {
   // solo vería las páginas ya cargadas). Una petición por pausa de escritura.
   const [busqueda, setBusqueda] = useState("");
   const busquedaAplicada = useDebounce(busqueda.trim());
+  // Filtro por categorías, también en el servidor (?categorias=): mismas
+  // píldoras y misma regla ("al menos una") que el catálogo.
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    categoriasApi
+      .listar()
+      .then(setCategorias)
+      .catch((err) => console.error("Error al cargar categorías:", err));
+  }, []);
 
   const {
     items: productos,
@@ -34,7 +46,12 @@ export const ProductAdminTable: React.FC = () => {
     recargar,
     actualizarItem,
     eliminarItem,
-  } = useProductosPaginados({ search: busquedaAplicada, incluirInactivos: true });
+  } = useProductosPaginados({
+    search: busquedaAplicada,
+    categorias: [...categoriasSeleccionadas],
+    incluirInactivos: true,
+  });
+  const hayFiltros = Boolean(busquedaAplicada) || categoriasSeleccionadas.size > 0;
 
   const handleToggleActivo = async (producto: Producto) => {
     if (!producto.id) return;
@@ -88,6 +105,13 @@ export const ProductAdminTable: React.FC = () => {
 
       <SearchInput value={busqueda} onChange={setBusqueda} placeholder={t("adminProducts.search")} className="mb-4 max-w-md" />
 
+      <CategoryFilter
+        categorias={categorias}
+        seleccionadas={categoriasSeleccionadas}
+        onChange={setCategoriasSeleccionadas}
+        className="mb-4"
+      />
+
       {error && (
         <div className="p-4 mb-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
           {t("adminProducts.loadError")}
@@ -113,7 +137,11 @@ export const ProductAdminTable: React.FC = () => {
               {!cargando && !error && productos.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-on-surface-variant">
-                    {busquedaAplicada ? t("common.noResults", { query: busquedaAplicada }) : t("adminProducts.empty")}
+                    {busquedaAplicada
+                      ? t("common.noResults", { query: busquedaAplicada })
+                      : hayFiltros
+                      ? t("adminProducts.emptyFiltered")
+                      : t("adminProducts.empty")}
                   </td>
                 </tr>
               )}
