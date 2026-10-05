@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import mimicoin from "../../assets/mimicoin.webp";
 
 interface MonedasProps {
   cantidad: number;
@@ -8,12 +9,20 @@ interface MonedasProps {
   className?: string;
 }
 
-// El icono de la moneda, el mismo en todo el sitio: una estrella dentro de
-// un círculo (sin símbolo de dólar: las monedas no son dinero).
+// El icono del MimiCoin, el mismo en todo el sitio: la cara de Mimi en un
+// círculo con borde, como una moneda. La imagen (assets/mimicoin.webp) es un
+// recorte de la ilustración de la portada (mmd-scene.webp): para cambiar la
+// moneda se reemplaza ese archivo, nada más.
+// Mide en `em`: sigue el tamaño de letra de donde se ponga (o el que le dé
+// `className`, p. ej. "text-[20px]").
 export const IconoMoneda: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <span className={`material-symbols-outlined ${className}`} style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
-    stars
-  </span>
+  <img
+    src={mimicoin}
+    alt=""
+    aria-hidden="true"
+    draggable={false}
+    className={`inline-block w-[1.25em] h-[1.25em] shrink-0 rounded-full object-cover ring-1 ring-primary/50 ${className}`}
+  />
 );
 
 // Una cantidad de monedas, siempre con el mismo icono. El único sitio donde
