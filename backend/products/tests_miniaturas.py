@@ -271,8 +271,8 @@ class GenerarMiniaturasTests(MediaTemporalMixin, TestCase):
         nuevo.refresh_from_db()
         self.assertEqual(self.abrir(viejo.imagen_miniatura).size[0], LADO_MINIATURA)
         self.assertEqual(nuevo.imagen_miniatura.name, nombre_nuevo)
-        self.assertIn('Productos por procesar: 1', salida)
-        self.assertIn('Miniaturas creadas: 1', salida)
+        self.assertIn('products.Producto.imagen_previa: 1 por procesar', salida)
+        self.assertIn('products.Producto.imagen_previa: 1 miniaturas creadas', salida)
 
     def test_no_toca_la_portada_ni_los_demas_datos(self):
         producto = self.sin_miniatura()
@@ -290,7 +290,7 @@ class GenerarMiniaturasTests(MediaTemporalMixin, TestCase):
 
         salida = self.correr()
 
-        self.assertIn('Productos por procesar: 0', salida)
+        self.assertIn('products.Producto.imagen_previa: 0 por procesar', salida)
         self.assertEqual(Producto.objects.get().imagen_miniatura.name, nombre)
         self.assertEqual(len(self.archivos()), 1)
 

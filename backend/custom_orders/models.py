@@ -1,4 +1,5 @@
 from django.db import models
+from core.miniaturas import ConMiniaturas
 from users.models import Usuario
 from orders.models import Orden
 
@@ -91,7 +92,9 @@ class DatosPublicacion(models.Model):
         )
 
 
-class ComisionMotion(DatosPublicacion):
+class ComisionMotion(ConMiniaturas, DatosPublicacion):
+    MINIATURAS = {'foto_entrega': 'foto_entrega_miniatura'}
+
     """Comisión de coreografía/animación sobre un personaje que el cliente ya tiene."""
     orden = models.OneToOneField(Orden, on_delete=models.CASCADE, related_name='comision_motion')
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='comisiones_motion')
@@ -105,6 +108,11 @@ class ComisionMotion(DatosPublicacion):
     # Foto del resultado terminado, subida por el admin junto con archivo_entrega y
     # categoria al completar la comisión — mismo patrón que ComisionModelo.foto_entrega.
     foto_entrega = models.ImageField(upload_to='comisiones/motion/entrega/', null=True, blank=True)
+    # Copia ligera para tarjetas y listas; la mantiene ConMiniaturas al guardar.
+    foto_entrega_miniatura = models.ImageField(
+        upload_to='comisiones/miniaturas/', null=True, blank=True, editable=False,
+        help_text="Miniatura de foto_entrega; se genera sola.",
+    )
     # Igual que Producto.categorias: varias categorías por comisión. Opcional
     # (blank=True) hasta que se completa la entrega — ver ValidacionEntregaMixin.
     categorias = models.ManyToManyField('products.Categoria', related_name='comisiones_motion', blank=True)
@@ -122,7 +130,13 @@ class ComisionMotion(DatosPublicacion):
         return f"Motion #{self.id} - {self.usuario.nombre} - {self.nombre_cancion}"
 
 
-class ComisionModelo(DatosPublicacion):
+class ComisionModelo(ConMiniaturas, DatosPublicacion):
+    MINIATURAS = {
+        'foto_referencia_1': 'foto_referencia_1_miniatura',
+        'foto_referencia_2': 'foto_referencia_2_miniatura',
+        'foto_entrega': 'foto_entrega_miniatura',
+    }
+
     """Comisión de un modelo 3D nuevo (personaje que aún no está en la tienda)."""
     orden = models.OneToOneField(Orden, on_delete=models.CASCADE, related_name='comision_modelo')
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='comisiones_modelo')
@@ -130,12 +144,25 @@ class ComisionModelo(DatosPublicacion):
     nombre_personaje = models.CharField(max_length=150)
     foto_referencia_1 = models.ImageField(upload_to='comisiones/modelo/referencias/')
     foto_referencia_2 = models.ImageField(upload_to='comisiones/modelo/referencias/', null=True, blank=True)
+    # Copias ligeras para tarjetas y listas; las mantiene ConMiniaturas al guardar.
+    foto_referencia_1_miniatura = models.ImageField(
+        upload_to='comisiones/miniaturas/', null=True, blank=True, editable=False,
+        help_text="Miniatura de foto_referencia_1; se genera sola.",
+    )
+    foto_referencia_2_miniatura = models.ImageField(
+        upload_to='comisiones/miniaturas/', null=True, blank=True, editable=False,
+        help_text="Miniatura de foto_referencia_2; se genera sola.",
+    )
     estado = models.CharField(max_length=20, choices=EstadoComision.choices, default=EstadoComision.SOLICITADO)
     archivo_entrega = models.FileField(upload_to='comisiones/modelo/', null=True, blank=True)
     # Foto del modelo ya terminado, subida por el admin junto con archivo_entrega al
     # completar la comisión (distinta de foto_referencia_1/2, que sube el cliente al
     # pedirla). Se reutiliza como imagen_previa al publicar el Producto en la tienda.
     foto_entrega = models.ImageField(upload_to='comisiones/modelo/entrega/', null=True, blank=True)
+    foto_entrega_miniatura = models.ImageField(
+        upload_to='comisiones/miniaturas/', null=True, blank=True, editable=False,
+        help_text="Miniatura de foto_entrega; se genera sola.",
+    )
     # Igual que Producto.categorias: varias categorías por comisión. Opcional
     # (blank=True) hasta que se completa la entrega — ver ValidacionEntregaMixin.
     categorias = models.ManyToManyField('products.Categoria', related_name='comisiones_modelo', blank=True)

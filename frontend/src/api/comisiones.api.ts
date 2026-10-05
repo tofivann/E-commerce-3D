@@ -41,6 +41,9 @@ export interface ComisionMotion {
   informacion_adicional: string;
   estado: EstadoComision;
   foto_entrega: string | null;
+  // Solo lectura: copia ligera que genera el servidor, para tarjetas y
+  // listas (ver utils/imagenComision.ts). null si no hay foto.
+  foto_entrega_miniatura: string | null;
   categorias: Categoria[];
   producto_publicado: number | null;
   descarga_url: string | null;
@@ -53,8 +56,13 @@ export interface ComisionModelo {
   nombre_personaje: string;
   foto_referencia_1: string;
   foto_referencia_2: string | null;
+  foto_referencia_1_miniatura: string | null;
+  foto_referencia_2_miniatura: string | null;
   estado: EstadoComision;
   foto_entrega: string | null;
+  // Solo lectura: copia ligera que genera el servidor, para tarjetas y
+  // listas (ver utils/imagenComision.ts). null si no hay foto.
+  foto_entrega_miniatura: string | null;
   categorias: Categoria[];
   producto_publicado: number | null;
   descarga_url: string | null;

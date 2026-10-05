@@ -14,6 +14,7 @@ import { FiltroChips } from "../ui/FiltroChips";
 import { SearchInput } from "../products/SearchInput";
 import { CompletarComisionModal } from "./CompletarComisionModal";
 import { ComisionDetalleModal } from "./ComisionDetalleModal";
+import { fotoTarjetaComision } from "../../utils/imagenComision";
 
 // Los modales de esta carpeta importan `Item` desde aquí; el tipo real vive
 // en utils/comisiones.ts junto con la lógica de filtrado.
@@ -167,7 +168,7 @@ export const SolicitudesComisionesTable: React.FC = () => {
             item.tipo === "motion"
               ? `${nombreTramoMotion(item.data.tramo_personajes)} · ${item.data.nombre_juego}`
               : item.data.juego.nombre;
-          const foto = item.tipo === "motion" ? item.data.foto_entrega : item.data.foto_entrega || item.data.foto_referencia_1;
+          const foto = fotoTarjetaComision(item);
           // Una comisión cancelada ya no se trabaja: no se le sube entrega ni
           // se publica (el backend tampoco la completaría — ver perform_update).
           const cancelada = item.data.estado === "CANCELADO";

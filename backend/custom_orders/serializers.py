@@ -96,6 +96,11 @@ class SolicitudComisionModeloSerializer(MontoComisionMixin, serializers.Serializ
 # descarga (solo presente cuando ya se subió el archivo de entrega).
 # ---------------------------------------------------------------------------
 
+# Miniaturas de las fotos de una comisión de modelo (solo lectura: las genera
+# el servidor, ver core/miniaturas.py). Para tarjetas y listas.
+MINIATURAS_MODELO = ('foto_referencia_1_miniatura', 'foto_referencia_2_miniatura', 'foto_entrega_miniatura')
+
+
 class ComisionMotionSerializer(serializers.ModelSerializer):
     orden = OrdenResumenSerializer(read_only=True)
     tramo_personajes = TramoPersonajesMotionSerializer(read_only=True)
@@ -106,7 +111,7 @@ class ComisionMotionSerializer(serializers.ModelSerializer):
         model = ComisionMotion
         fields = [
             'id', 'orden', 'tramo_personajes', 'nombre_juego', 'nombre_cancion',
-            'link_video', 'informacion_adicional', 'estado', 'foto_entrega',
+            'link_video', 'informacion_adicional', 'estado', 'foto_entrega', 'foto_entrega_miniatura',
             'categorias', 'producto_publicado', 'descarga_url',
         ]
         read_only_fields = fields
@@ -129,7 +134,7 @@ class ComisionModeloSerializer(serializers.ModelSerializer):
         model = ComisionModelo
         fields = [
             'id', 'orden', 'juego', 'nombre_personaje', 'foto_referencia_1', 'foto_referencia_2',
-            'estado', 'foto_entrega', 'categorias', 'producto_publicado', 'descarga_url',
+            *MINIATURAS_MODELO, 'estado', 'foto_entrega', 'categorias', 'producto_publicado', 'descarga_url',
         ]
         read_only_fields = fields
 
@@ -242,12 +247,13 @@ class ComisionMotionAdminSerializer(NombreArchivoEntregaMixin, ValidacionPublica
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
             'nombre_cancion', 'link_video', 'informacion_adicional', 'estado', 'archivo_entrega',
-            'archivo_entrega_nombre', 'foto_entrega', 'categorias', 'categorias_detalle', 'producto_publicado',
+            'archivo_entrega_nombre', 'foto_entrega', 'foto_entrega_miniatura', 'categorias', 'categorias_detalle',
+            'producto_publicado',
             *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'tramo_personajes', 'nombre_juego',
-            'nombre_cancion', 'link_video', 'informacion_adicional', 'producto_publicado',
+            'nombre_cancion', 'link_video', 'informacion_adicional', 'producto_publicado', 'foto_entrega_miniatura',
         ]
         extra_kwargs = ARCHIVO_ENTREGA_SOLO_ESCRITURA
 
@@ -269,13 +275,14 @@ class ComisionModeloAdminSerializer(NombreArchivoEntregaMixin, ValidacionPublica
         model = ComisionModelo
         fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
-            'foto_referencia_1', 'foto_referencia_2', 'estado', 'archivo_entrega', 'archivo_entrega_nombre', 'foto_entrega',
+            'foto_referencia_1', 'foto_referencia_2', *MINIATURAS_MODELO, 'estado', 'archivo_entrega',
+            'archivo_entrega_nombre', 'foto_entrega',
             'categorias', 'categorias_detalle', 'producto_publicado',
             *CAMPOS_PUBLICACION, 'publicacion_completa',
         ]
         read_only_fields = [
             'id', 'orden', 'usuario_nombre', 'usuario_email', 'juego', 'nombre_personaje',
-            'foto_referencia_1', 'foto_referencia_2', 'producto_publicado',
+            'foto_referencia_1', 'foto_referencia_2', 'producto_publicado', *MINIATURAS_MODELO,
         ]
         extra_kwargs = ARCHIVO_ENTREGA_SOLO_ESCRITURA
 

@@ -7,6 +7,7 @@ import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import type { Item } from "./SolicitudesComisionesTable";
 import { etiquetaFormato } from "../../utils/formato";
 import { comisionesAdminApi } from "../../api/comisiones.api";
+import { miniaturaComision } from "../../utils/imagenComision";
 
 interface ComisionDetalleModalProps {
   item: Item | null;
@@ -149,10 +150,14 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
             </div>
             <Campo label={t("comisionDetalle.referencePhotos")}>
               <div className="flex gap-3 mt-1">
-                {[item.data.foto_referencia_1, item.data.foto_referencia_2].filter(Boolean).map((foto, i) => (
+                {/* Se muestra la miniatura; el enlace abre la foto original. */}
+                {[
+                  [item.data.foto_referencia_1, item.data.foto_referencia_1_miniatura],
+                  [item.data.foto_referencia_2, item.data.foto_referencia_2_miniatura],
+                ].filter(([foto]) => Boolean(foto)).map(([foto, miniatura], i) => (
                   <a key={i} href={foto as string} target="_blank" rel="noreferrer">
                     <img loading="lazy" decoding="async"
-                      src={foto as string}
+                      src={miniaturaComision(foto, miniatura) ?? undefined}
                       alt={t("comisionDetalle.referenceAlt", { n: i + 1 })}
                       className="w-28 h-28 object-cover rounded-lg border border-outline-variant/30 hover:opacity-80 transition-opacity"
                     />
@@ -186,7 +191,7 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
             <Campo label={t("comisionDetalle.deliveryPhoto")}>
               <a href={item.data.foto_entrega} target="_blank" rel="noreferrer">
                 <img loading="lazy" decoding="async"
-                  src={item.data.foto_entrega}
+                  src={miniaturaComision(item.data.foto_entrega, item.data.foto_entrega_miniatura) ?? undefined}
                   alt={t("comisionDetalle.deliveryPhoto")}
                   className="w-20 h-20 object-cover rounded-lg border border-outline-variant/30 hover:opacity-80 transition-opacity mt-1"
                 />

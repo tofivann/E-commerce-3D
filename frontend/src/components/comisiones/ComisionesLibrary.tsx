@@ -5,6 +5,7 @@ import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
 import { ComisionCardCliente } from "./ComisionCardCliente";
 import { coincideBusqueda } from "../../utils/texto";
+import { fotoTarjetaComision } from "../../utils/imagenComision";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
@@ -115,7 +116,7 @@ export const ComisionesLibrary: React.FC<ComisionesLibraryProps> = ({ busqueda =
         const titulo = item.tipo === "motion" ? item.data.nombre_cancion : item.data.nombre_personaje;
         const subtitulo = item.tipo === "motion" ? item.data.nombre_juego : item.data.juego.nombre;
 
-        const foto = item.data.foto_entrega;
+        const foto = fotoTarjetaComision(item);
 
         return (
           <ComisionCardCliente

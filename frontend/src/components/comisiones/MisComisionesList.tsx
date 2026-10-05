@@ -4,6 +4,7 @@ import type { ComisionMotion, ComisionModelo } from "../../api/comisiones.api";
 import { comisionesApi, descargarComisionMotion, descargarComisionModelo } from "../../api/comisiones.api";
 import { nombreTramoMotion } from "../../utils/tramoMotion";
 import { ComisionCardCliente } from "./ComisionCardCliente";
+import { fotoTarjetaComision } from "../../utils/imagenComision";
 
 type Item =
   | { tipo: "motion"; data: ComisionMotion }
@@ -88,7 +89,7 @@ export const MisComisionesList: React.FC<MisComisionesListProps> = ({ refreshKey
                 juego: item.data.nombre_juego,
               })
             : t("misComisiones.modeloSubtitle", { juego: item.data.juego.nombre });
-        const foto = item.tipo === "motion" ? item.data.foto_entrega : item.data.foto_entrega || item.data.foto_referencia_1;
+        const foto = fotoTarjetaComision(item);
         const puedeDescargar = item.data.estado === "COMPLETADO" && Boolean(item.data.descarga_url);
 
         return (
