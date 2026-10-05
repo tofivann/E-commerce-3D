@@ -224,7 +224,7 @@ const FormularioPerfil: React.FC<{ perfil: Perfil }> = ({ perfil }) => {
       <section className="border-t border-outline-variant/30 pt-6 flex flex-col gap-2">
         <span className={labelClass}>{t("perfil.password")}</span>
         <p className="text-on-surface-variant text-sm">{t("perfil.passwordHelp")}</p>
-        <Link to="/forgot-password" className="text-primary font-semibold hover:underline no-underline self-start inline-flex items-center gap-1">
+        <Link to="/forgot-password" className="mt-1 self-start inline-flex items-center gap-2 no-underline border border-outline-variant/60 text-primary rounded-lg py-2 px-4 font-semibold hover:border-primary/60 hover:bg-primary/10 transition-colors">
           <span className="material-symbols-outlined text-[18px]">lock_reset</span>
           {t("perfil.changePassword")}
         </Link>
