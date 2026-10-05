@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import transaction
 
 from core.email_utils import enviar_email
+from core.idiomas import EN, ES
 from core.stripe_utils import stripe_dict_get
 from .models import Usuario
 
@@ -57,7 +58,8 @@ def activar_suscripcion_usuario(session_data):
 
     enviar_email(
         to=usuario.email,
-        subject="¡Tu cuenta ya está activa! 🎉",
+        asuntos={ES: "¡Tu cuenta ya está activa! 🎉", EN: "Your account is now active! 🎉"},
         template_name='users/email_cuenta_activada.html',
         context={'nombre': usuario.nombre, 'frontend_url': settings.FRONTEND_URL},
+        idioma=usuario.idioma,
     )

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from core.idiomas import IDIOMA_POR_DEFECTO, OPCIONES_IDIOMA
+
 class Usuario(AbstractUser):
     class Rol(models.TextChoices):
         CLIENTE = 'CLIENTE', 'Cliente'
@@ -27,6 +29,15 @@ class Usuario(AbstractUser):
         default=EstadoSuscripcion.INACTIVO,
         db_index=True,  # Búsqueda rápida por estado de suscripción
         help_text="Estado del pago de suscripción."
+    )
+    idioma = models.CharField(
+        max_length=2,
+        choices=OPCIONES_IDIOMA,
+        default=IDIOMA_POR_DEFECTO,
+        help_text=(
+            "Idioma en que el usuario usa el sitio; en él se le escriben los correos. "
+            "Se actualiza solo (users/authentication.py), no se edita a mano."
+        ),
     )
     fecha_registro = models.DateTimeField(auto_now_add=True)
 

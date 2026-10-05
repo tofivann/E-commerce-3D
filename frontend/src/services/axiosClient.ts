@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
+import i18n from '../i18n/config';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1/';
 
@@ -10,12 +11,18 @@ export const axiosClient = axios.create({
   },
 });
 
-// Adjunta el JWT guardado en el login a toda petición autenticada.
+// Adjunta a toda petición el JWT guardado en el login y el idioma en que el
+// usuario está viendo el sitio.
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Cabecera estándar: con ella el backend sabe en qué idioma responderle a
+  // esta persona y lo recuerda en su cuenta para escribirle los correos
+  // (core/idiomas.py y users/authentication.py en el backend). Se lee en
+  // cada petición, así un cambio de pestaña ES/EN vale desde la siguiente.
+  config.headers['Accept-Language'] = i18n.resolvedLanguage ?? i18n.language;
   return config;
 });
 

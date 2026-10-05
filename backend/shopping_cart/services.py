@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import transaction
 
 from core.email_utils import enviar_email
+from core.idiomas import EN, ES
 from orders.models import Orden, ComprasDigitales
 from .models import CarritoItem
 
@@ -52,7 +53,7 @@ def marcar_orden_pagada(session_id=None, paypal_order_id=None):
 
     enviar_email(
         to=orden.usuario.email,
-        subject="Recibo de tu compra ✨",
+        asuntos={ES: "Recibo de tu compra ✨", EN: "Your purchase receipt ✨"},
         template_name='shopping_cart/email_recibo_compra.html',
         context={
             'codigo_orden': orden.codigo_orden,
@@ -60,4 +61,5 @@ def marcar_orden_pagada(session_id=None, paypal_order_id=None):
             'total': orden.total,
             'frontend_url': settings.FRONTEND_URL,
         },
+        idioma=orden.usuario.idioma,
     )

@@ -1,0 +1,13 @@
+{% extends "core/email_base.html" %}
+
+{% block titulo %}Your account is now active!{% endblock %}
+
+{% block contenido %}
+<h1 style="font-size:20px; color:#3a2e35; margin:0 0 16px;">Hi{% if nombre %}, {{ nombre }}{% endif %}! 🎉</h1>
+<p style="font-size:15px; color:#5c4d54; line-height:1.6; margin:0 0 24px;">
+  Your payment was confirmed and your account is now <strong>active</strong>. You can log in and unlock the full catalog, request custom commissions, and more.
+</p>
+<a href="{{ frontend_url }}/login" style="display:inline-block; background-color:#f472a0; color:#ffffff; text-decoration:none; padding:12px 28px; border-radius:8px; font-weight:bold; font-size:14px;">
+  Log in
+</a>
+{% endblock %}

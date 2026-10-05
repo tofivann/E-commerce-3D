@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 
 from core import paypal_utils
 from core.email_utils import enviar_email
+from core.idiomas import EN, ES
 from orders.models import Orden, ComprasDigitales
 from products.models import Producto
 from .models import EstadoComision, TramoPersonajesMotion, JuegoComision, ComisionMotion, ComisionModelo
@@ -367,10 +368,13 @@ class ComisionAdminViewSetBase(
             instance.estado = EstadoComision.COMPLETADO
             instance.save(update_fields=['estado'])
 
-            tipo_label, detalle = datos_comision_para_email(instance.orden)
+            # El idioma del CLIENTE (guardado en su cuenta), no el del admin
+            # que está subiendo la entrega en esta petición.
+            idioma = instance.usuario.idioma
+            tipo_label, detalle = datos_comision_para_email(instance.orden, idioma)
             enviar_email(
                 to=instance.usuario.email,
-                subject="¡Tu comisión está lista! 🎉",
+                asuntos={ES: "¡Tu comisión está lista! 🎉", EN: "Your commission is ready! 🎉"},
                 template_name='custom_orders/email_comision_completada.html',
                 context={
                     'codigo_orden': instance.orden.codigo_orden,
@@ -378,6 +382,7 @@ class ComisionAdminViewSetBase(
                     'detalle': detalle,
                     'frontend_url': settings.FRONTEND_URL,
                 },
+                idioma=idioma,
             )
 
     def _publicar_producto(self, comision):

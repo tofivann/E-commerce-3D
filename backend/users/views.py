@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import TokenBlacklistView, TokenObtainPairVi
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from core.email_utils import enviar_email
+from core.idiomas import EN, ES, idioma_de_peticion
 from core import paypal_utils
 from .models import Usuario
 from .serializers import (
@@ -69,8 +70,10 @@ class RegistroView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # 1. Creamos el usuario (nace como PENDIENTE_PAGO)
-        usuario = serializer.save()
+        # 1. Creamos el usuario (nace como PENDIENTE_PAGO), recordando el
+        #    idioma en que se registró: el correo de "cuenta activada" sale
+        #    después, desde el webhook, sin él presente.
+        usuario = serializer.save(idioma=idioma_de_peticion(request))
 
         # 2. Definimos el monto y producto para la suscripción en Stripe
         line_items = [
@@ -137,7 +140,7 @@ class RegistroPayPalView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = serializer.save()
+        usuario = serializer.save(idioma=idioma_de_peticion(request))
 
         try:
             orden_paypal = paypal_utils.crear_orden(
@@ -344,9 +347,13 @@ class SolicitarResetPasswordView(generics.GenericAPIView):
 
         enviar_email(
             to=usuario.email,
-            subject="Restablece tu contraseña",
+            asuntos={ES: "Restablece tu contraseña", EN: "Reset your password"},
             template_name='users/email_reset_password.html',
             context={'nombre': usuario.nombre, 'enlace': enlace},
+            # Quien lo pide está presente y acaba de leer el formulario en un
+            # idioma: se le responde en ese. Si la petición no lo dice, en el
+            # que tenga guardado su cuenta.
+            idioma=idioma_de_peticion(request) or usuario.idioma,
         )
 
         return Response({"mensaje": "Si el correo existe, se ha enviado un enlace de recuperación."}, status=status.HTTP_200_OK)

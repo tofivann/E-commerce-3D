@@ -3,6 +3,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.utils import datetime_from_epoch
+from core.idiomas import IDIOMA_POR_DEFECTO
 from .models import Usuario
 from .tokens import (
     CLAIM_REMEMBER_ME,
@@ -148,6 +149,9 @@ class RegistroSerializer(serializers.ModelSerializer):
             nombre=validated_data['nombre'],
             password=validated_data['password'],
             rol=Usuario.Rol.CLIENTE,
-            estado_suscripcion=Usuario.EstadoSuscripcion.PENDIENTE_PAGO
+            estado_suscripcion=Usuario.EstadoSuscripcion.PENDIENTE_PAGO,
+            # Lo pasa la vista con serializer.save(idioma=...): no es un dato
+            # que el cliente escriba, sale del idioma en que ve el sitio.
+            idioma=validated_data.get('idioma') or IDIOMA_POR_DEFECTO,
         )
         return user

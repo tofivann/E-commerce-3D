@@ -117,7 +117,8 @@ else:
 # 6. Configuración de Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # JWT estándar + recuerda el idioma del usuario (para los correos).
+        'users.authentication.JWTAuthenticationConIdioma',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
