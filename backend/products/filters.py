@@ -17,6 +17,23 @@ class BusquedaNormalizadaFilter(filters.SearchFilter):
         return [normalizar_texto(t) for t in super().get_search_terms(request) if normalizar_texto(t)]
 
 
+class TiendaFilter(filters.BaseFilterBackend):
+    """Filtra por ?tienda=dinero|monedas: qué tienda está mirando el cliente.
+    La tienda normal muestra lo que acepta dinero y la "Tienda MimiCoins" lo
+    que acepta MimiCoins: un producto que acepta las dos sale en ambas. Sin
+    el parámetro (o con un valor desconocido) no se filtra: el panel del
+    admin lista todo."""
+    parametro = 'tienda'
+    condiciones = {
+        'dinero': {'acepta_dinero': True},
+        'monedas': {'acepta_monedas': True},
+    }
+
+    def filter_queryset(self, request, queryset, view):
+        condicion = self.condiciones.get(request.query_params.get(self.parametro, ''))
+        return queryset.filter(**condicion) if condicion else queryset
+
+
 class CategoriasFilter(filters.BaseFilterBackend):
     """Filtra por ?categorias=1,2,3 (ids separados por coma): el producto
     tiene que tener AL MENOS UNA de las categorías pedidas (OR). Cada

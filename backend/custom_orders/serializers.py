@@ -186,8 +186,8 @@ class ValidacionEntregaMixin:
 # publicar (_publicar_producto). Deliberadamente fuera del trío de
 # ValidacionEntregaMixin: se pueden completar en otro momento.
 CAMPOS_PUBLICACION = [
-    'titulo_publicacion', 'descripcion_publicacion', 'precio_publicacion', 'precio_monedas_publicacion',
-    'formato_archivo_publicacion', 'link_youtube',
+    'titulo_publicacion', 'descripcion_publicacion', 'acepta_dinero_publicacion', 'acepta_monedas_publicacion',
+    'precio_publicacion', 'precio_monedas_publicacion', 'formato_archivo_publicacion', 'link_youtube',
 ]
 
 
@@ -215,6 +215,18 @@ class ValidacionPublicacionMixin:
         if valor is not None and valor < 0:
             raise serializers.ValidationError('El precio no puede ser negativo.')
         return valor
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        # Al menos una forma de pago (el precio de cada una se exige recién
+        # al publicar, como el resto de datos de reventa).
+        def valor(campo):
+            return attrs[campo] if campo in attrs else getattr(self.instance, campo, False)
+
+        if 'acepta_dinero_publicacion' in attrs or 'acepta_monedas_publicacion' in attrs:
+            if not valor('acepta_dinero_publicacion') and not valor('acepta_monedas_publicacion'):
+                raise serializers.ValidationError({'acepta_dinero_publicacion': 'Marca al menos una forma de pago.'})
+        return attrs
 
 
 # El archivo de entrega solo ENTRA por estos serializers (lo sube el admin):

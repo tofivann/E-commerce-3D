@@ -11,9 +11,14 @@ interface ProductGridProps {
   favoritoIds?: ReadonlySet<number>;
   onSelectProducto?: (producto: Producto) => void;
   onAddToCart?: (producto: Producto) => void;
+  // Canje directo con MimiCoins (ver ProductCard).
+  onCanjear?: (producto: Producto) => void;
   onGoToLibrary?: (producto: Producto) => void;
   // Sin esta acción las tarjetas no muestran el corazón.
   onToggleFavorito?: (producto: Producto) => void;
+  // Botón de todas las tarjetas (ver ProductCard.accion). Sin valor, cada
+  // tarjeta decide por su producto.
+  accion?: "carrito" | "canje";
 }
 
 // La grilla de tarjetas de producto, sin saber de dónde salen los productos:
@@ -26,8 +31,10 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   favoritoIds,
   onSelectProducto,
   onAddToCart,
+  onCanjear,
   onGoToLibrary,
   onToggleFavorito,
+  accion,
 }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     {productos.map((prod) => {
@@ -41,8 +48,10 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           isFavorito={tieneId && (favoritoIds?.has(prod.id as number) ?? false)}
           onSelect={onSelectProducto}
           onAddToCart={onAddToCart}
+          onCanjear={onCanjear}
           onGoToLibrary={onGoToLibrary}
           onToggleFavorito={onToggleFavorito}
+          accion={accion}
         />
       );
     })}

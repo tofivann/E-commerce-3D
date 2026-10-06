@@ -7,6 +7,7 @@ import { carritoApi } from "../../api/carrito.api";
 import { capturarOrdenPayPal } from "../../api/paypal.api";
 import { perfilStore } from "../../stores/perfilStore";
 import { miniaturaDe } from "../../utils/imagenProducto";
+import { pagableConMonedas } from "../../utils/monedas";
 import { Monedas } from "../ui/Monedas";
 import { PagarConMonedas } from "../ui/PagarConMonedas";
 
@@ -160,8 +161,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <h3 className="font-semibold text-on-surface truncate">{item.producto.titulo}</h3>
                   <p className="font-mono text-primary-fixed-dim text-sm mt-1 flex items-center gap-3">
                     ${Number(item.producto.precio).toFixed(2)}
-                    {item.producto.precio_monedas != null && (
-                      <Monedas cantidad={item.producto.precio_monedas} className="text-on-surface-variant font-normal" />
+                    {pagableConMonedas(item.producto) && (
+                      <Monedas cantidad={item.producto.precio_monedas as number} className="text-on-surface-variant font-normal" />
                     )}
                   </p>
                 </div>

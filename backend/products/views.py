@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.pagination import PaginacionEstandar
-from .filters import BusquedaNormalizadaFilter, CategoriasFilter
+from .filters import BusquedaNormalizadaFilter, CategoriasFilter, TiendaFilter
 from .models import Categoria, Favorito, Producto
 from .permissions import EsAdminOSoloLectura, TieneAccesoAlCatalogo
 from .serializers import CategoriaSerializer, ProductoSerializer
@@ -46,7 +46,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
     # infinito, y por eso buscar/filtrar en el navegador ya no sirve — solo
     # vería la parte cargada.
     pagination_class = PaginacionEstandar
-    filter_backends = [BusquedaNormalizadaFilter, CategoriasFilter]
+    filter_backends = [BusquedaNormalizadaFilter, CategoriasFilter, TiendaFilter]
     search_fields = ['titulo_normalizado', 'descripcion_normalizada']
 
     def get_permissions(self):

@@ -5,6 +5,7 @@ from .views import (
     CheckoutView,
     CheckoutPayPalCrearView,
     CheckoutMonedasView,
+    CanjeMonedasView,
     OrdenPorSesionView,
 )
 
@@ -15,5 +16,6 @@ urlpatterns = [
     path('checkout/', CheckoutView.as_view(), name='carrito-checkout'),
     path('checkout-paypal/', CheckoutPayPalCrearView.as_view(), name='carrito-checkout-paypal'),
     path('checkout-monedas/', CheckoutMonedasView.as_view(), name='carrito-checkout-monedas'),
+    path('canjear-monedas/', CanjeMonedasView.as_view(), name='canjear-monedas'),
     path('orden/<str:session_id>/', OrdenPorSesionView.as_view(), name='orden-por-sesion'),
 ]

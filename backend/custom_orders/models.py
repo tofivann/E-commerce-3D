@@ -1,6 +1,6 @@
 from django.db import models
 from core.miniaturas import ConMiniaturas
-from monedas.campos import campo_precio_en_monedas
+from monedas.campos import campo_acepta_dinero, campo_acepta_monedas, campo_precio_en_monedas
 from users.models import Usuario
 from orders.models import Orden
 
@@ -70,9 +70,12 @@ class DatosPublicacion(models.Model):
     """
     titulo_publicacion = models.CharField(max_length=200, blank=True)
     descripcion_publicacion = models.TextField(blank=True)
+    # Formas de pago con que se publicará (se copian a Producto.acepta_*):
+    # cada una marcada exige su precio — ver `publicacion_completa`.
+    acepta_dinero_publicacion = campo_acepta_dinero()
+    acepta_monedas_publicacion = campo_acepta_monedas()
     precio_publicacion = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    # Se copia a Producto.precio_monedas al publicar. Opcional: vacío = el
-    # producto no se podrá pagar con monedas.
+    # Se copia a Producto.precio_monedas al publicar.
     precio_monedas_publicacion = campo_precio_en_monedas()
     formato_archivo_publicacion = models.CharField(max_length=50, blank=True, help_text="Ej: STL, OBJ, FBX")
     # Mismo nombre y definición que Producto.link_youtube: se copia tal cual
@@ -91,12 +94,16 @@ class DatosPublicacion(models.Model):
     @property
     def publicacion_completa(self):
         """True si ya están los datos mínimos para crear el Producto (todo lo
-        que en Producto es obligatorio). link_youtube es opcional también ahí."""
+        que en Producto es obligatorio): título, descripción, formato, al
+        menos una forma de pago y el precio de cada forma marcada.
+        link_youtube es opcional también ahí."""
         return bool(
             self.titulo_publicacion
             and self.descripcion_publicacion
-            and self.precio_publicacion is not None
             and self.formato_archivo_publicacion
+            and (self.acepta_dinero_publicacion or self.acepta_monedas_publicacion)
+            and (not self.acepta_dinero_publicacion or self.precio_publicacion is not None)
+            and (not self.acepta_monedas_publicacion or self.precio_monedas_publicacion)
         )
 
 

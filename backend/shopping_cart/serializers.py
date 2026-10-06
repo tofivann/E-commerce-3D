@@ -30,8 +30,10 @@ class CarritoSerializer(serializers.ModelSerializer):
         """Lo que cuesta el carrito entero pagado con monedas, o None si no
         se puede pagar así (está vacío, o algún producto no tiene precio en
         monedas): no se mezclan monedas y dinero en una misma compra."""
-        precios = [item.producto.precio_monedas for item in obj.items.all()]
-        return sum(precios) if precios and all(precios) else None
+        productos = [item.producto for item in obj.items.all()]
+        if not productos or not all(producto.pagable_con_monedas for producto in productos):
+            return None
+        return sum(producto.precio_monedas for producto in productos)
 
     def get_subtotal(self, obj):
         return sum((item.producto.precio for item in obj.items.all()), Decimal('0.00'))

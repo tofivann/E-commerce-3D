@@ -6,6 +6,7 @@ import { FavoritoButton } from "./FavoritoButton";
 import { etiquetaFormato } from "../../utils/formato";
 import { miniaturaDe } from "../../utils/imagenProducto";
 import { Monedas } from "../ui/Monedas";
+import { pagableConMonedas } from "../../utils/monedas";
 
 interface ProductCardProps {
   producto: Producto;
@@ -18,9 +19,16 @@ interface ProductCardProps {
   isFavorito?: boolean;
   onSelect?: (producto: Producto) => void;
   onAddToCart?: (producto: Producto) => void;
+  // Canje directo con MimiCoins (sin carrito). Es la acción de los productos
+  // que no aceptan dinero y de toda la Tienda MimiCoins (ver `accion`).
+  onCanjear?: (producto: Producto) => void;
   onGoToLibrary?: (producto: Producto) => void;
   // Marcar/desmarcar favorito. Sin esta acción no se muestra el corazón.
   onToggleFavorito?: (producto: Producto) => void;
+  // Qué botón lleva la tarjeta. Por defecto se decide por el producto:
+  // carrito si acepta dinero, canje si solo acepta MimiCoins. La Tienda
+  // MimiCoins fuerza "canje" también para los que aceptan las dos.
+  accion?: "carrito" | "canje";
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -30,10 +38,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isFavorito = false,
   onSelect,
   onAddToCart,
+  onCanjear,
   onGoToLibrary,
   onToggleFavorito,
+  accion,
 }) => {
   const { t } = useTranslation();
+  const conMonedas = pagableConMonedas(producto);
+  const canjea = (accion ?? (producto.acepta_dinero ? "carrito" : "canje")) === "canje" && conMonedas;
   const fallbackImage =
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80";
 
@@ -146,24 +158,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         ) : hasAccess ? (
           <div className="mt-1 flex items-center justify-between">
-            {/* Precio en dólares y, debajo, en monedas (si se puede pagar con
-                ellas): en la misma línea no caben junto al botón. */}
+            {/* Los precios que apliquen: dólares si acepta dinero y, debajo,
+                MimiCoins si los acepta (en la misma línea no caben junto al
+                botón). Un producto solo-MimiCoins muestra solo MimiCoins. */}
             <span className="text-primary-container font-bold font-mono flex flex-col leading-tight min-w-0">
-              ${Number(producto.precio).toFixed(2)}
-              {producto.precio_monedas != null && (
-                <Monedas cantidad={producto.precio_monedas} className="text-xs text-on-surface-variant font-normal" />
+              {producto.acepta_dinero && <span>${Number(producto.precio).toFixed(2)}</span>}
+              {conMonedas && (
+                <Monedas
+                  cantidad={producto.precio_monedas as number}
+                  className={producto.acepta_dinero ? "text-xs text-on-surface-variant font-normal" : ""}
+                />
               )}
             </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToCart && onAddToCart(producto);
-              }}
-              className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1 rounded hover:bg-primary-fixed-dim transition-colors font-semibold flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
-              {t("catalog.add")}
-            </button>
+            {canjea ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCanjear?.(producto);
+                }}
+                className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1 rounded hover:bg-primary-fixed-dim transition-colors font-semibold flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[16px]">redeem</span>
+                {t("monedas.canjear")}
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddToCart && onAddToCart(producto);
+                }}
+                className="text-xs bg-primary-container text-on-primary-fixed px-3 py-1 rounded hover:bg-primary-fixed-dim transition-colors font-semibold flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+                {t("catalog.add")}
+              </button>
+            )}
           </div>
         ) : (
           <div className="h-6 w-1/3 bg-surface-container-highest rounded animate-pulse mt-1 opacity-20"></div>

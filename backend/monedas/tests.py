@@ -51,8 +51,11 @@ class MonedasTestsBase(MediaTemporalMixin, APITestCase):
         ajustar_saldo(usuario or self.cliente, cantidad, 'Saldo inicial del test', self.admin)
 
     def producto(self, titulo='Modelo', **campos):
+        # Con precio en MimiCoins, acepta MimiCoins (además de dinero), salvo que el test diga otra cosa.
+        campos.setdefault('acepta_monedas', bool(campos.get('precio_monedas')))
+        campos.setdefault('precio', Decimal('8.00'))
         return Producto.objects.create(
-            titulo=titulo, descripcion='x', precio=Decimal('8.00'), formato_archivo='ZIP',
+            titulo=titulo, descripcion='x', formato_archivo='ZIP',
             archivo_3d=SimpleUploadedFile('m.zip', b'zip'), **campos,
         )
 
@@ -528,7 +531,9 @@ class PreciosEnMonedasTests(MonedasTestsBase):
     def datos_producto(self, **extra):
         return {
             'titulo': 'Modelo', 'descripcion': 'x', 'precio': '10.00', 'categorias': [self.categoria.id],
-            'formato_archivo': 'ZIP', 'archivo_3d': SimpleUploadedFile('m.zip', b'zip'), 'activo': 'true', **extra,
+            'formato_archivo': 'ZIP', 'archivo_3d': SimpleUploadedFile('m.zip', b'zip'), 'activo': 'true',
+            # En multipart un booleano ausente cuenta como False: el panel manda siempre las formas de pago.
+            'acepta_dinero': 'true', **extra,
         }
 
     def test_un_producto_nuevo_nace_con_el_precio_en_monedas_por_defecto(self):
@@ -603,6 +608,237 @@ class PreciosEnMonedasTests(MonedasTestsBase):
         self.assertEqual(Producto.objects.get().precio_monedas, 33)
         # Recibir en la biblioteca el producto de su propia comisión no es una compra: no da moneda.
         self.assertEqual(self.saldo(), 1)
+
+
+URL_CANJEAR = '/api/v1/cart/canjear-monedas/'
+URL_PRODUCTOS = '/api/v1/products/products/'
+
+
+class TiendaMimiCoinsTests(MonedasTestsBase):
+    """Formas de pago de un producto (dinero, MimiCoins o las dos), la
+    "Tienda MimiCoins" (?tienda=) y el canje directo."""
+
+    def setUp(self):
+        super().setUp()
+        self.solo_dinero = self.producto('Solo dinero')
+        self.ambos = self.producto('Ambos', precio_monedas=5)
+        self.solo_monedas = self.producto('Solo MimiCoins', precio_monedas=3, acepta_dinero=False, precio=0)
+
+    def titulos(self, **params):
+        respuesta = self.client.get(URL_PRODUCTOS, params)
+        return sorted(p['titulo'] for p in respuesta.data['results'])
+
+    # ---- qué tienda muestra qué
+    def test_la_tienda_normal_muestra_lo_que_acepta_dinero(self):
+        self.assertEqual(self.titulos(tienda='dinero'), ['Ambos', 'Solo dinero'])
+
+    def test_la_tienda_mimicoins_muestra_lo_que_acepta_mimicoins(self):
+        self.assertEqual(self.titulos(tienda='monedas'), ['Ambos', 'Solo MimiCoins'])
+
+    def test_sin_tienda_se_ve_todo(self):
+        self.assertEqual(len(self.titulos()), 3)
+        self.assertEqual(len(self.titulos(tienda='otra')), 3)
+
+    def test_el_catalogo_dice_que_formas_de_pago_acepta_cada_producto(self):
+        por_titulo = {p['titulo']: (p['acepta_dinero'], p['acepta_monedas']) for p in self.client.get(URL_PRODUCTOS).data['results']}
+        self.assertEqual(por_titulo, {'Solo dinero': (True, False), 'Ambos': (True, True), 'Solo MimiCoins': (False, True)})
+
+    # ---- reglas al crear/editar
+    def datos(self, **extra):
+        categoria = Categoria.objects.create(nombre='P', nombre_en='P')
+        return {
+            'titulo': 'Nuevo', 'descripcion': 'x', 'precio': '10.00', 'categorias': [categoria.id], 'formato_archivo': 'ZIP',
+            'archivo_3d': SimpleUploadedFile('m.zip', b'zip'), 'activo': 'true', **extra,
+        }
+
+    def test_hay_que_marcar_al_menos_una_forma_de_pago(self):
+        self.client.force_authenticate(self.admin)
+
+        respuesta = self.client.post(URL_PRODUCTOS, self.datos(acepta_dinero='false', acepta_monedas='false'), format='multipart')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('acepta_dinero', respuesta.data)
+
+    def test_aceptar_mimicoins_exige_precio_en_mimicoins(self):
+        self.client.force_authenticate(self.admin)
+
+        respuesta = self.client.post(
+            URL_PRODUCTOS, self.datos(acepta_dinero='true', acepta_monedas='true', precio_monedas=''), format='multipart',
+        )
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('precio_monedas', respuesta.data)
+
+    def test_un_producto_solo_mimicoins_no_cobra_dinero(self):
+        self.client.force_authenticate(self.admin)
+
+        respuesta = self.client.post(
+            URL_PRODUCTOS, self.datos(acepta_dinero='false', acepta_monedas='true', precio='99.00', precio_monedas='7'),
+            format='multipart',
+        )
+
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        self.assertEqual(Decimal(respuesta.data['precio']), Decimal('0'))
+        self.assertEqual(respuesta.data['precio_monedas'], 7)
+
+    def test_editar_solo_la_portada_no_pide_de_nuevo_las_formas_de_pago(self):
+        self.client.force_authenticate(self.admin)
+
+        respuesta = self.client.patch(f'{URL_PRODUCTOS}{self.solo_monedas.id}/', {'titulo': 'Otro'}, format='multipart')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        self.solo_monedas.refresh_from_db()
+        self.assertEqual((self.solo_monedas.acepta_dinero, self.solo_monedas.acepta_monedas), (False, True))
+
+    # ---- carrito y dinero
+    def test_un_producto_solo_mimicoins_no_entra_al_carrito(self):
+        respuesta = self.client.post('/api/v1/cart/items/', {'producto': self.solo_monedas.id}, format='json')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data['motivo'], 'solo_monedas')
+        self.assertFalse(CarritoItem.objects.exists())
+
+    def test_el_carrito_no_se_cobra_con_dinero_si_un_producto_dejo_de_aceptarlo(self):
+        self.al_carrito(self.ambos)
+        Producto.objects.filter(pk=self.ambos.pk).update(acepta_dinero=False)
+
+        with patch('shopping_cart.views.stripe.checkout.Session.create') as crear_sesion:
+            respuesta = self.client.post('/api/v1/cart/checkout/')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data['motivo'], 'solo_monedas')
+        crear_sesion.assert_not_called()
+        self.assertFalse(Orden.objects.exists())
+
+    def test_un_precio_en_mimicoins_sin_la_casilla_no_permite_pagar_con_mimicoins(self):
+        con_precio_pero_sin_casilla = self.producto('Sin casilla', precio_monedas=4, acepta_monedas=False)
+        self.al_carrito(con_precio_pero_sin_casilla)
+        self.dar(50)
+
+        self.assertIsNone(self.client.get('/api/v1/cart/mio/').data['total_monedas'])
+        self.assertEqual(self.client.post(URL_PAGAR_CARRITO).status_code, 400)
+        self.assertEqual(self.saldo(), 50)
+
+    # ---- canje directo
+    def test_canjear_compra_el_producto_al_instante_con_mimicoins(self):
+        self.dar(10)
+
+        respuesta = self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json')
+
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        self.assertEqual(respuesta.data['saldo_monedas'], 7)
+        orden = Orden.objects.get()
+        self.assertEqual((orden.pasarela_pago, orden.total, orden.total_monedas, orden.estado_pago), (PASARELA_MONEDAS, Decimal('0'), 3, Orden.EstadoPago.COMPLETADO))
+        self.assertTrue(ComprasDigitales.objects.filter(usuario=self.cliente, producto=self.solo_monedas).exists())
+        self.assertEqual(self.saldo(), 7)
+        self.assertEqual(MovimientoMonedas.objects.filter(tipo=Tipo.GANADA).count(), 0)
+
+    def test_canjear_no_toca_lo_que_habia_en_el_carrito(self):
+        self.al_carrito(self.solo_dinero, self.ambos)
+        self.dar(10)
+
+        self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json')
+
+        self.assertEqual(sorted(CarritoItem.objects.values_list('producto__titulo', flat=True)), ['Ambos', 'Solo dinero'])
+
+    def test_tambien_se_puede_canjear_un_producto_que_acepta_las_dos_formas(self):
+        self.dar(5)
+
+        self.assertEqual(self.client.post(URL_CANJEAR, {'producto': self.ambos.id}, format='json').status_code, 201)
+        self.assertEqual(self.saldo(), 0)
+
+    def test_no_se_canjea_lo_que_no_acepta_mimicoins(self):
+        self.dar(50)
+
+        respuesta = self.client.post(URL_CANJEAR, {'producto': self.solo_dinero.id}, format='json')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data['motivo'], 'no_pagable')
+        self.assertEqual(self.saldo(), 50)
+
+    def test_no_se_canjea_sin_mimicoins_suficientes(self):
+        self.dar(2)
+
+        respuesta = self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data['motivo'], 'saldo_insuficiente')
+        self.assertFalse(Orden.objects.exists())
+        self.assertEqual(self.saldo(), 2)
+
+    def test_no_se_canjea_dos_veces_lo_que_ya_esta_en_la_biblioteca(self):
+        self.dar(10)
+        self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json')
+
+        respuesta = self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json')
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(respuesta.data['motivo'], 'no_pagable')
+        self.assertEqual(self.saldo(), 7)
+
+    def test_un_producto_inactivo_o_inexistente_no_se_canjea(self):
+        self.dar(10)
+        Producto.objects.filter(pk=self.solo_monedas.pk).update(activo=False)
+
+        self.assertEqual(self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json').status_code, 404)
+        self.assertEqual(self.client.post(URL_CANJEAR, {'producto': 99999}, format='json').status_code, 404)
+
+    def test_canjear_exige_sesion(self):
+        self.client.force_authenticate(None)
+
+        self.assertEqual(self.client.post(URL_CANJEAR, {'producto': self.solo_monedas.id}, format='json').status_code, 401)
+
+    # ---- publicar una comisión
+    def test_publicar_copia_las_formas_de_pago_y_sin_dinero_el_precio_queda_en_0(self):
+        self.client.force_authenticate(self.admin)
+        comision = self.comision_con_dinero()
+        marcar_comision_pagada(session_id='sess_c')
+        categoria = Categoria.objects.create(nombre='P', nombre_en='P')
+        with patch('custom_orders.views.enviar_email'):
+            guardado = self.client.patch(
+                f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/',
+                data={
+                    'archivo_entrega': SimpleUploadedFile('e.zip', b'zip'), 'foto_entrega': portada(200, 200),
+                    'categorias': [categoria.id], 'titulo_publicacion': 'Pack', 'descripcion_publicacion': 'x',
+                    'formato_archivo_publicacion': 'VMD', 'acepta_dinero_publicacion': 'false',
+                    'acepta_monedas_publicacion': 'true', 'precio_monedas_publicacion': '12',
+                },
+                format='multipart',
+            )
+        self.assertEqual(guardado.status_code, 200, guardado.data)
+        self.assertTrue(guardado.data['publicacion_completa'])
+
+        respuesta = self.client.post(f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/publicar/')
+
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        producto = Producto.objects.get(titulo='Pack')
+        self.assertEqual((producto.acepta_dinero, producto.acepta_monedas, producto.precio, producto.precio_monedas), (False, True, Decimal('0'), 12))
+
+    def test_una_comision_sin_forma_de_pago_marcada_no_esta_lista_para_publicar(self):
+        self.client.force_authenticate(self.admin)
+        comision = self.comision_con_dinero()
+
+        respuesta = self.client.patch(
+            f'/api/v1/custom-orders/admin/comisiones/motion/{comision.id}/',
+            {'acepta_dinero_publicacion': False, 'acepta_monedas_publicacion': False}, format='json',
+        )
+
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('acepta_dinero_publicacion', respuesta.data)
+
+    def test_una_comision_que_acepta_mimicoins_no_esta_lista_sin_su_precio(self):
+        self.client.force_authenticate(self.admin)
+        comision = self.comision_con_dinero()
+        ComisionMotion.objects.filter(pk=comision.pk).update(
+            titulo_publicacion='Pack', descripcion_publicacion='x', formato_archivo_publicacion='VMD',
+            precio_publicacion=Decimal('15.00'), acepta_monedas_publicacion=True, precio_monedas_publicacion=None,
+        )
+
+        comision.refresh_from_db()
+        self.assertFalse(comision.publicacion_completa)
+        ComisionMotion.objects.filter(pk=comision.pk).update(precio_monedas_publicacion=8)
+        comision.refresh_from_db()
+        self.assertTrue(comision.publicacion_completa)
 
 
 class VentasConMonedasTests(MonedasTestsBase):

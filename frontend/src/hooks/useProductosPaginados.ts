@@ -17,6 +17,7 @@ export function useProductosPaginados(filtros: FiltrosProductos): ListaPaginada<
     search: filtros.search?.trim() ?? "",
     categorias: [...(filtros.categorias ?? [])].sort((a, b) => a - b),
     incluirInactivos: Boolean(filtros.incluirInactivos),
+    tienda: filtros.tienda,
   } satisfies FiltrosProductos);
 
   // Depende solo de la clave (de la que se reconstruyen los filtros), así

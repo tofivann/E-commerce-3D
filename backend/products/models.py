@@ -3,7 +3,7 @@ from django.db import models
 
 from core.miniaturas import LADO_MINIATURA, ConMiniaturas  # noqa: F401 (LADO_MINIATURA lo usan los tests)
 from core.text_utils import normalizar_texto
-from monedas.campos import campo_precio_en_monedas
+from monedas.campos import campo_acepta_dinero, campo_acepta_monedas, campo_precio_en_monedas
 
 
 # Categorías principales del negocio (las que crea la migración 0004). No se
@@ -37,6 +37,12 @@ class Producto(ConMiniaturas):
 
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
+    # Con qué se compra (ver monedas/campos.py): cualquier combinación, al
+    # menos una. Deciden cuál de los dos precios aplica; ProductoSerializer
+    # exige el que toque.
+    acepta_dinero = campo_acepta_dinero()
+    acepta_monedas = campo_acepta_monedas()
+    # En un producto solo-MimiCoins queda en 0: no se cobra dinero.
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     # Lo que cuesta si se paga con monedas en vez de con dinero (ver monedas/reglas.py).
     precio_monedas = campo_precio_en_monedas()
@@ -88,6 +94,12 @@ class Producto(ConMiniaturas):
 
     def __str__(self):
         return self.titulo
+
+    @property
+    def pagable_con_monedas(self):
+        """Acepta MimiCoins y tiene precio en MimiCoins (el serializer exige
+        lo segundo cuando se marca lo primero; esto cubre filas antiguas)."""
+        return self.acepta_monedas and bool(self.precio_monedas)
 
     def save(self, *args, **kwargs):
         self.titulo_normalizado = normalizar_texto(self.titulo)

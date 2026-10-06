@@ -4,6 +4,7 @@ import type { Producto } from "../../api/productos.api";
 import { extraerIdYoutube } from "../../utils/youtube";
 import { YoutubeEmbed } from "../ui/YoutubeEmbed";
 import { Monedas } from "../ui/Monedas";
+import { pagableConMonedas } from "../../utils/monedas";
 import { FavoritoButton } from "./FavoritoButton";
 import { etiquetaFormato } from "../../utils/formato";
 import { portadaDe } from "../../utils/imagenProducto";
@@ -13,9 +14,13 @@ interface ProductDetailsModalProps {
   hasAccess: boolean;
   onClose: () => void;
   onAddToCart?: (producto: Producto) => void;
+  // Canje directo con MimiCoins (ver ProductCard).
+  onCanjear?: (producto: Producto) => void;
   // Favoritos: sin la acción no se muestra el corazón.
   isFavorito?: boolean;
   onToggleFavorito?: (producto: Producto) => void;
+  // Mismo criterio que ProductCard.accion.
+  accion?: "carrito" | "canje";
 }
 
 const fallbackImage =
@@ -26,11 +31,15 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   hasAccess,
   onClose,
   onAddToCart,
+  onCanjear,
   isFavorito = false,
   onToggleFavorito,
+  accion,
 }) => {
   const { t } = useTranslation();
   if (!producto) return null;
+  const conMonedas = pagableConMonedas(producto);
+  const canjea = (accion ?? (producto.acepta_dinero ? "carrito" : "canje")) === "canje" && conMonedas;
 
   const videoId = extraerIdYoutube(producto.link_youtube);
   const imagenUrl =
@@ -93,21 +102,38 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           {hasAccess ? (
             <>
               <span className="text-primary-container font-bold font-mono text-xl flex flex-wrap items-center gap-x-3">
-                ${Number(producto.precio).toFixed(2)}
-                {producto.precio_monedas != null && (
-                  <Monedas cantidad={producto.precio_monedas} formato="largo" className="text-sm text-on-surface-variant" />
+                {producto.acepta_dinero && <span>${Number(producto.precio).toFixed(2)}</span>}
+                {conMonedas && (
+                  <Monedas
+                    cantidad={producto.precio_monedas as number}
+                    formato="largo"
+                    className={producto.acepta_dinero ? "text-sm text-on-surface-variant" : ""}
+                  />
                 )}
               </span>
-              <button
-                onClick={() => {
-                  onAddToCart && onAddToCart(producto);
-                  onClose();
-                }}
-                className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2.5 px-6 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                {t("productDetails.addToCart")}
-              </button>
+              {canjea ? (
+                <button
+                  onClick={() => {
+                    onCanjear?.(producto);
+                    onClose();
+                  }}
+                  className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2.5 px-6 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">redeem</span>
+                  {t("monedas.canjearCon", { count: producto.precio_monedas as number })}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onAddToCart && onAddToCart(producto);
+                    onClose();
+                  }}
+                  className="bg-primary-container text-on-primary-fixed btn-glow-inner rounded-lg py-2.5 px-6 font-semibold hover:bg-primary-fixed-dim transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                  {t("productDetails.addToCart")}
+                </button>
+              )}
             </>
           ) : (
             <p className="text-on-surface-variant text-sm">

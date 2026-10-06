@@ -6,6 +6,7 @@ import { CategoryFilter } from "./CategoryFilter";
 import { ProductForm } from "./ProductForm";
 import { SearchInput } from "./SearchInput";
 import { Monedas } from "../ui/Monedas";
+import { pagableConMonedas } from "../../utils/monedas";
 import { useDebounce } from "../../hooks/useDebounce";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { TablaSkeleton } from "../ui/TablaSkeleton";
@@ -175,11 +176,12 @@ export const ProductAdminTable: React.FC = () => {
                     {etiquetaFormato(producto.formato_archivo, "—")}
                   </td>
                   <td className="py-3 px-6 font-mono text-primary-fixed-dim font-semibold">
-                    {/* Dólares a la izquierda y MimiCoins a la derecha de la celda. */}
+                    {/* Los precios de las formas de pago que acepta: dólares a
+                        la izquierda y MimiCoins a la derecha de la celda. */}
                     <div className="flex items-center justify-between gap-4">
-                      <span>${Number(producto.precio).toFixed(2)}</span>
-                      {producto.precio_monedas != null && (
-                        <Monedas cantidad={producto.precio_monedas} className="text-xs text-on-surface-variant font-normal" />
+                      <span>{producto.acepta_dinero ? `$${Number(producto.precio).toFixed(2)}` : "—"}</span>
+                      {pagableConMonedas(producto) && (
+                        <Monedas cantidad={producto.precio_monedas as number} className="text-xs text-on-surface-variant font-normal" />
                       )}
                     </div>
                   </td>

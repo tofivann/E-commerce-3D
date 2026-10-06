@@ -60,7 +60,15 @@
     "ajusteCancelar": "Cancel",
     "ajusteGuardar": "Save adjustment",
     "ajusteGuardando": "Saving...",
-    "ajusteError": "The adjustment could not be saved. Please try again."
+    "ajusteError": "The adjustment could not be saved. Please try again.",
+    "canjear": "Redeem",
+    "canjearCon_one": "Redeem for {{count}} MimiCoin",
+    "canjearCon_other": "Redeem for {{count}} MimiCoins",
+    "formasPagoLabel": "Paid with",
+    "formaDinero": "Money",
+    "formaMimiCoins": "MimiCoins",
+    "formasPagoAyuda": "Check one or both. With MimiCoins, the product appears in the MimiCoins Store.",
+    "formasPagoNinguna": "Check at least one payment method."
   },
   "sidebar": {
     "home": "Home",
@@ -148,6 +156,12 @@
   },
   "catalog": {
     "title": "Explore Featured Models",
+    "titleMimiCoins": "MimiCoins Store",
+    "storeLabel": "Store",
+    "storeMoney": "Store",
+    "storeMimiCoins": "MimiCoins Store",
+    "storeMimiCoinsHelp": "Here products are redeemed with MimiCoins, without going through the cart.",
+    "storeMimiCoinsEmpty": "There are no products in the MimiCoins Store yet.",
     "active": "Catalog Active",
     "preview": "Showing preview",
     "loadError": "Could not load products from the server.",

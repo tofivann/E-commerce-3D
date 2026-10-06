@@ -97,6 +97,16 @@ export const carritoApi = {
     return data.saldo_monedas;
   },
 
+  // Canje directo de UN producto con MimiCoins, sin pasar por el carrito (la
+  // Tienda MimiCoins). Queda en la biblioteca al instante. Devuelve el saldo
+  // que le queda al usuario.
+  canjearMonedas: async (productoId: number): Promise<number> => {
+    const { data } = await axiosClient.post<{ orden: Orden; saldo_monedas: number }>("cart/canjear-monedas/", {
+      producto: productoId,
+    });
+    return data.saldo_monedas;
+  },
+
   // Consulta el estado de una orden por el session_id que Stripe agrega a la
   // success_url. Se usa en la pantalla de "Pago Completado" para esperar la
   // confirmación del webhook.

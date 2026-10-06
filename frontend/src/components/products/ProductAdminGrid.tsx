@@ -12,6 +12,8 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useProductosPaginados } from "../../hooks/useProductosPaginados";
 import { etiquetaFormato } from "../../utils/formato";
 import { miniaturaDe } from "../../utils/imagenProducto";
+import { pagableConMonedas } from "../../utils/monedas";
+import { Monedas } from "../ui/Monedas";
 
 export const ProductAdminGrid: React.FC = () => {
   const { t } = useTranslation();
@@ -153,8 +155,15 @@ export const ProductAdminGrid: React.FC = () => {
                   {producto.descripcion || t("adminProducts.defaultDescription")}
                 </p>
                 <div className="mt-auto flex justify-between items-center">
-                  <span className="font-mono text-primary-fixed-dim font-bold">
-                    ${Number(producto.precio).toFixed(2)}
+                  {/* Los precios de las formas de pago que acepta. */}
+                  <span className="font-mono text-primary-fixed-dim font-bold flex flex-col leading-tight">
+                    {producto.acepta_dinero && <span>${Number(producto.precio).toFixed(2)}</span>}
+                    {pagableConMonedas(producto) && (
+                      <Monedas
+                        cantidad={producto.precio_monedas as number}
+                        className={producto.acepta_dinero ? "text-xs text-on-surface-variant font-normal" : ""}
+                      />
+                    )}
                   </span>
                   <button
                     aria-label={t("adminProducts.editProduct")}

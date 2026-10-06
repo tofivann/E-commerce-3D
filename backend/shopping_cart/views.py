@@ -18,7 +18,7 @@ from orders.serializers import OrdenSerializer
 from products.models import Producto
 from .models import Carrito, CarritoItem
 from .serializers import CarritoSerializer, TASA_IMPUESTO
-from .services import CarritoNoPagableConMonedas, pagar_carrito_con_monedas
+from .services import CarritoNoPagableConMonedas, canjear_producto_con_monedas, pagar_carrito_con_monedas
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -37,6 +37,26 @@ def _obtener_carrito(usuario):
     return carrito
 
 
+def _items_para_cobrar_en_dinero(carrito):
+    """Los ítems del carrito listos para cobrarse con Stripe o PayPal, o
+    (None, Response) con el error. Un producto solo-MimiCoins no entra al
+    carrito (CarritoItemView), pero pudo cambiar de modo después de
+    agregarse: se comprueba también aquí, que es donde se cobra."""
+    items = list(carrito.items.select_related('producto'))
+    if not items:
+        return None, Response({"detail": "El carrito está vacío."}, status=status.HTTP_400_BAD_REQUEST)
+    solo_monedas = [item.producto.titulo for item in items if not item.producto.acepta_dinero]
+    if solo_monedas:
+        return None, Response(
+            {
+                "detail": f"Estos productos solo se canjean con {NOMBRE_MONEDAS}, quítalos del carrito: " + ', '.join(solo_monedas) + '.',
+                "motivo": "solo_monedas",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return items, None
+
+
 class MiCarritoView(APIView):
     """Devuelve el carrito del usuario autenticado (lo crea si no existe)."""
     permission_classes = [permissions.IsAuthenticated]
@@ -53,6 +73,14 @@ class CarritoItemView(APIView):
     def post(self, request):
         producto_id = request.data.get('producto')
         producto = get_object_or_404(Producto, pk=producto_id, activo=True)
+        # Un producto solo-MimiCoins no va al carrito: se canjea directo
+        # (CanjeMonedasView). Si entrara, el carrito no se podría pagar con
+        # dinero ni mezclarse con MimiCoins.
+        if not producto.acepta_dinero:
+            return Response(
+                {"detail": f"Este producto se canjea con {NOMBRE_MONEDAS}, no se agrega al carrito.", "motivo": "solo_monedas"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         carrito = _obtener_carrito(request.user)
         CarritoItem.objects.get_or_create(carrito=carrito, producto=producto)
         return Response(
@@ -82,12 +110,9 @@ class CheckoutView(APIView):
     @transaction.atomic
     def post(self, request):
         carrito = _obtener_carrito(request.user)
-        items = list(carrito.items.select_related('producto'))
-        if not items:
-            return Response(
-                {"detail": "El carrito está vacío."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        items, error = _items_para_cobrar_en_dinero(carrito)
+        if error:
+            return error
 
         subtotal = sum((item.producto.precio for item in items))
         impuestos = (subtotal * TASA_IMPUESTO).quantize(Decimal('0.01'))
@@ -169,12 +194,9 @@ class CheckoutPayPalCrearView(APIView):
     @transaction.atomic
     def post(self, request):
         carrito = _obtener_carrito(request.user)
-        items = list(carrito.items.select_related('producto'))
-        if not items:
-            return Response(
-                {"detail": "El carrito está vacío."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        items, error = _items_para_cobrar_en_dinero(carrito)
+        if error:
+            return error
 
         subtotal = sum((item.producto.precio for item in items))
         impuestos = (subtotal * TASA_IMPUESTO).quantize(Decimal('0.01'))
@@ -226,6 +248,37 @@ class CheckoutMonedasView(APIView):
     def post(self, request):
         try:
             orden = pagar_carrito_con_monedas(request.user)
+        except SaldoInsuficiente as e:
+            return Response(
+                {
+                    "detail": f"No tienes {NOMBRE_MONEDAS} suficientes: tienes {e.saldo} y hacen falta {e.necesarias}.",
+                    "motivo": "saldo_insuficiente",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except CarritoNoPagableConMonedas as e:
+            return Response({"detail": str(e), "motivo": "no_pagable"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            {
+                "orden": OrdenSerializer(orden, context={'request': request}).data,
+                "saldo_monedas": saldo_de(request.user),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CanjeMonedasView(APIView):
+    """`cart/canjear-monedas/` (POST {producto}): compra UN producto con
+    MimiCoins al instante, sin carrito. Es el botón "Canjear" de la Tienda
+    MimiCoins (y sirve para cualquier producto que acepte MimiCoins). Mismos
+    errores que CheckoutMonedasView (`motivo`)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        producto = get_object_or_404(Producto, pk=request.data.get('producto'), activo=True)
+        try:
+            orden = canjear_producto_con_monedas(request.user, producto)
         except SaldoInsuficiente as e:
             return Response(
                 {

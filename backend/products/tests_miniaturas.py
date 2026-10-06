@@ -199,8 +199,8 @@ class MiniaturaEnLaApiTests(MediaTemporalMixin, APITestCase):
         return {
             'titulo': 'Modelo', 'descripcion': 'x', 'precio': '10.00', 'categorias': [self.categoria.id],
             'formato_archivo': 'ZIP', 'archivo_3d': SimpleUploadedFile('m.zip', b'zip'), 'imagen_previa': portada(),
-            # En multipart un booleano ausente cuenta como False: el panel lo manda siempre.
-            'activo': 'true', **extra,
+            # En multipart un booleano ausente cuenta como False: el panel los manda siempre.
+            'activo': 'true', 'acepta_dinero': 'true', **extra,
         }
 
     def test_crear_un_producto_devuelve_la_miniatura_y_se_puede_ver(self):

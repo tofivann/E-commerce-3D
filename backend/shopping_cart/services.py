@@ -8,7 +8,7 @@ from core.idiomas import EN, ES
 from monedas.reglas import NOMBRE_MONEDAS, PASARELA_MONEDAS
 from monedas.services import cobrar_orden, otorgar_por_orden_pagada
 from orders.models import Orden, DetalleOrden, ComprasDigitales
-from .models import CarritoItem
+from .models import Carrito, CarritoItem
 
 
 class CarritoNoPagableConMonedas(Exception):
@@ -71,30 +71,29 @@ def _enviar_recibo(orden):
 
 
 @transaction.atomic
-def _pagar_carrito_con_monedas_db(usuario):
-    """Crea la orden del carrito, la cobra en monedas y la entrega, todo o
-    nada. Lanza `CarritoNoPagableConMonedas` o `SaldoInsuficiente`."""
-    items = list(CarritoItem.objects.filter(carrito__usuario=usuario).select_related('producto'))
-    if not items:
+def _pagar_productos_con_monedas_db(usuario, productos):
+    """Crea una orden con `productos`, la cobra en monedas y la entrega,
+    todo o nada. Lanza `CarritoNoPagableConMonedas` o `SaldoInsuficiente`."""
+    if not productos:
         raise CarritoNoPagableConMonedas('El carrito está vacío.')
-    sin_precio = [item.producto.titulo for item in items if not item.producto.precio_monedas]
-    if sin_precio:
+    no_pagables = [producto.titulo for producto in productos if not producto.pagable_con_monedas]
+    if no_pagables:
         raise CarritoNoPagableConMonedas(
-            f'Estos productos no se pueden pagar con {NOMBRE_MONEDAS}: ' + ', '.join(sin_precio) + '.'
+            f'Estos productos no se pueden pagar con {NOMBRE_MONEDAS}: ' + ', '.join(no_pagables) + '.'
         )
 
     orden = Orden.objects.create(
         codigo_orden=f"ORD-{uuid.uuid4().hex[:10].upper()}",
         usuario=usuario,
         total=0,
-        total_monedas=sum(item.producto.precio_monedas for item in items),
+        total_monedas=sum(producto.precio_monedas for producto in productos),
         estado_pago=Orden.EstadoPago.PENDIENTE,
         tipo_orden=Orden.TipoOrden.CATALOGO,
         pasarela_pago=PASARELA_MONEDAS,
     )
-    for item in items:
+    for producto in productos:
         DetalleOrden.objects.create(
-            orden=orden, producto=item.producto, precio_unitario=0, precio_monedas=item.producto.precio_monedas,
+            orden=orden, producto=producto, precio_unitario=0, precio_monedas=producto.precio_monedas,
         )
 
     cobrar_orden(orden)
@@ -109,7 +108,28 @@ def pagar_carrito_con_monedas(usuario):
 
     Igual que en `marcar_orden_pagada`, el recibo sale fuera de la
     transacción: un correo lento no puede revertir la compra."""
-    orden = _pagar_carrito_con_monedas_db(usuario)
+    items = CarritoItem.objects.filter(carrito__usuario=usuario).select_related('producto')
+    orden = _pagar_productos_con_monedas_db(usuario, [item.producto for item in items])
+    _enviar_recibo(orden)
+    return orden
+
+
+def canjear_producto_con_monedas(usuario, producto):
+    """Canje directo de UN producto con MimiCoins, sin pasar por el carrito:
+    es como se compran los productos solo-MimiCoins (los de la "Tienda
+    MimiCoins"). Un producto que ya está en su biblioteca no se canjea dos
+    veces. Devuelve la Orden ya completada; el carrito queda como estaba
+    (`_entregar_orden` lo vacía: se guarda y se repone)."""
+    if ComprasDigitales.objects.filter(usuario=usuario, producto=producto, activo=True).exists():
+        raise CarritoNoPagableConMonedas('Ya tienes este producto en tu biblioteca.')
+    productos_en_carrito = list(
+        CarritoItem.objects.filter(carrito__usuario=usuario).values_list('producto_id', flat=True)
+    )
+    with transaction.atomic():
+        orden = _pagar_productos_con_monedas_db(usuario, [producto])
+        carrito = Carrito.objects.get(usuario=usuario) if productos_en_carrito else None
+        for producto_id in productos_en_carrito:
+            CarritoItem.objects.get_or_create(carrito=carrito, producto_id=producto_id)
     _enviar_recibo(orden)
     return orden
 

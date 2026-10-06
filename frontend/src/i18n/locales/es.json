@@ -60,7 +60,15 @@
     "ajusteCancelar": "Cancelar",
     "ajusteGuardar": "Guardar ajuste",
     "ajusteGuardando": "Guardando...",
-    "ajusteError": "No se pudo guardar el ajuste. Inténtalo de nuevo."
+    "ajusteError": "No se pudo guardar el ajuste. Inténtalo de nuevo.",
+    "canjear": "Canjear",
+    "canjearCon_one": "Canjear por {{count}} MimiCoin",
+    "canjearCon_other": "Canjear por {{count}} MimiCoins",
+    "formasPagoLabel": "Se paga con",
+    "formaDinero": "Dinero",
+    "formaMimiCoins": "MimiCoins",
+    "formasPagoAyuda": "Marca una o las dos. Con MimiCoins, el producto aparece en la Tienda MimiCoins.",
+    "formasPagoNinguna": "Marca al menos una forma de pago."
   },
   "sidebar": {
     "home": "Inicio",
@@ -148,6 +156,12 @@
   },
   "catalog": {
     "title": "Explorar Modelos Destacados",
+    "titleMimiCoins": "Tienda MimiCoins",
+    "storeLabel": "Tienda",
+    "storeMoney": "Tienda",
+    "storeMimiCoins": "Tienda MimiCoins",
+    "storeMimiCoinsHelp": "Aquí los productos se canjean con MimiCoins, sin pasar por el carrito.",
+    "storeMimiCoinsEmpty": "Todavía no hay productos en la Tienda MimiCoins.",
     "active": "Catálogo Activo",
     "preview": "Mostrando vista previa",
     "loadError": "No se pudieron cargar los productos del servidor.",

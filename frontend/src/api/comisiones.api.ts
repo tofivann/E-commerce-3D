@@ -109,7 +109,9 @@ export interface DatosPublicacion {
   titulo_publicacion: string;
   descripcion_publicacion: string;
   precio_publicacion: string | number | null;
-  // Precio en monedas que tendrá el producto; null = no se podrá pagar con monedas.
+  // Formas de pago con que se publicará el producto (al menos una) y su precio en MimiCoins.
+  acepta_dinero_publicacion: boolean;
+  acepta_monedas_publicacion: boolean;
   precio_monedas_publicacion: number | null;
   formato_archivo_publicacion: string;
   link_youtube: string | null;

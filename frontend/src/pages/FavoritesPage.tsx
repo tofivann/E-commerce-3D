@@ -8,6 +8,7 @@ import { ProductGrid } from "../components/products/ProductGrid";
 import { ProductGridSkeleton } from "../components/products/ProductGridSkeleton";
 import { AppLayout } from "../components/layout/AppLayout";
 import { InfiniteScrollSentinel } from "../components/ui/InfiniteScrollSentinel";
+import { useCanjeMonedas } from "../hooks/useCanjeMonedas";
 import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
 import { useComprasIds } from "../hooks/useComprasIds";
 import { useListaPaginada } from "../hooks/useListaPaginada";
@@ -28,6 +29,8 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
   const [seleccionado, setSeleccionado] = useState<Producto | null>(null);
 
   const carrito = useCarritoDrawer(true);
+  // Un favorito solo-MimiCoins se canjea directo (ver ProductCard).
+  const canje = useCanjeMonedas(() => navigate("/biblioteca"));
   const purchasedIds = useComprasIds(true);
   const lista = useListaPaginada<Producto>({
     clave: "favoritos",
@@ -93,6 +96,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
             favoritoIds={favoritoIds}
             onSelectProducto={setSeleccionado}
             onAddToCart={carrito.agregar}
+            onCanjear={canje.canjear}
             onGoToLibrary={() => navigate("/biblioteca")}
             onToggleFavorito={quitar}
           />
@@ -110,6 +114,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
         hasAccess
         onClose={() => setSeleccionado(null)}
         onAddToCart={carrito.agregar}
+        onCanjear={canje.canjear}
         isFavorito
         onToggleFavorito={quitar}
       />

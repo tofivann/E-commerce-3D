@@ -26,7 +26,12 @@ export interface Producto {
   // Nombre del archivo cargado. Solo llega para el admin; null para el resto.
   archivo_nombre?: string | null;
   imagen_previa?: File | string; // File cuando se sube desde un input tipo file, string si es la URL ya guardada
-  // Lo que cuesta pagándolo con monedas; null = no se puede pagar con monedas.
+  // Formas de pago, cualquier combinación (al menos una). Deciden qué precio
+  // aplica y en qué tienda sale: la normal (acepta_dinero) o la Tienda
+  // MimiCoins (acepta_monedas). Ver utils/monedas.ts.
+  acepta_dinero: boolean;
+  acepta_monedas: boolean;
+  // Precio en MimiCoins (aplica si acepta_monedas).
   precio_monedas?: number | null;
   // Solo lectura: copia ligera de la portada que genera el servidor, para
   // tarjetas y listas (ver utils/imagenProducto.ts). null si no hay portada.
@@ -67,7 +72,12 @@ export interface FiltrosProductos {
   categorias?: number[];
   // Solo tiene efecto para staff (panel admin); el catálogo público siempre ve solo activos.
   incluirInactivos?: boolean;
+  // Qué tienda: "dinero" (lo que se compra con dinero) o "monedas" (la
+  // Tienda MimiCoins). Sin valor, todo (panel admin).
+  tienda?: Tienda;
 }
+
+export type Tienda = "dinero" | "monedas";
 
 // Listado paginado (50 por página, ver core/pagination.py). La búsqueda y el
 // filtro por categoría se resuelven en el servidor: como el cliente solo
@@ -83,6 +93,7 @@ export async function listarProductos(
       search: filtros.search?.trim() || undefined,
       categorias: filtros.categorias?.length ? filtros.categorias.join(",") : undefined,
       incluir_inactivos: filtros.incluirInactivos ? "true" : undefined,
+      tienda: filtros.tienda,
     },
   });
   return data;

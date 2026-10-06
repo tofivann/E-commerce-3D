@@ -6,7 +6,8 @@ import { categoriasApi } from "../../api/productos.api";
 import { nombreCategoria } from "../../utils/categoria";
 import { Pildora } from "../ui/Pildora";
 import { PrecioMonedasInput } from "../ui/PrecioMonedasInput";
-import { precioMonedasATexto, precioMonedasValido } from "../../utils/monedas";
+import { FormasDePagoInput } from "../ui/FormasDePagoInput";
+import { PRECIO_EN_MONEDAS_POR_DEFECTO, precioMonedasATexto, precioMonedasValido } from "../../utils/monedas";
 import { extraerErroresValidacion } from "../../utils/erroresApi";
 import { formatearImporte, IMPORTE_VALIDO } from "../../utils/importe";
 import type { ErroresPorCampo } from "../../utils/erroresApi";
@@ -36,7 +37,9 @@ interface FormPublicacion {
   titulo: string;
   descripcion: string;
   precio: string;
-  // Lo que costará el producto pagándolo con monedas (vacío = no se puede).
+  // Formas de pago con que se publicará (al menos una) y el precio en MimiCoins.
+  aceptaDinero: boolean;
+  aceptaMonedas: boolean;
   precioMonedas: string;
   formato: string;
   linkYoutube: string;
@@ -57,6 +60,8 @@ function formInicial(item: Item): FormPublicacion {
     // comisión (Orden.total, que incluye lo que haya pagado de más sobre el
     // mínimo). Es solo el valor inicial: el admin puede cambiarlo.
     precio: formatearImporte(item.data.precio_publicacion ?? item.data.orden.total),
+    aceptaDinero: item.data.acepta_dinero_publicacion,
+    aceptaMonedas: item.data.acepta_monedas_publicacion,
     // El backend ya lo guarda con el valor por defecto (10) desde que se crea la comisión.
     precioMonedas: precioMonedasATexto(item.data.precio_monedas_publicacion),
     formato: item.data.formato_archivo_publicacion || "",
@@ -82,6 +87,7 @@ const CAMPO_POR_ERROR: Record<string, keyof FormPublicacion> = {
   titulo_publicacion: "titulo",
   descripcion_publicacion: "descripcion",
   precio_publicacion: "precio",
+  acepta_dinero_publicacion: "aceptaDinero",
   precio_monedas_publicacion: "precioMonedas",
   formato_archivo_publicacion: "formato",
   link_youtube: "linkYoutube",
@@ -96,7 +102,10 @@ function validarFormulario(form: FormPublicacion, t: (clave: string) => string):
   const errores: ErroresForm = {};
   const precio = form.precio.trim();
   if (precio !== "" && !IMPORTE_VALIDO.test(precio)) errores.precio = t("completarComisionModal.errorPrice");
-  if (!precioMonedasValido(form.precioMonedas)) errores.precioMonedas = t("monedas.precioInvalido");
+  if (form.aceptaMonedas && (form.precioMonedas.trim() === "" || !precioMonedasValido(form.precioMonedas))) {
+    errores.precioMonedas = t("monedas.precioInvalido");
+  }
+  if (!form.aceptaDinero && !form.aceptaMonedas) errores.aceptaDinero = t("monedas.formasPagoNinguna");
   return errores;
 }
 
@@ -118,7 +127,9 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string>("");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriaIds, setCategoriaIds] = useState<number[]>([]);
-  const [form, setForm] = useState<FormPublicacion>({ titulo: "", descripcion: "", precio: "", precioMonedas: "", formato: "", linkYoutube: "" });
+  const [form, setForm] = useState<FormPublicacion>({
+    titulo: "", descripcion: "", precio: "", aceptaDinero: true, aceptaMonedas: false, precioMonedas: "", formato: "", linkYoutube: "",
+  });
   const [publicarAhora, setPublicarAhora] = useState(false);
   const [saving, setSaving] = useState(false);
   // Error general (arriba del formulario) y errores por campo (debajo de
@@ -164,8 +175,15 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
   // datos de reventa para publicar) no hay que volver a subir archivo y foto.
   const yaTieneEntrega = Boolean(item.data.archivo_entrega_nombre && item.data.foto_entrega);
   const yaPublicado = Boolean(item.data.producto_publicado);
+  // Espejo de `publicacion_completa` del backend: al menos una forma de
+  // pago, y el precio de cada forma marcada.
   const datosReventaCompletos =
-    form.titulo.trim() !== "" && form.descripcion.trim() !== "" && form.precio !== "" && form.formato.trim() !== "";
+    form.titulo.trim() !== "" &&
+    form.descripcion.trim() !== "" &&
+    form.formato.trim() !== "" &&
+    (form.aceptaDinero || form.aceptaMonedas) &&
+    (!form.aceptaDinero || form.precio !== "") &&
+    (!form.aceptaMonedas || form.precioMonedas.trim() !== "");
 
   const actualizarForm = (cambios: Partial<FormPublicacion>) => {
     setForm((prev) => ({ ...prev, ...cambios }));
@@ -237,6 +255,8 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
     if (form.precio.trim() !== "") formData.append("precio_publicacion", form.precio.trim());
     // Este sí viaja vacío: "" significa "sin precio en monedas" y el backend lo acepta.
     formData.append("precio_monedas_publicacion", form.precioMonedas.trim());
+    formData.append("acepta_dinero_publicacion", String(form.aceptaDinero));
+    formData.append("acepta_monedas_publicacion", String(form.aceptaMonedas));
 
     try {
       if (item.tipo === "motion") {
@@ -377,28 +397,48 @@ export const CompletarComisionModal: React.FC<CompletarComisionModalProps> = ({
             <ErrorCampo mensaje={erroresCampos.descripcion} />
           </div>
 
+          <FormasDePagoInput
+            valor={{ aceptaDinero: form.aceptaDinero, aceptaMonedas: form.aceptaMonedas }}
+            onChange={({ aceptaDinero, aceptaMonedas }) =>
+              actualizarForm({
+                aceptaDinero,
+                aceptaMonedas,
+                precioMonedas:
+                  aceptaMonedas && !form.aceptaMonedas && form.precioMonedas.trim() === ""
+                    ? String(PRECIO_EN_MONEDAS_POR_DEFECTO)
+                    : form.precioMonedas,
+              })
+            }
+            error={erroresCampos.aceptaDinero}
+          />
+
+          {/* Solo los precios de las formas de pago marcadas. */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className={labelClass}>{t("completarComisionModal.resalePrice")}</label>
-              {/* type="text" + inputMode="decimal" (no type="number"): así
-                  una coma o un "$" no se descartan en silencio — llegan al
-                  estado y se avisa con un error claro debajo del campo. */}
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                className={`${inputClass} ${erroresCampos.precio ? inputErrorClass : ""}`}
-                value={form.precio}
-                onChange={(e) => actualizarForm({ precio: e.target.value })}
+            {form.aceptaDinero && (
+              <div>
+                <label className={labelClass}>{t("completarComisionModal.resalePrice")}</label>
+                {/* type="text" + inputMode="decimal" (no type="number"): así
+                    una coma o un "$" no se descartan en silencio — llegan al
+                    estado y se avisa con un error claro debajo del campo. */}
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  className={`${inputClass} ${erroresCampos.precio ? inputErrorClass : ""}`}
+                  value={form.precio}
+                  onChange={(e) => actualizarForm({ precio: e.target.value })}
+                />
+                <ErrorCampo mensaje={erroresCampos.precio} />
+              </div>
+            )}
+            {form.aceptaMonedas && (
+              <PrecioMonedasInput
+                id="comisionPrecioMonedas"
+                valor={form.precioMonedas}
+                onChange={(precioMonedas) => actualizarForm({ precioMonedas })}
+                error={erroresCampos.precioMonedas}
               />
-              <ErrorCampo mensaje={erroresCampos.precio} />
-            </div>
-            <PrecioMonedasInput
-              id="comisionPrecioMonedas"
-              valor={form.precioMonedas}
-              onChange={(precioMonedas) => actualizarForm({ precioMonedas })}
-              error={erroresCampos.precioMonedas}
-            />
+            )}
             <div>
               <label className={labelClass}>{t("productForm.formatLabel")}</label>
               <input

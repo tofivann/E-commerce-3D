@@ -481,14 +481,17 @@ class ComisionAdminViewSetBase(
             )
         if not comision.publicacion_completa:
             return None, Response(
-                {"detail": "Completa los datos de publicación (título, descripción, precio y formato) antes de publicar el producto."},
+                {"detail": "Completa los datos de publicación (título, descripción, formato, al menos una forma de pago y su precio) antes de publicar el producto."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         producto = Producto.objects.create(
             titulo=comision.titulo_publicacion,
             descripcion=comision.descripcion_publicacion,
-            precio=comision.precio_publicacion,
+            acepta_dinero=comision.acepta_dinero_publicacion,
+            acepta_monedas=comision.acepta_monedas_publicacion,
+            # Sin dinero no se cobra dinero: el precio en $ queda en 0.
+            precio=comision.precio_publicacion if comision.acepta_dinero_publicacion else 0,
             precio_monedas=comision.precio_monedas_publicacion,
             formato_archivo=comision.formato_archivo_publicacion,
             archivo_3d=comision.archivo_entrega,

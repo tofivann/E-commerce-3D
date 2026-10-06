@@ -6,6 +6,7 @@ import { nombreCategoria } from "../../utils/categoria";
 import { PRECIO_EN_MONEDAS_POR_DEFECTO, precioMonedasATexto, precioMonedasValido } from "../../utils/monedas";
 import { Pildora } from "../ui/Pildora";
 import { PrecioMonedasInput } from "../ui/PrecioMonedasInput";
+import { FormasDePagoInput } from "../ui/FormasDePagoInput";
 
 interface ProductFormProps {
   open: boolean;
@@ -18,8 +19,10 @@ const emptyForm = {
   titulo: "",
   descripcion: "",
   precio: "",
-  // Un producto nuevo nace con el precio en monedas por defecto; el admin
-  // lo cambia o lo vacía (vacío = no se puede pagar con monedas).
+  // Formas de pago: un producto nuevo se paga con dinero; el admin marca
+  // MimiCoins si también (o solo) se canjea con MimiCoins.
+  acepta_dinero: true,
+  acepta_monedas: false,
   precio_monedas: String(PRECIO_EN_MONEDAS_POR_DEFECTO),
   categorias: [] as number[],
   formato_archivo: "",
@@ -55,6 +58,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         titulo: producto.titulo || "",
         descripcion: producto.descripcion || "",
         precio: String(producto.precio ?? ""),
+        acepta_dinero: producto.acepta_dinero,
+        acepta_monedas: producto.acepta_monedas,
         precio_monedas: precioMonedasATexto(producto.precio_monedas),
         categorias: producto.categorias || [],
         formato_archivo: producto.formato_archivo || "",
@@ -96,7 +101,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const data = new FormData();
     data.append("titulo", form.titulo);
     data.append("descripcion", form.descripcion);
-    data.append("precio", form.precio);
+    // En multipart un booleano ausente cuenta como False: van siempre.
+    data.append("acepta_dinero", String(form.acepta_dinero));
+    data.append("acepta_monedas", String(form.acepta_monedas));
+    // Sin dinero el precio en $ no aplica (el backend lo deja en 0).
+    data.append("precio", form.acepta_dinero ? form.precio : "0");
     // Vacío viaja como "": el backend lo guarda como "sin precio en monedas".
     data.append("precio_monedas", form.precio_monedas.trim());
     data.append("formato_archivo", form.formato_archivo);
@@ -126,7 +135,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       return;
     }
 
-    if (!precioMonedasValido(form.precio_monedas)) {
+    if (!form.acepta_dinero && !form.acepta_monedas) {
+      setError(t("monedas.formasPagoNinguna"));
+      return;
+    }
+
+    if (form.acepta_monedas && (form.precio_monedas.trim() === "" || !precioMonedasValido(form.precio_monedas))) {
       setError(t("monedas.precioInvalido"));
       return;
     }
@@ -263,28 +277,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
-                {t("productForm.priceLabel")}
-              </label>
-              <input
-                required
-                type="number"
-                min="0"
-                step="0.01"
-                className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
-                placeholder="0.00"
-                value={form.precio}
-                onChange={(e) => setForm({ ...form, precio: e.target.value })}
-              />
-            </div>
+          <FormasDePagoInput
+            valor={{ aceptaDinero: form.acepta_dinero, aceptaMonedas: form.acepta_monedas }}
+            onChange={({ aceptaDinero, aceptaMonedas }) =>
+              setForm({
+                ...form,
+                acepta_dinero: aceptaDinero,
+                acepta_monedas: aceptaMonedas,
+                // Al activar MimiCoins con el precio vacío, se propone el valor por defecto.
+                precio_monedas:
+                  aceptaMonedas && !form.acepta_monedas && form.precio_monedas.trim() === ""
+                    ? String(PRECIO_EN_MONEDAS_POR_DEFECTO)
+                    : form.precio_monedas,
+              })
+            }
+          />
 
-            <PrecioMonedasInput
-              id="productoPrecioMonedas"
-              valor={form.precio_monedas}
-              onChange={(precio_monedas) => setForm({ ...form, precio_monedas })}
-            />
+          {/* Solo los precios de las formas de pago marcadas. */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {form.acepta_dinero && (
+              <div>
+                <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
+                  {t("productForm.priceLabel")}
+                </label>
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full bg-surface-variant border border-outline-variant rounded-lg py-3 px-4 text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none shadow-inner"
+                  placeholder="0.00"
+                  value={form.precio}
+                  onChange={(e) => setForm({ ...form, precio: e.target.value })}
+                />
+              </div>
+            )}
+
+            {form.acepta_monedas && (
+              <PrecioMonedasInput
+                id="productoPrecioMonedas"
+                valor={form.precio_monedas}
+                onChange={(precio_monedas) => setForm({ ...form, precio_monedas })}
+              />
+            )}
 
             <div>
               <label className="block text-xs font-semibold tracking-wider text-on-surface-variant uppercase mb-2">
