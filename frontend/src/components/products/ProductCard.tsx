@@ -20,7 +20,7 @@ interface ProductCardProps {
   onSelect?: (producto: Producto) => void;
   onAddToCart?: (producto: Producto) => void;
   // Canje directo con MimiCoins (sin carrito). Es la acción de los productos
-  // que no aceptan dinero y de toda la Tienda MimiCoins (ver `accion`).
+  // que no aceptan dinero y de toda la página Mimi Gifts (ver `accion`).
   onCanjear?: (producto: Producto) => void;
   onGoToLibrary?: (producto: Producto) => void;
   // Marcar/desmarcar favorito. Sin esta acción no se muestra el corazón.

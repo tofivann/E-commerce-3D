@@ -73,7 +73,7 @@ export interface FiltrosProductos {
   // Solo tiene efecto para staff (panel admin); el catálogo público siempre ve solo activos.
   incluirInactivos?: boolean;
   // Qué tienda: "dinero" (lo que se compra con dinero) o "monedas" (la
-  // Tienda MimiCoins). Sin valor, todo (panel admin).
+  // Mimi Gifts). Sin valor, todo (panel admin).
   tienda?: Tienda;
 }
 

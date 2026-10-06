@@ -6,6 +6,7 @@ import { AdminPage } from "./pages/AdminPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
+import { MimiGiftsPage } from "./pages/MimiGiftsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { perfilStore } from "./stores/perfilStore";
 import { SupportChatPage } from "./pages/SupportChatPage";
@@ -159,6 +160,17 @@ function AppRoutes() {
         element={
           isLoggedIn && (isStaff || isSubscribed) ? (
             <FavoritesPage isStaff={isStaff} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Mimi Gifts (lo que se canjea con MimiCoins): misma regla que Favoritos */}
+      <Route
+        path="/mimi-gifts"
+        element={
+          isLoggedIn && (isStaff || isSubscribed) ? (
+            <MimiGiftsPage isStaff={isStaff} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )

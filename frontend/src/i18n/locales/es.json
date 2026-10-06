@@ -67,17 +67,22 @@
     "formasPagoLabel": "Se paga con",
     "formaDinero": "Dinero",
     "formaMimiCoins": "MimiCoins",
-    "formasPagoAyuda": "Marca una o las dos. Con MimiCoins, el producto aparece en la Tienda MimiCoins.",
+    "formasPagoAyuda": "Marca una o las dos. Con MimiCoins, el producto aparece en Mimi Gifts.",
     "formasPagoNinguna": "Marca al menos una forma de pago."
   },
   "sidebar": {
     "home": "Inicio",
     "favorites": "Favoritos",
+    "mimiGifts": "Mimi Gifts",
     "library": "Mi Biblioteca",
     "commissions": "Comisiones",
     "support": "Chat con Mimi",
     "admin": "Panel Admin",
     "logout": "Cerrar Sesión"
+  },
+  "mimiGifts": {
+    "title": "Mimi Gifts",
+    "subtitle": "Productos que se canjean con MimiCoins, sin pasar por el carrito. Ganas MimiCoins con cada compra."
   },
   "home": {
     "login": "Iniciar Sesión",
@@ -156,12 +161,8 @@
   },
   "catalog": {
     "title": "Explorar Modelos Destacados",
-    "titleMimiCoins": "Tienda MimiCoins",
-    "storeLabel": "Tienda",
-    "storeMoney": "Tienda",
-    "storeMimiCoins": "Tienda MimiCoins",
-    "storeMimiCoinsHelp": "Aquí los productos se canjean con MimiCoins, sin pasar por el carrito.",
-    "storeMimiCoinsEmpty": "Todavía no hay productos en la Tienda MimiCoins.",
+    "titleMimiGifts": "Canjea con tus MimiCoins",
+    "mimiGiftsEmpty": "Todavía no hay productos en Mimi Gifts.",
     "active": "Catálogo Activo",
     "preview": "Mostrando vista previa",
     "loadError": "No se pudieron cargar los productos del servidor.",

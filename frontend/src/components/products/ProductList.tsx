@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { categoriasApi } from "../../api/productos.api";
 import type { Producto, Categoria, Tienda } from "../../api/productos.api";
-import { FiltroChips } from "../ui/FiltroChips";
-import { accionDeTienda, conTienda, leerTienda } from "../../utils/tienda";
+import { accionDeTienda } from "../../utils/tienda";
 import { ProductGrid } from "./ProductGrid";
 import { ProductGridSkeleton } from "./ProductGridSkeleton";
 import { CategoryFilter } from "./CategoryFilter";
@@ -22,11 +20,15 @@ interface ProductListProps {
   favoritoIds?: ReadonlySet<number>;
   onSelectProducto?: (producto: Producto) => void;
   onAddToCart?: (producto: Producto) => void;
-  // Canje directo con MimiCoins: la acción de la Tienda MimiCoins.
+  // Canje directo con MimiCoins: la acción en Mimi Gifts.
   onCanjear?: (producto: Producto) => void;
   onGoToLibrary?: (producto: Producto) => void;
   onToggleFavorito?: (producto: Producto) => void;
   searchQuery?: string;
+  // Qué catálogo: la tienda (se compra con dinero, Inicio) o Mimi Gifts (se
+  // canjea con MimiCoins, su propia página). Cambia el título, el filtro
+  // que va al servidor y el botón de las tarjetas.
+  tienda?: Tienda;
 }
 
 
@@ -40,14 +42,11 @@ export const ProductList: React.FC<ProductListProps> = ({
   onGoToLibrary,
   onToggleFavorito,
   searchQuery = "",
+  tienda = "dinero",
 }) => {
   const { t } = useTranslation();
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState<Set<number>>(new Set());
-  // La tienda elegida vive en la URL (utils/tienda.ts).
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tienda = leerTienda(searchParams);
-  const cambiarTienda = (nueva: Tienda) => setSearchParams(conTienda(searchParams, nueva), { replace: true });
 
   // La búsqueda y las categorías se resuelven en el backend (el cliente solo
   // tiene cargadas las páginas que ya pidió). El texto va con retraso para
@@ -75,7 +74,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
   const hayFiltros = busqueda !== "" || categoriasSeleccionadas.size > 0;
   // Sin filtros, la tienda normal nunca está vacía (si lo está es un fallo
-  // de carga); la Tienda MimiCoins sí puede estarlo, y se dice.
+  // de carga); Mimi Gifts sí puede estarlo, y se dice.
   const sinResultados = !cargando && !error && productos.length === 0 && (hayFiltros || tienda === "monedas");
 
   return (
@@ -83,7 +82,7 @@ export const ProductList: React.FC<ProductListProps> = ({
       {/* Encabezado del Catálogo */}
       <div className="flex justify-between items-end border-b border-[var(--color-outline-variant)]/20 pb-4">
         <h2 className="text-2xl font-bold text-[var(--color-on-surface)]">
-          {tienda === "monedas" ? t("catalog.titleMimiCoins") : t("catalog.title")}
+          {tienda === "monedas" ? t("catalog.titleMimiGifts") : t("catalog.title")}
         </h2>
         <div className="flex gap-2">
           <span className="font-mono text-xs text-[var(--color-outline)] bg-[var(--color-surface-container-low)] px-3 py-1 rounded-full border border-[var(--color-outline-variant)]/30">
@@ -91,19 +90,6 @@ export const ProductList: React.FC<ProductListProps> = ({
           </span>
         </div>
       </div>
-
-      {/* Qué tienda: la normal (se compra con dinero) o la Tienda MimiCoins
-          (se canjea con MimiCoins). Un producto puede estar en las dos. */}
-      <FiltroChips<Tienda>
-        opciones={[
-          { valor: "dinero", etiqueta: t("catalog.storeMoney") },
-          { valor: "monedas", etiqueta: t("catalog.storeMimiCoins") },
-        ]}
-        seleccionado={tienda}
-        onChange={cambiarTienda}
-        titulo={t("catalog.storeLabel")}
-      />
-      {tienda === "monedas" && <p className="text-on-surface-variant text-sm -mt-2">{t("catalog.storeMimiCoinsHelp")}</p>}
 
       {/* Filtro por categoría */}
       <CategoryFilter
@@ -129,7 +115,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             ? t("catalog.noResults", { query: busqueda })
             : hayFiltros
             ? t("catalog.noResultsFilters")
-            : t("catalog.storeMimiCoinsEmpty")}
+            : t("catalog.mimiGiftsEmpty")}
         </div>
       )}
 

@@ -9,10 +9,9 @@ interface MonedasProps {
   className?: string;
 }
 
-// El icono del MimiCoin, el mismo en todo el sitio: la cara de Mimi en un
-// círculo con borde, como una moneda. La imagen (assets/mimicoin.webp) es un
-// recorte de la ilustración de la portada (mmd-scene.webp): para cambiar la
-// moneda se reemplaza ese archivo, nada más.
+// El icono del MimiCoin, el mismo en todo el sitio: la moneda dorada con la
+// conejita (assets/mimicoin.webp, 128 px, recortada de la ilustración que
+// entregó el dueño). Para cambiar la moneda se reemplaza ese archivo, nada más.
 // Mide en `em`: sigue el tamaño de letra de donde se ponga (o el que le dé
 // `className`, p. ej. "text-[20px]").
 export const IconoMoneda: React.FC<{ className?: string }> = ({ className = "" }) => (
@@ -21,7 +20,7 @@ export const IconoMoneda: React.FC<{ className?: string }> = ({ className = "" }
     alt=""
     aria-hidden="true"
     draggable={false}
-    className={`inline-block w-[1.25em] h-[1.25em] shrink-0 rounded-full object-cover ring-1 ring-primary/50 ${className}`}
+    className={`inline-block w-[1.25em] h-[1.25em] shrink-0 rounded-full object-cover ${className}`}
   />
 );
 

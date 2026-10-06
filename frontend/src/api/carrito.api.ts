@@ -98,7 +98,7 @@ export const carritoApi = {
   },
 
   // Canje directo de UN producto con MimiCoins, sin pasar por el carrito (la
-  // Tienda MimiCoins). Queda en la biblioteca al instante. Devuelve el saldo
+  // Mimi Gifts). Queda en la biblioteca al instante. Devuelve el saldo
   // que le queda al usuario.
   canjearMonedas: async (productoId: number): Promise<number> => {
     const { data } = await axiosClient.post<{ orden: Orden; saldo_monedas: number }>("cart/canjear-monedas/", {

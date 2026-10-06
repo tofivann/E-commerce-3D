@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { ProductList } from "../components/products/ProductList";
@@ -12,7 +12,6 @@ import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
 import { useComprasIds } from "../hooks/useComprasIds";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { useCanjeMonedas } from "../hooks/useCanjeMonedas";
-import { accionDeTienda, leerTienda } from "../utils/tienda";
 import { capturarOrdenPayPal } from "../api/paypal.api";
 import { userApi } from "../services/userApi";
 import type { Producto } from "../api/productos.api";
@@ -48,12 +47,9 @@ export const HomePage: React.FC<HomePageProps> = ({
   const carrito = useCarritoDrawer(hasAccess);
   const purchasedIds = useComprasIds(isLoggedIn);
   const favoritos = useFavoritos(hasAccess);
-  // Canje directo con MimiCoins (Tienda MimiCoins): el producto queda en la
-  // biblioteca al instante, así que se va allí, como tras pagar el carrito.
+  // Canje directo con MimiCoins (un producto que solo acepta MimiCoins): el
+  // producto queda en la biblioteca al instante, así que se va allí.
   const canje = useCanjeMonedas(() => navigate("/biblioteca"));
-  // Para que el detalle abierto desde la Tienda MimiCoins ofrezca canjear.
-  const [searchParams] = useSearchParams();
-  const accion = accionDeTienda(leerTienda(searchParams));
 
   // Al redirigir a Stripe/PayPal con window.location.href, activandoPago se
   // queda en true (nunca se resetea, porque se asume que la página va a
@@ -266,7 +262,6 @@ export const HomePage: React.FC<HomePageProps> = ({
         onClose={() => setSelectedProduct(null)}
         onAddToCart={carrito.agregar}
         onCanjear={canje.canjear}
-        accion={accion}
         isFavorito={typeof selectedProduct?.id === "number" && favoritos.ids.has(selectedProduct.id)}
         onToggleFavorito={favoritos.alternar}
       />

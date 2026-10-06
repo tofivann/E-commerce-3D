@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SaldoMonedas } from "./SaldoMonedas";
+import { IconoMoneda } from "../ui/Monedas";
 
 interface SidebarProps {
   isStaff: boolean;
@@ -36,6 +37,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
         <NavLink to="/favoritos" className={linkClass} onClick={closeMobile}>
           <span className="material-symbols-outlined text-[20px]">favorite</span>
           {t("sidebar.favorites")}
+        </NavLink>
+      )}
+
+      {/* Mimi Gifts: lo que se canjea con MimiCoins. Lleva la moneda como icono. */}
+      {hasAccess && (
+        <NavLink to="/mimi-gifts" className={linkClass} onClick={closeMobile}>
+          <IconoMoneda className="text-[20px]" />
+          {t("sidebar.mimiGifts")}
         </NavLink>
       )}
 

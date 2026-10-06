@@ -67,17 +67,22 @@
     "formasPagoLabel": "Paid with",
     "formaDinero": "Money",
     "formaMimiCoins": "MimiCoins",
-    "formasPagoAyuda": "Check one or both. With MimiCoins, the product appears in the MimiCoins Store.",
+    "formasPagoAyuda": "Check one or both. With MimiCoins, the product appears in Mimi Gifts.",
     "formasPagoNinguna": "Check at least one payment method."
   },
   "sidebar": {
     "home": "Home",
     "favorites": "Favorites",
+    "mimiGifts": "Mimi Gifts",
     "library": "My Library",
     "commissions": "Commissions",
     "support": "Chat with Mimi",
     "admin": "Admin Panel",
     "logout": "Log Out"
+  },
+  "mimiGifts": {
+    "title": "Mimi Gifts",
+    "subtitle": "Products you redeem with MimiCoins, without going through the cart. You earn MimiCoins with every purchase."
   },
   "home": {
     "login": "Log In",
@@ -156,12 +161,8 @@
   },
   "catalog": {
     "title": "Explore Featured Models",
-    "titleMimiCoins": "MimiCoins Store",
-    "storeLabel": "Store",
-    "storeMoney": "Store",
-    "storeMimiCoins": "MimiCoins Store",
-    "storeMimiCoinsHelp": "Here products are redeemed with MimiCoins, without going through the cart.",
-    "storeMimiCoinsEmpty": "There are no products in the MimiCoins Store yet.",
+    "titleMimiGifts": "Redeem with your MimiCoins",
+    "mimiGiftsEmpty": "There are no products in Mimi Gifts yet.",
     "active": "Catalog Active",
     "preview": "Showing preview",
     "loadError": "Could not load products from the server.",

@@ -13,7 +13,7 @@ const CLAVE_ERROR: Record<MotivoPagoMonedasRechazado, string> = {
 };
 
 // La acción "Canjear" de un producto: lo compra al instante con MimiCoins,
-// sin carrito (así se compra en la Tienda MimiCoins). Pide confirmación con
+// sin carrito (así se compra en Mimi Gifts). Pide confirmación con
 // el saldo a la vista, actualiza el saldo de la cabecera y avisa al que
 // llama cuando el producto ya está en la biblioteca. Los errores se avisan
 // igual que "agregar al carrito" (useCarritoDrawer): con un aviso simple.
