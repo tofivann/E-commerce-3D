@@ -8,6 +8,7 @@ import { LibraryPage } from "./pages/LibraryPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { MimiGiftsPage } from "./pages/MimiGiftsPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { MimiCoinsPage } from "./pages/MimiCoinsPage";
 import { perfilStore } from "./stores/perfilStore";
 import { SupportChatPage } from "./pages/SupportChatPage";
 import { CommissionsPage } from "./pages/CommissionsPage";
@@ -183,6 +184,17 @@ function AppRoutes() {
         element={
           isLoggedIn ? (
             <ProfilePage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+      {/* Ruta de Mis MimiCoins (saldo e historial completo): misma regla que el perfil */}
+      <Route
+        path="/mimicoins"
+        element={
+          isLoggedIn ? (
+            <MimiCoinsPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )

@@ -22,10 +22,11 @@ export type MotivoPagoMonedasRechazado = "saldo_insuficiente" | "no_pagable";
 
 export const monedasApi = {
   // Historial del usuario con sesión, lo más reciente primero. El saldo
-  // actual viaja en su perfil (perfil.api.ts → saldo_monedas).
-  listarMovimientos: async (page: number): Promise<RespuestaPaginada<MovimientoMonedas>> => {
+  // actual viaja en su perfil (perfil.api.ts → saldo_monedas). `pageSize`
+  // (hasta 100, ver core/pagination.py) sirve para pedir solo los últimos.
+  listarMovimientos: async (page: number, pageSize?: number): Promise<RespuestaPaginada<MovimientoMonedas>> => {
     const { data } = await axiosClient.get<RespuestaPaginada<MovimientoMonedas>>("monedas/movimientos/", {
-      params: { page },
+      params: { page, page_size: pageSize },
     });
     return data;
   },
