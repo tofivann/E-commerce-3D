@@ -1,0 +1,13 @@
+/* The torso stays grounded. Continuous painted vertices bend independently. */
+.mimi-rig{position:relative;width:100%;aspect-ratio:2/3;pointer-events:none;--mimi-night:0;--mimi-sunset:1;filter:brightness(calc(1 - var(--mimi-night) * .25)) saturate(calc(1 - var(--mimi-night) * .08));transition:filter 1.8s}
+.mimi-mesh-canvas,.mimi-static-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;max-width:none;user-select:none;pointer-events:none;image-rendering:auto}
+.mimi-mesh-canvas{visibility:hidden}.mimi-rig[data-renderer=mesh] .mimi-mesh-canvas{visibility:visible}.mimi-rig[data-renderer=mesh] .mimi-static-fallback{visibility:hidden}
+.mimi-mesh-canvas{inset:auto;left:-3.125%;top:-2.083333%;width:106.25%;height:104.166667%}
+.mimi-star-hit{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;border:0;padding:0;background:transparent;border-radius:35%;z-index:8;min-width:24px;min-height:24px}
+.mimi-star-hit:focus-visible{outline:3px solid #fff2c5;outline-offset:2px;box-shadow:0 0 0 5px #a54274}
+.mimi-star-glint{position:absolute;left:-38%;top:-35%;width:175%;max-width:none;height:175%;object-fit:contain;opacity:0;pointer-events:none;mix-blend-mode:screen}
+.mimi-star-hit:hover .mimi-star-glint{opacity:.45}.mimi-rig[data-shine=true] .mimi-star-glint{animation:mimi-star-shine 2.6s ease-in-out both}
+.mimi-rig[data-weather=storm]{filter:brightness(calc(.91 - var(--mimi-night) * .21))}.mimi-rig[data-magic=true]{filter:brightness(calc(1.06 - var(--mimi-night) * .22)) saturate(1.12)}.mimi-rig[data-flash=true]{filter:brightness(1.18) saturate(.87)!important}
+.mimi-rig[data-paused=true] *{animation-play-state:paused!important;transition:none!important}
+@keyframes mimi-star-shine{0%{opacity:0;transform:scale(.65) rotate(-12deg)}22%{opacity:1;transform:scale(1.1) rotate(0)}44%{opacity:.35}68%{opacity:.9;transform:scale(.9) rotate(10deg)}100%{opacity:0;transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.mimi-rig,.mimi-rig *{animation:none!important;transition:none!important}.mimi-rig[data-shine=true] .mimi-star-glint{opacity:.7}}

@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { IconoConejo } from "../ui/IconosKit";
 
 export type AdminView = "catalogo" | "chat" | "comisiones" | "estadisticas" | "ajustes";
+
+// Mismo estilo de enlace que el menú de la tienda (Sidebar): pastilla con
+// borde, rosa con barra a la izquierda cuando está activa.
+const linkBase =
+  "w-full text-left flex items-center gap-3 min-h-[52px] px-3 py-2.5 my-1 rounded-lg border transition-colors no-underline text-[14px] font-semibold";
+const linkActivo = `${linkBase} text-[#b72e61] bg-linear-to-r from-[#f4bbce] to-[#f2c6cf] border-[#df93ad] shadow-[inset_4px_0_#dc4a7c,0_3px_10px_#bd6c8417]`;
+const linkInactivo = `${linkBase} text-[#484469] border-transparent hover:bg-[#efd0c5]`;
 
 interface AdminSidebarProps {
   activeView: AdminView;
@@ -27,45 +35,42 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { view: "ajustes", label: t("adminSidebar.settings"), icon: "settings" },
   ];
 
+  // Marca como en la tienda, con "Admin" en vez del lema.
+  const marca = (
+    <Link to="/" className="flex items-center gap-2 no-underline" onClick={closeMobile}>
+      <IconoConejo className="w-[34px] h-[42px] text-vino shrink-0" />
+      <span className="flex flex-col leading-tight">
+        <span className="text-[22px] font-extrabold tracking-[-1px] text-vino">{t("common.appName")}</span>
+        <small className="text-[9px] font-medium tracking-[2px] uppercase text-malva mt-1">Admin</small>
+      </span>
+    </Link>
+  );
+
   const navLinks = (
-    <nav className="flex-1 px-3 space-y-1">
-      {navItems.map((item) => {
-        const active = activeView === item.view;
-        return (
-          <button
-            key={item.view}
-            onClick={() => {
-              onSelectView(item.view);
-              closeMobile();
-            }}
-            className={`w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
-              active
-                ? "text-primary bg-primary/10 border-l-4 border-primary font-semibold"
-                : "text-on-surface-variant hover:text-on-surface hover:bg-primary-container/10 border-l-4 border-transparent"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-            {item.label}
-          </button>
-        );
-      })}
+    <nav className="flex-1">
+      {navItems.map((item) => (
+        <button
+          key={item.view}
+          onClick={() => {
+            onSelectView(item.view);
+            closeMobile();
+          }}
+          className={activeView === item.view ? linkActivo : linkInactivo}
+        >
+          <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+          {item.label}
+        </button>
+      ))}
     </nav>
   );
 
   const footerLinks = (
-    <div className="px-3 mt-auto flex flex-col gap-1">
-      <Link
-        to="/"
-        onClick={closeMobile}
-        className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-primary-container/10 transition-colors no-underline"
-      >
+    <div className="mt-auto flex flex-col">
+      <Link to="/" onClick={closeMobile} className={linkInactivo}>
         <span className="material-symbols-outlined text-[20px]">storefront</span>
         {t("adminSidebar.backToShop")}
       </Link>
-      <button
-        onClick={onLogout}
-        className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-error transition-colors text-left"
-      >
+      <button onClick={onLogout} className={`${linkInactivo} hover:text-error hover:bg-error/10`}>
         <span className="material-symbols-outlined text-[20px]">logout</span>
         {t("adminSidebar.logout")}
       </button>
@@ -84,18 +89,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       </button>
 
       {/* Sidebar de escritorio */}
-      <aside className="hidden md:flex flex-col pt-8 pb-6 bg-surface-container-low/80 backdrop-blur-2xl fixed left-0 top-0 h-screen w-64 z-40 border-r border-outline-variant/30">
-        <div className="px-6 mb-8">
-          <Link to="/" className="flex items-center gap-2 no-underline">
-            <span className="material-symbols-outlined text-primary text-[28px]">architecture</span>
-            <span className="font-bold text-lg tracking-tighter text-primary leading-tight">
-              MimiMMDart
-              <span className="block text-xs font-semibold text-on-surface-variant tracking-widest uppercase">
-                Admin
-              </span>
-            </span>
-          </Link>
-        </div>
+      <aside className="hidden md:flex flex-col pt-[25px] pb-5 px-3.5 menu-kit fixed left-0 top-0 h-screen w-64 z-40 border-r border-[#a56f80]/40 shadow-[6px_0_24px_#68405a20] overflow-y-auto">
+        <div className="px-px pb-[25px]">{marca}</div>
         {navLinks}
         {footerLinks}
       </aside>
@@ -109,20 +104,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={closeMobile} />
 
         <aside
-          className={`absolute right-0 top-0 h-full w-72 max-w-[80vw] bg-surface-container-low/95 backdrop-blur-2xl border-l border-outline-variant/30 shadow-2xl flex flex-col pt-6 pb-6 transition-transform duration-300 ease-out ${
+          className={`absolute right-0 top-0 h-full w-72 max-w-[80vw] menu-kit border-l border-[#a56f80]/40 shadow-2xl flex flex-col pt-6 pb-6 px-3.5 transition-transform duration-300 ease-out ${
             mobileOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between px-6 mb-8">
-            <Link to="/" className="flex items-center gap-2 no-underline" onClick={closeMobile}>
-              <span className="material-symbols-outlined text-primary text-[28px]">architecture</span>
-              <span className="font-bold text-lg tracking-tighter text-primary leading-tight">
-                MimiMMDart
-                <span className="block text-xs font-semibold text-on-surface-variant tracking-widest uppercase">
-                  Admin
-                </span>
-              </span>
-            </Link>
+          <div className="flex items-center justify-between px-px mb-8">
+            {marca}
             <button
               onClick={closeMobile}
               aria-label={t("home.closeMenu")}

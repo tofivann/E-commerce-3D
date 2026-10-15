@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { perfilApi, TAMANO_MAXIMO_FOTO_MB } from "../api/perfil.api";
 import type { Perfil } from "../api/perfil.api";
 import { AppLayout } from "../components/layout/AppLayout";
+import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { HistorialMonedas } from "../components/perfil/HistorialMonedas";
 import { RecortarFotoModal } from "../components/perfil/RecortarFotoModal";
 import { Avatar } from "../components/ui/Avatar";
@@ -31,12 +32,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ isStaff = false, isSub
   const { perfil, fase } = usePerfil();
 
   return (
-    <AppLayout isStaff={isStaff} hasAccess={isStaff || isSubscribed} onLogout={onLogoutClick} mainClassName="flex flex-col gap-6">
-      <div className="border-b border-outline-variant/20 pb-4">
-        <h1 className="text-2xl font-bold text-on-surface">{t("perfil.title")}</h1>
-        <p className="text-on-surface-variant text-sm mt-1">{t("perfil.subtitle")}</p>
-      </div>
-
+    <AppLayout
+      isStaff={isStaff}
+      hasAccess={isStaff || isSubscribed}
+      onLogout={onLogoutClick}
+      mainClassName="flex flex-col gap-6"
+      hoja={<HojaSeccion titulo={t("perfil.title")} subtitulo={t("perfil.subtitle")} />}
+    >
       {fase === "error" && (
         <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
           {t("perfil.loadError")}

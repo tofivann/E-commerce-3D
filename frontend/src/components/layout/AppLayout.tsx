@@ -6,6 +6,7 @@ import { usePerfil } from "../../hooks/usePerfil";
 import { Avatar } from "../ui/Avatar";
 import type { CarritoDrawer } from "../../hooks/useCarritoDrawer";
 import { CartDrawer } from "../products/CartDrawer";
+import { EscenaMimi } from "../escena/EscenaMimi";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
 import { SaldoMonedas } from "./SaldoMonedas";
@@ -25,6 +26,13 @@ interface AppLayoutProps {
   // Carrito de la página, cuando esta necesita "agregar al carrito". Si no
   // se pasa, el layout maneja el suyo.
   carrito?: CarritoDrawer;
+  // Primera pantalla de la sección sobre la escena (una HojaSeccion con el
+  // título); la bandeja con el contenido queda debajo, al hacer scroll.
+  hoja?: React.ReactNode;
+  // Por defecto el contenido va dentro de una bandeja de papel (se lee sobre
+  // la escena). Las páginas que ya dibujan su propio panel (el chat) o que
+  // ponen cosas directamente sobre la escena (el hero de Inicio) la quitan.
+  sinBandeja?: boolean;
   children: React.ReactNode;
 }
 
@@ -43,6 +51,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   barra,
   mainClassName = "",
   carrito: carritoDeLaPagina,
+  hoja,
+  sinBandeja = false,
   children,
 }) => {
   const { t } = useTranslation();
@@ -53,10 +63,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const carrito = carritoDeLaPagina ?? carritoPropio;
 
   return (
-    <div className="bg-background text-on-surface font-sans min-h-screen flex">
+    <div className="text-on-surface font-sans min-h-screen flex">
+      {/* Escenario pintado de fondo (fijo); el resto va por encima. */}
+      <EscenaMimi conMenuLateral />
       <Sidebar isStaff={isStaff} hasAccess={hasAccess} onLogout={onLogout} />
 
-      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
+      <div className="relative z-10 flex-1 flex flex-col min-w-0 md:ml-64">
         {/* BARRA SUPERIOR. pl-16 en móvil: deja sitio al botón de menú del Sidebar. */}
         <header className="fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
           <div className="flex justify-between items-center gap-4 pl-16 pr-gutter md:px-gutter max-w-container-max mx-auto h-20">
@@ -99,8 +111,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </div>
         </header>
 
-        <main className={`flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full ${mainClassName}`}>
-          {children}
+        <main className={`flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-16 ${sinBandeja ? mainClassName : ""}`}>
+          {hoja}
+          {sinBandeja ? children : <div className={`bandeja-kit ${mainClassName}`}>{children}</div>}
         </main>
 
         <PieDePagina />

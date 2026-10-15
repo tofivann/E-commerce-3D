@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { monedasApi } from "../api/monedas.api";
 import type { MovimientoMonedas } from "../api/monedas.api";
 import { AppLayout } from "../components/layout/AppLayout";
+import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { ListaMovimientos } from "../components/monedas/ListaMovimientos";
 import { InfiniteScrollSentinel } from "../components/ui/InfiniteScrollSentinel";
 import { IconoMoneda, Monedas } from "../components/ui/Monedas";
@@ -35,19 +36,26 @@ export const MimiCoinsPage: React.FC<MimiCoinsPageProps> = ({ isStaff = false, i
   });
 
   return (
-    <AppLayout isStaff={isStaff} hasAccess={isStaff || isSubscribed} onLogout={onLogoutClick} mainClassName="flex flex-col gap-6">
-      <div className="border-b border-outline-variant/20 pb-4 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0">
-          <IconoMoneda className="text-[40px] mt-0.5" />
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-on-surface">{t("monedas.titulo")}</h1>
-            <p className="text-on-surface-variant text-sm mt-1">{t("monedas.explicacion")}</p>
-          </div>
-        </div>
-        {perfil && <Monedas cantidad={saldo} formato="largo" className="text-2xl text-primary" />}
-      </div>
-
-      <div className="glass-panel rounded-xl p-6 md:p-8 max-w-3xl flex flex-col gap-4">
+    <AppLayout
+      isStaff={isStaff}
+      hasAccess={isStaff || isSubscribed}
+      onLogout={onLogoutClick}
+      mainClassName="flex flex-col gap-6"
+      hoja={
+        <HojaSeccion
+          titulo={
+            <span className="flex items-center gap-3">
+              <IconoMoneda className="text-[0.9em]" />
+              {t("monedas.titulo")}
+            </span>
+          }
+          subtitulo={t("monedas.explicacion")}
+        >
+          {perfil && <Monedas cantidad={saldo} formato="largo" className="mt-5 text-2xl text-vino" />}
+        </HojaSeccion>
+      }
+    >
+      <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-on-surface">{t("monedas.historialTitulo")}</h2>
           {lista.total !== null && (

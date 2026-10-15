@@ -17,9 +17,10 @@ const CLAVE_ERROR: Record<MotivoPagoMonedasRechazado, string> = {
 // el saldo a la vista, actualiza el saldo de la cabecera y avisa al que
 // llama cuando el producto ya está en la biblioteca. Los errores se avisan
 // igual que "agregar al carrito" (useCarritoDrawer): con un aviso simple.
-export function useCanjeMonedas(onCanjeado: (producto: Producto) => void) {
+// `habilitado=false` (visitante o cuenta sin acceso) no pide el perfil.
+export function useCanjeMonedas(onCanjeado: (producto: Producto) => void, habilitado = true) {
   const { t } = useTranslation();
-  const { perfil } = usePerfil();
+  const { perfil } = usePerfil(habilitado);
   const [canjeandoId, setCanjeandoId] = useState<number | null>(null);
   const saldo = perfil?.saldo_monedas ?? 0;
 

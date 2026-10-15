@@ -9,6 +9,7 @@ import { DatosRegistroForm } from "../components/registro/DatosRegistroForm";
 import type { FormularioRegistro } from "../components/registro/DatosRegistroForm";
 import { PagoRegistroPaso } from "../components/registro/PagoRegistroPaso";
 import { VerificarCorreoPaso } from "../components/registro/VerificarCorreoPaso";
+import { IconoConejo } from "../components/ui/IconosKit";
 import { useCuentaAtras } from "../hooks/useCuentaAtras";
 import { extraerErroresValidacion } from "../utils/erroresApi";
 
@@ -196,9 +197,7 @@ export const RegisterPage: React.FC = () => {
             {t("register.tagline")}
           </p>
           <div className="mt-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-              architecture
-            </span>
+            <IconoConejo className="w-6 h-7 text-primary" />
             <span className="text-xs font-mono tracking-widest uppercase text-primary-fixed-dim border border-primary-fixed-dim/30 px-3 py-1 rounded-full bg-primary-fixed-dim/10">
               {t("register.badge")}
             </span>

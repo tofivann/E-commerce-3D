@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { EscenaMimi } from "../escena/EscenaMimi";
+import { IconoConejo } from "../ui/IconosKit";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
 
@@ -25,17 +27,18 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
   const [guestMenuOpen, setGuestMenuOpen] = useState(false);
 
   return (
-    <div className="bg-background text-on-surface font-sans min-h-screen flex">
-      <div className="flex-1 flex flex-col min-w-0">
+    <div className="text-on-surface font-sans min-h-screen flex">
+      {/* Escenario pintado de fondo (fijo); el resto va por encima. */}
+      <EscenaMimi />
+      <div className="relative z-10 flex-1 flex flex-col min-w-0">
         {/* BARRA SUPERIOR */}
         <header className="fixed top-0 right-0 left-0 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
           <div className="flex justify-between items-center gap-4 pl-gutter pr-gutter md:px-gutter max-w-container-max mx-auto h-20">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary-container text-[32px]">
-                architecture
-              </span>
-              <span className="font-bold text-[24px] tracking-tighter text-primary">
-                {t("common.appName")}
+              <IconoConejo className="w-8 h-10 text-vino" />
+              <span className="flex flex-col leading-tight">
+                <span className="font-extrabold text-[22px] tracking-[-1px] text-vino">{t("common.appName")}</span>
+                <small className="text-[9px] font-medium tracking-[2px] uppercase text-malva">{t("common.tagline")}</small>
               </span>
             </div>
 
@@ -78,17 +81,16 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
             onClick={() => setGuestMenuOpen(false)}
           />
           <aside
-            className={`absolute right-0 top-0 h-full w-72 max-w-[80vw] bg-surface-container-low/95 backdrop-blur-2xl border-l border-outline-variant/30 shadow-2xl flex flex-col pt-6 pb-6 px-3 transition-transform duration-300 ease-out ${
+            className={`absolute right-0 top-0 h-full w-72 max-w-[80vw] menu-kit border-l border-[#a56f80]/40 shadow-2xl flex flex-col pt-6 pb-6 px-3 transition-transform duration-300 ease-out ${
               guestMenuOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
             <div className="flex items-center justify-between px-3 mb-8">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[28px]">
-                  architecture
-                </span>
-                <span className="font-bold text-xl tracking-tighter text-primary">
-                  {t("common.appName")}
+                <IconoConejo className="w-8 h-10 text-vino" />
+                <span className="flex flex-col leading-tight">
+                  <span className="font-extrabold text-[22px] tracking-[-1px] text-vino">{t("common.appName")}</span>
+                  <small className="text-[9px] font-medium tracking-[2px] uppercase text-malva">{t("common.tagline")}</small>
                 </span>
               </div>
               <button

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { DigitalLibrary } from "../components/products/DigitalLibrary";
 import { ComisionesLibrary } from "../components/comisiones/ComisionesLibrary";
 import { AppLayout } from "../components/layout/AppLayout";
+import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { SearchInput } from "../components/products/SearchInput";
 
 interface LibraryPageProps {
@@ -39,6 +40,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           className="w-full max-w-40 sm:max-w-xs md:max-w-sm"
         />
       }
+      hoja={<HojaSeccion titulo={t("library.title")} subtitulo={t("library.subtitle")} />}
     >
       <div className="inline-flex items-center gap-1 p-1 mb-6 rounded-lg bg-surface-container-high/60 border border-outline-variant/30">
         <button

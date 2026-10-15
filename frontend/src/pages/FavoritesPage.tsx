@@ -7,6 +7,7 @@ import { ProductDetailsModal } from "../components/products/ProductDetailsModal"
 import { ProductGrid } from "../components/products/ProductGrid";
 import { ProductGridSkeleton } from "../components/products/ProductGridSkeleton";
 import { AppLayout } from "../components/layout/AppLayout";
+import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { InfiniteScrollSentinel } from "../components/ui/InfiniteScrollSentinel";
 import { useCanjeMonedas } from "../hooks/useCanjeMonedas";
 import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
@@ -64,12 +65,14 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
 
   return (
     <>
-      <AppLayout isStaff={isStaff} hasAccess onLogout={onLogoutClick} carrito={carrito} mainClassName="flex flex-col gap-6">
-        <div className="border-b border-outline-variant/20 pb-4">
-          <h1 className="text-2xl font-bold text-on-surface">{t("favoritos.title")}</h1>
-          <p className="text-on-surface-variant text-sm mt-1">{t("favoritos.subtitle")}</p>
-        </div>
-
+      <AppLayout
+        isStaff={isStaff}
+        hasAccess
+        onLogout={onLogoutClick}
+        carrito={carrito}
+        mainClassName="flex flex-col gap-6"
+        hoja={<HojaSeccion titulo={t("favoritos.title")} subtitulo={t("favoritos.subtitle")} />}
+      >
         {lista.cargando && <ProductGridSkeleton />}
 
         {lista.error && (

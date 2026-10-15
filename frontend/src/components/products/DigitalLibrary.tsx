@@ -75,13 +75,7 @@ export const DigitalLibrary: React.FC<DigitalLibraryProps> = ({ busqueda = "" })
 
   return (
     <div>
-      <header className="mb-6 flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold text-on-surface">{t("library.title")}</h1>
-        <p className="text-on-surface-variant max-w-2xl">
-          {t("library.subtitle")}
-        </p>
-      </header>
-
+      {/* El título de la sección lo pone LibraryPage en su HojaSeccion. */}
       {!loading && !error && compras.length > 0 && (
         <CategoryFilter
           categorias={categorias}

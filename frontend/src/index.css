@@ -1,38 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-  /* Colores de MimiMMDart — paleta "Mimi Pastel" (clara) */
-  --color-background: #fff5f7;
-  --color-surface: #fff5f7;
-  --color-surface-dim: #fbe4ea;
-  --color-surface-bright: #ffffff;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #fdeef2;
-  --color-surface-container: #f6c7d8;
-  --color-surface-container-high: #f2b4cb;
-  --color-surface-container-highest: #eda3bd;
-  --color-surface-variant: #fbe4ea;
+  /* Colores de MimiMMDart — paleta "rooftop atelier" (la del kit de Mimi):
+     superficies de papel durazno, tinta índigo y vino como color principal.
+     Toda la app (tienda, admin, login) pinta con estos tokens. */
+  --color-background: #f8e9dc;
+  --color-surface: #fbf1e8;
+  --color-surface-dim: #efd8c8;
+  --color-surface-bright: #fffaf4;
+  --color-surface-container-lowest: #fffaf4;
+  --color-surface-container-low: #fae8d9;
+  --color-surface-container: #f3dbc8;
+  --color-surface-container-high: #eccdb9;
+  --color-surface-container-highest: #e4bfae;
+  --color-surface-variant: #f7e4d6;
 
-  --color-primary: #e889ae;
-  --color-primary-container: #e889ae;
-  --color-primary-fixed: #e889ae;
-  --color-primary-fixed-dim: #d5648f;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #ffffff;
-  --color-on-primary-fixed: #ffffff;
+  --color-primary: #bc3c70;
+  --color-primary-container: #bc3c70;
+  --color-primary-fixed: #bc3c70;
+  --color-primary-fixed-dim: #a12d5c;
+  --color-on-primary: #fff7ed;
+  --color-on-primary-container: #fff7ed;
+  --color-on-primary-fixed: #fff7ed;
 
-  --color-secondary: #9b7fc9;
-  --color-secondary-container: #c9b8e8;
-  --color-on-secondary-container: #40334f;
+  --color-secondary: #906b9e;
+  --color-secondary-container: #e6c4d7;
+  --color-on-secondary-container: #4a2d57;
 
-  --color-on-surface: #40334f;
-  --color-on-surface-variant: #7a6b8a;
-  --color-outline: #b39dcf;
-  --color-outline-variant: #cde7f0;
+  --color-on-surface: #292b51;
+  --color-on-surface-variant: #715c76;
+  --color-outline: #ba929e;
+  --color-outline-variant: #d9b4ad;
 
   --color-error: #d64550;
   --color-on-error: #ffffff;
   --color-on-error-container: #7a1f26;
+
+  /* Colores del kit "rooftop atelier" (hoja de papel del hero, menú lateral) */
+  --color-papel: #f7e3cc;
+  --color-papel-suave: #fae8d9;
+  --color-tinta: #292b51;
+  --color-vino: #bc3c70;
+  --color-vino-oscuro: #a12d5c;
+  --color-malva: #9a6176;
+  --color-linea-papel: #cfa2a3;
 
   /* Espaciados personalizados */
   --spacing-gutter: 24px;
@@ -41,14 +52,83 @@
 
 /* Clases especiales del diseño */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(250, 232, 217, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(201, 184, 232, 0.35);
+  border: 1px solid rgba(207, 162, 163, 0.5);
 }
 
 .btn-glow-inner {
   box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.5);
+}
+
+/* Hoja de papel del kit: cinta adhesiva arriba (::before) y textura de
+   líneas (::after). Los hijos van por encima de la textura. */
+.papel-kit {
+  position: relative;
+  background: linear-gradient(115deg, #f7e3ccef, #f9e8d7fa 65%, #f2d9c8f5);
+  border: 1px solid #cfa2a3;
+  border-radius: 3px;
+  box-shadow: 0 12px 28px #392a5433;
+}
+.papel-kit::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 43%;
+  width: 75px;
+  height: 24px;
+  background: #d89b9c85;
+  border: 1px solid #c48a8f35;
+  transform: rotate(-5deg);
+}
+.papel-kit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(7deg, transparent 0 9px, #e9c6b419 10px 11px);
+  opacity: 0.6;
+}
+.papel-kit > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Menú lateral del kit: degradado durazno con un velo de líneas finas. */
+.menu-kit {
+  background: linear-gradient(135deg, #f5d7d0ef, #f5d9c5f5 60%, #debbbef5);
+}
+.menu-kit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background:
+    radial-gradient(ellipse at 0% 8%, #cd7b8d24 0, transparent 42%),
+    repeating-linear-gradient(83deg, transparent 0 53px, #fff0d822 54px 55px);
+}
+.menu-kit > * {
+  position: relative;
+}
+
+/* Bandeja de papel del kit: el contenido de cada sección va dentro para que
+   títulos y listas se lean sobre la escena pintada. */
+.bandeja-kit {
+  background: linear-gradient(#f6dfcfee, #f3d5c5ed);
+  border: 1px solid #c08d99;
+  border-radius: 8px;
+  box-shadow: 0 8px 35px #38305822;
+  padding: 23px;
+}
+
+/* Postal del menú ("Little creations. Lovely possibilities."). */
+.postal-kit {
+  background: #f9e5cf;
+  border: 1px solid #d5aab0;
+  box-shadow: 0 4px 12px #6d46571e;
+  transform: rotate(-3deg);
 }
 
 .card-hover {
@@ -57,7 +137,7 @@
 
 .card-hover:hover {
   transform: translateY(-4px);
-  border-color: rgba(232, 137, 174, 0.5);
+  border-color: rgba(188, 60, 112, 0.45);
 }
 
 .card-hover:hover img {

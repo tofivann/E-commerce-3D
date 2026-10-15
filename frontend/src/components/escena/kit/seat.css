@@ -1,0 +1,13 @@
+/* Source room foreground pixels remain registered with that room. */
+.mimi-seat{position:relative;width:520px;max-width:100%;height:760px;isolation:isolate;pointer-events:none;--seat-night:0}
+.mimi-seat[data-anchored=true]{position:absolute;inset:0;width:100%;height:100%;max-width:none;isolation:auto;z-index:1}
+.mimi-seat__character{position:absolute;width:500px;z-index:2;pointer-events:none}
+.mimi-seat__foreground{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:fill;z-index:3;pointer-events:none;filter:brightness(calc(1 - var(--seat-night) * .3));transition:filter 2s}
+.mimi-seat__foreground[hidden]{display:none}
+.mimi-seat__shadow{position:absolute;width:350px;height:34px;z-index:1;pointer-events:none;background:radial-gradient(ellipse,#3e293749,transparent 69%)}
+.mimi-seat[data-pose=favorites] .mimi-seat__shadow{height:42px;opacity:.6}.mimi-seat[data-pose=catalog] .mimi-seat__shadow{height:22px}.mimi-seat[data-anchored=false] .mimi-seat__shadow,.mimi-seat[data-anchored=false] .mimi-seat__foreground{display:none}
+.mimi-seat__light{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:calc(.28 + var(--seat-night) * .15);background:linear-gradient(100deg,#ffac710c,transparent 60%,#55446e10);mix-blend-mode:soft-light}
+.mimi-seat__caption{position:absolute;bottom:22px;right:6%;z-index:5;max-width:270px;margin:0;padding:9px 14px;border:1px solid #cb96a0;border-radius:12px 12px 3px 12px;background:#f9e4cce8;color:#715671;font:italic 13px/1.5 Georgia,serif;box-shadow:0 4px 10px #2b1a3924}
+.mimi-seat__caption[hidden]{display:none}.mimi-seat[data-weather=storm] .mimi-seat__foreground{filter:brightness(calc(.91 - var(--seat-night) * .3))}.mimi-seat[data-magic=true] .mimi-seat__foreground{filter:brightness(calc(1.06 - var(--seat-night) * .3)) saturate(1.1)}.mimi-seat[data-flash=true] .mimi-seat__foreground{filter:brightness(1.18) saturate(.87)!important}
+@media(max-width:800px){.mimi-seat{height:550px}.mimi-seat__caption{font-size:11px;max-width:190px;bottom:20px;right:9%}}
+@media(prefers-reduced-motion:reduce){.mimi-seat *{transition:none!important}}

@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "MimiMMDart",
+    "tagline": "the rooftop atelier",
     "cart": "Carrito",
     "search": "Buscar modelos...",
     "language": "Idioma",
@@ -85,7 +86,9 @@
     "commissions": "Comisiones",
     "support": "Chat con Mimi",
     "admin": "Panel Admin",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "postalLinea1": "Little creations.",
+    "postalLinea2": "Lovely possibilities."
   },
   "mimiGifts": {
     "title": "Mimi Gifts",
@@ -109,6 +112,8 @@
     "heroFeature1": "Modelos de alta calidad",
     "heroFeature2": "Listos para MMD y optimizados",
     "heroFeature3": "Expresiones y personalización",
+    "heroExplore": "Explorar modelos",
+    "heroCommission": "Pedir comisión",
     "footerRights": "© 2026 MimiMMDart.",
     "footerPrivacy": "Privacidad",
     "footerTerms": "Términos"

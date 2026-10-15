@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "../components/layout/AppLayout";
+import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { ComisionMotionForm } from "../components/comisiones/ComisionMotionForm";
 import { ComisionModeloForm } from "../components/comisiones/ComisionModeloForm";
 import { MisComisionesList } from "../components/comisiones/MisComisionesList";
@@ -63,14 +64,13 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
   }, [sessionId]);
 
   return (
-    <AppLayout isStaff={isStaff} hasAccess={hasAccess} onLogout={onLogoutClick} mainClassName="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold text-on-surface">{t("commissionsPage.title")}</h1>
-        <p className="text-on-surface-variant max-w-2xl">
-          {t("commissionsPage.subtitle")}
-        </p>
-      </header>
-
+    <AppLayout
+      isStaff={isStaff}
+      hasAccess={hasAccess}
+      onLogout={onLogoutClick}
+      mainClassName="flex flex-col gap-8"
+      hoja={<HojaSeccion titulo={t("commissionsPage.title")} subtitulo={t("commissionsPage.subtitle")} />}
+    >
       {confirmandoPago && (
         <div className="bg-primary-container/15 border border-primary-container/40 text-on-surface p-4 rounded-lg flex items-center gap-3">
           <div className="w-5 h-5 rounded-full border-2 border-outline-variant/40 border-t-primary-container animate-spin shrink-0" />

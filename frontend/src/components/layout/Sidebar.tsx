@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SaldoMonedas } from "./SaldoMonedas";
+import { IconoConejo, IconoCorazon } from "../ui/IconosKit";
 import { IconoMoneda } from "../ui/Monedas";
 
 interface SidebarProps {
@@ -11,21 +12,47 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
+// Enlaces al estilo del kit: pastilla con borde, rosa con una barra a la
+// izquierda cuando es la sección activa.
 const linkBase =
-  "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all border-l-4 w-full no-underline";
+  "flex items-center gap-3 min-h-[52px] px-3 py-2.5 my-1 rounded-lg border transition-colors w-full no-underline text-[14px] font-semibold";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive
-    ? `${linkBase} text-primary bg-primary/10 border-primary font-semibold`
-    : `${linkBase} text-on-surface-variant hover:text-on-surface hover:bg-primary-container/10 border-transparent`;
+    ? `${linkBase} text-[#b72e61] bg-linear-to-r from-[#f4bbce] to-[#f2c6cf] border-[#df93ad] shadow-[inset_4px_0_#dc4a7c,0_3px_10px_#bd6c8417]`
+    : `${linkBase} text-[#484469] border-transparent hover:bg-[#efd0c5]`;
 
 export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
   const { t } = useTranslation();
 
+  // Marca del kit: la conejita, el nombre y el lema debajo.
+  const marca = (
+    <NavLink to="/" end className="flex items-center gap-2 no-underline" onClick={closeMobile}>
+      <IconoConejo className="w-[34px] h-[42px] text-vino shrink-0" />
+      <span className="flex flex-col leading-tight">
+        <span className="text-[22px] font-extrabold tracking-[-1px] text-vino">{t("common.appName")}</span>
+        <small className="text-[9px] font-medium tracking-[2px] uppercase text-malva mt-1">{t("common.tagline")}</small>
+      </span>
+    </NavLink>
+  );
+
+  // La postal con el corazón, debajo de los enlaces.
+  const postal = (
+    <div className="postal-kit relative mx-[9px] mt-8 mb-4 px-3.5 py-[19px] text-[13px] text-[#856779]">
+      <IconoCorazon className="w-[19px] h-[19px] text-[#ce7a96]" />
+      <p className="my-2.5 font-serif italic text-[17px] leading-snug">
+        {t("sidebar.postalLinea1")}
+        <br />
+        {t("sidebar.postalLinea2")}
+      </p>
+      <span className="block h-px w-[65%] bg-[#d6aab2]" />
+    </div>
+  );
+
   const navLinks = (
-    <nav className="flex-1 px-3 space-y-1">
+    <nav className="flex-1">
       <NavLink to="/" end className={linkClass} onClick={closeMobile}>
         <span className="material-symbols-outlined text-[20px]">storefront</span>
         {t("sidebar.home")}
@@ -79,10 +106,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
   );
 
   const logoutButton = (
-    <div className="px-3 mt-auto">
+    <div className="mt-auto">
       <button
         onClick={onLogout}
-        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors text-left"
+        className={`${linkBase} text-[#484469] border-transparent hover:text-error hover:bg-error/10 text-left`}
       >
         <span className="material-symbols-outlined text-[20px]">logout</span>
         {t("sidebar.logout")}
@@ -102,14 +129,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
       </button>
 
       {/* Sidebar de escritorio */}
-      <aside className="hidden md:flex flex-col pt-8 pb-6 bg-surface-container-low/80 backdrop-blur-2xl fixed left-0 top-0 h-screen w-64 z-40 border-r border-outline-variant/30">
-        <div className="px-6 mb-8">
-          <NavLink to="/" end className="flex items-center gap-2 no-underline">
-            <span className="material-symbols-outlined text-primary text-[28px]">architecture</span>
-            <span className="font-bold text-xl tracking-tighter text-primary">{t("common.appName")}</span>
-          </NavLink>
-        </div>
+      <aside className="hidden md:flex flex-col pt-[25px] pb-5 px-3.5 menu-kit fixed left-0 top-0 h-screen w-64 z-40 border-r border-[#a56f80]/40 shadow-[6px_0_24px_#68405a20] overflow-y-auto">
+        <div className="px-px pb-[25px]">{marca}</div>
         {navLinks}
+        {postal}
         {logoutButton}
       </aside>
 
@@ -122,15 +145,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
         <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={closeMobile} />
 
         <aside
-          className={`absolute right-0 top-0 h-full w-72 max-w-[80vw] bg-surface-container-low/95 backdrop-blur-2xl border-l border-outline-variant/30 shadow-2xl flex flex-col pt-6 pb-6 transition-transform duration-300 ease-out ${
+          className={`absolute right-0 top-0 h-full w-72 max-w-[80vw] menu-kit border-l border-[#a56f80]/40 shadow-2xl flex flex-col pt-6 pb-6 px-3.5 transition-transform duration-300 ease-out ${
             mobileOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between px-6 mb-8">
-            <NavLink to="/" end className="flex items-center gap-2 no-underline" onClick={closeMobile}>
-              <span className="material-symbols-outlined text-primary text-[28px]">architecture</span>
-              <span className="font-bold text-xl tracking-tighter text-primary">{t("common.appName")}</span>
-            </NavLink>
+          <div className="flex items-center justify-between px-px mb-8">
+            {marca}
             <button
               onClick={closeMobile}
               aria-label={t("home.closeMenu")}
@@ -141,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
           </div>
           {/* En móvil el selector de idioma y el saldo de monedas no caben
               en la cabecera (ver AppLayout). */}
-          <div className="px-6 mb-6 flex flex-wrap items-center gap-3">
+          <div className="px-3 mb-6 flex flex-wrap items-center gap-3">
             <LanguageSwitcher />
             {hasAccess && <SaldoMonedas />}
           </div>
