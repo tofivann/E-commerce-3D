@@ -11,11 +11,23 @@ export type VistaEscena =
   | "commissions"
   | "chat";
 
+export type ClimaEscena = "clear" | "rain" | "snow" | "storm";
+
 export interface EscenaKit {
   setView(vista: VistaEscena): void;
+  // 0 = mañana, 0.5 = atardecer, 1 = noche.
   setLighting(valor: number): void;
-  setWeather(clima: "clear" | "rain" | "snow" | "storm"): void;
+  setWeather(clima: ClimaEscena): void;
   setPaused(pausada: boolean): void;
+  // Termina el "cielo de deseos" (lo inicia la estrella del pelo de Mimi).
+  // La escena avisa del inicio y el fin con el evento `mimi:magic`
+  // ({ detail: { active } }), que burbujea hasta document.
+  clearStars(): void;
+  // Añadido por nosotros en mimi-scene.js: descarga las imágenes del cielo
+  // de deseos (cometas, constelación, luna) sin mostrarlas, para que el
+  // primer clic en la estrella no las pida a medio fundido.
+  cargarEfectos(): void;
+  cargarCapas(selector: string): void;
   destroy(): void;
 }
 

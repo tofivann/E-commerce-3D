@@ -90,6 +90,21 @@
     "postalLinea1": "Little creations.",
     "postalLinea2": "Lovely possibilities."
   },
+  "escena": {
+    "titulo": "Ambiente de la escena",
+    "expresion": {
+      "welcome": "Mimi normal",
+      "happy": "Mimi feliz",
+      "excited": "Mimi emocionada",
+      "sleepy": "Mimi con sueño",
+      "wink": "Mimi guiñando"
+    },
+    "hora": { "manana": "mañana", "atardecer": "atardecer rosa", "noche": "noche" },
+    "clima": { "clear": "despejado", "rain": "lluvia", "snow": "nieve", "storm": "tormenta" },
+    "cambiarHora": "Hora: {{actual}} (cambiar a {{siguiente}})",
+    "cambiarClima": "Clima: {{actual}} (cambiar a {{siguiente}})",
+    "volverDelDeseo": "Volver al atelier ✦"
+  },
   "mimiGifts": {
     "title": "Mimi Gifts",
     "subtitle": "Productos que se canjean con MimiCoins, sin pasar por el carrito. Ganas MimiCoins con cada compra."

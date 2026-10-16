@@ -4,6 +4,7 @@ import "./kit/scene.css";
 import "./kit/character.css";
 import "./kit/seat.css";
 import { cargarKit, RUTA_ASSETS_KIT } from "./cargarKit";
+import { escenaStore } from "./escenaStore";
 import type { AsientoKit, EscenaKit, VistaEscena } from "./kit";
 
 // Habitación y pose de Mimi según la ruta. Lo que no esté aquí usa el
@@ -38,16 +39,16 @@ const sobreLaFigura = (figura: Element, x: number, y: number) => {
 };
 
 // Mimi reacciona al ratón: guiño al entrar sobre ella, sonrisa mientras el
-// cursor sigue encima y cara normal al salir. El contenido de la página está
-// por encima de la escena y se queda con los eventos, así que se escucha en
-// todo el documento y se mira la posición (igual que hace el kit con la
-// mirada). Devuelve la función que quita los oyentes.
+// cursor sigue encima y, al salir, la expresión que el usuario tenga elegida
+// en los controles. Se escucha en todo el documento y se mira la posición
+// (igual que hace el kit con la mirada), porque parte del contenido sigue
+// por encima de la escena. Devuelve la función que quita los oyentes.
 const reaccionarAlRaton = (asiento: AsientoKit, montaje: HTMLElement) => {
   let dentro = false;
   const salir = () => {
     if (!dentro) return;
     dentro = false;
-    asiento.setExpression("welcome");
+    asiento.setExpression(escenaStore.leer().expresion);
   };
   const mover = (e: PointerEvent) => {
     if (e.pointerType === "touch") return;
@@ -73,8 +74,12 @@ const reaccionarAlRaton = (asiento: AsientoKit, montaje: HTMLElement) => {
 // lo destruye todo. Quien quiera quitar la escena borra este componente y
 // public/mimi/, nada más.
 interface EscenaMimiProps {
-  // Si la página tiene el menú lateral fijo (AppLayout), la escena empieza a
-  // su derecha en escritorio; la portada de visitante no lo tiene.
+  // Si la página tiene el menú lateral fijo (AppLayout). Hoy no cambia nada:
+  // la escena ocupa siempre todo el ancho y el menú tapa su borde izquierdo
+  // (estantería y hiedra). Antes dejaba el hueco del menú (--scene-left) y,
+  // al pedir el deseo, el kit lo iba cerrando en 2,4 s: la pintura entera se
+  // estiraba cuadro a cuadro y se veía a tirones. Se mantiene la prop por si
+  // se quiere volver a ese comportamiento.
   conMenuLateral?: boolean;
 }
 
@@ -92,21 +97,38 @@ export const EscenaMimi: React.FC<EscenaMimiProps> = ({ conMenuLateral = false }
     let escena: EscenaKit | undefined;
     let asiento: AsientoKit | undefined;
     let quitarRaton: (() => void) | undefined;
+    // La escena avisa del cielo de deseos por este evento (burbujea desde su raíz).
+    const alCambiarDeseo = (e: Event) => escenaStore.fijarDeseo(Boolean((e as CustomEvent<{ active: boolean }>).detail?.active));
+    document.addEventListener("mimi:magic", alCambiarDeseo);
     cargarKit()
       .then(() => {
         if (cancelado || !mundoRef.current || !window.MimiScene) return;
         escena = new window.MimiScene(mundoRef.current, { assets: RUTA_ASSETS_KIT, view: vistaActual(), lighting: 0.5 });
         escenaRef.current = escena;
+        escenaStore.registrarEscena(escena);
         return esperarCargaDePagina();
       })
       .then(() => {
         if (cancelado || !escena || !mimiRef.current || !window.MimiSeat) return;
         asiento = new window.MimiSeat(mimiRef.current, { scene: escena, assets: RUTA_ASSETS_KIT, caption: false });
+        escenaStore.registrarAsiento(asiento);
         quitarRaton = reaccionarAlRaton(asiento, mimiRef.current);
+        // El cielo de deseos (≈1 MB: cometas, constelación, luna) se descarga
+        // en segundo plano cuando el navegador está ocioso, ya con Mimi en
+        // pantalla: así la estrella responde al instante y sin saltos.
+        const precargar = () => {
+          if (cancelado || !escena) return;
+          escena.cargarEfectos();
+          escena.cargarCapas(".mimi-orb--moon");
+        };
+        if ("requestIdleCallback" in window) window.requestIdleCallback(precargar, { timeout: 8000 });
+        else setTimeout(precargar, 4000);
       })
       .catch((error) => console.error("No se pudo montar la escena de Mimi:", error));
     return () => {
       cancelado = true;
+      document.removeEventListener("mimi:magic", alCambiarDeseo);
+      escenaStore.quitar();
       quitarRaton?.();
       asiento?.destroy();
       escena?.destroy();
@@ -118,10 +140,11 @@ export const EscenaMimi: React.FC<EscenaMimiProps> = ({ conMenuLateral = false }
     escenaRef.current?.setView(vista);
   }, [vista]);
 
-  // --scene-left: el kit deja ese hueco a la izquierda para el menú lateral
-  // (w-64 = 256px en escritorio; en móvil el menú es un panel flotante).
+  // --scene-left: el hueco que el kit deja a la izquierda para un menú; aquí
+  // siempre 0 (ver conMenuLateral). Sin aria-hidden: dentro está el botón de
+  // la estrella del pelo de Mimi (el "cielo de deseos"), accesible por teclado.
   return (
-    <div className={conMenuLateral ? "[--scene-left:0px] md:[--scene-left:256px]" : "[--scene-left:0px]"} aria-hidden="true">
+    <div className="[--scene-left:0px]" data-con-menu={conMenuLateral || undefined}>
       <div ref={mundoRef} />
       <div ref={mimiRef} />
     </div>

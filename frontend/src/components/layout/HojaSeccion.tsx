@@ -15,8 +15,10 @@ interface HojaSeccionProps {
 
 // Primera pantalla de cada sección, al estilo del kit: la escena pintada con
 // Mimi y, sobre ella, una hoja de papel inclinada con el título. El
-// contenido (la bandeja) viene después, al hacer scroll. En móvil deja hueco
-// arriba para que Mimi se vea antes que la hoja.
+// contenido (la bandeja) viene después, al hacer scroll; en escritorio la
+// sección mide algo menos que la pantalla para que la bandeja asome por
+// abajo (~100 px) y se note que hay más. En móvil deja hueco arriba para que
+// Mimi se vea antes que la hoja.
 export const HojaSeccion: React.FC<HojaSeccionProps> = ({ eyebrow, titulo, subtitulo, tamano = "seccion", children }) => {
   const { t } = useTranslation();
   const tituloClase =
@@ -25,7 +27,7 @@ export const HojaSeccion: React.FC<HojaSeccionProps> = ({ eyebrow, titulo, subti
       : "text-[34px] tracking-[-1.4px] md:text-[clamp(34px,3vw,48px)]";
 
   return (
-    <section className="pt-[56svh] md:pt-8 md:min-h-[calc(100svh-125px)]">
+    <section className="pt-[56svh] md:pt-8 md:min-h-[calc(100svh-260px)]">
       <div className="papel-kit w-full md:w-[54%] md:max-w-[680px] -rotate-[0.4deg] p-6 sm:p-8">
         <p className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[1.8px] text-[#b45279]">
           {eyebrow ?? (

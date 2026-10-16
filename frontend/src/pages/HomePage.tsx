@@ -105,7 +105,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const contenido = (
     <>
       {isLoggedIn && !isStaff && !isSubscribed && (
-        <div className="bg-error/10 border-l-4 border-error p-6 rounded-r-xl text-on-error-container flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
+        <div className="interactivo bg-error/10 border-l-4 border-error p-6 rounded-r-xl text-on-error-container flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
           <div>
             <h3 className="text-xl font-bold text-error">{t("home.pendingTitle")}</h3>
             <p className="text-sm text-on-error-container/80 mt-1">

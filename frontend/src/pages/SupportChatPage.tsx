@@ -15,7 +15,10 @@ export const SupportChatPage: React.FC<SupportChatPageProps> = ({
 }) => (
   // Misma regla de acceso que en HomePage: admins o suscriptores activos.
   <AppLayout isStaff={isStaff} hasAccess={isStaff || isSubscribed} onLogout={onLogoutClick} sinBandeja>
-    {/* El chat ya es un panel: sin bandeja debajo. */}
-    <ChatPanel isAdmin={isStaff} />
+    {/* El chat ya es un panel: sin bandeja debajo. .interactivo: recupera el
+        ratón, que la capa de contenido deja pasar a la escena. */}
+    <div className="interactivo">
+      <ChatPanel isAdmin={isStaff} />
+    </div>
   </AppLayout>
 );

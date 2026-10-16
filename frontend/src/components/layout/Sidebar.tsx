@@ -123,13 +123,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
       <button
         onClick={() => setMobileOpen(true)}
         aria-label={t("home.menu")}
-        className="md:hidden fixed top-4 left-4 z-60 w-10 h-10 rounded-full bg-surface-container-low/90 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface shadow-md"
+        className="oculto-en-deseo md:hidden fixed top-4 left-4 z-60 w-10 h-10 rounded-full bg-surface-container-low/90 backdrop-blur border border-outline-variant/30 flex items-center justify-center text-on-surface shadow-md"
       >
         <span className="material-symbols-outlined">menu</span>
       </button>
 
       {/* Sidebar de escritorio */}
-      <aside className="hidden md:flex flex-col pt-[25px] pb-5 px-3.5 menu-kit fixed left-0 top-0 h-screen w-64 z-40 border-r border-[#a56f80]/40 shadow-[6px_0_24px_#68405a20] overflow-y-auto">
+      <aside className="oculto-en-deseo hidden md:flex flex-col pt-[25px] pb-5 px-3.5 menu-kit fixed left-0 top-0 h-screen w-64 z-40 border-r border-[#a56f80]/40 shadow-[6px_0_24px_#68405a20] overflow-y-auto">
         <div className="px-px pb-[25px]">{marca}</div>
         {navLinks}
         {postal}

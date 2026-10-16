@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BotonVolverDeseo } from "../escena/BotonVolverDeseo";
+import { ControlesEscena } from "../escena/ControlesEscena";
 import { EscenaMimi } from "../escena/EscenaMimi";
 import { IconoConejo } from "../ui/IconosKit";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -28,9 +30,12 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
 
   return (
     <div className="text-on-surface font-sans min-h-screen flex">
-      {/* Escenario pintado de fondo (fijo); el resto va por encima. */}
+      {/* Escenario pintado de fondo (fijo) y su botonera; el resto va por
+          encima pero deja pasar los clics a la escena (.sobre-escena). */}
       <EscenaMimi />
-      <div className="relative z-10 flex-1 flex flex-col min-w-0">
+      <ControlesEscena />
+      <BotonVolverDeseo />
+      <div className="sobre-escena oculto-en-deseo relative z-10 flex-1 flex flex-col min-w-0">
         {/* BARRA SUPERIOR */}
         <header className="fixed top-0 right-0 left-0 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
           <div className="flex justify-between items-center gap-4 pl-gutter pr-gutter md:px-gutter max-w-container-max mx-auto h-20">

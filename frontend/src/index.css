@@ -113,6 +113,32 @@
   position: relative;
 }
 
+/* Capa de contenido sobre la escena: por sí misma deja pasar los clics a la
+   escena (la estrella del pelo de Mimi es un botón), y solo recuperan el
+   ratón las piezas con fondo o interactivas: cabecera, pie, hojas, bandejas,
+   paneles y lo que lleve .interactivo. */
+.sobre-escena {
+  pointer-events: none;
+}
+.sobre-escena :is(header, footer, .papel-kit, .bandeja-kit, .glass-panel, .interactivo) {
+  pointer-events: auto;
+}
+
+/* "Cielo de deseos" (la estrella del pelo de Mimi): mientras dura, la
+   interfaz se desvanece en 2,4 s como en el kit y la escena ocupa toda la
+   pantalla. escenaStore pone data-deseo en <html>; llevan .oculto-en-deseo el
+   menú lateral, la capa de contenido y la botonera. */
+.oculto-en-deseo {
+  transition: opacity 2.4s;
+}
+:root[data-deseo="true"] .oculto-en-deseo {
+  opacity: 0;
+}
+:root[data-deseo="true"] .oculto-en-deseo,
+:root[data-deseo="true"] .oculto-en-deseo * {
+  pointer-events: none !important;
+}
+
 /* Bandeja de papel del kit: el contenido de cada sección va dentro para que
    títulos y listas se lean sobre la escena pintada. */
 .bandeja-kit {

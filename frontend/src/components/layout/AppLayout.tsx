@@ -6,6 +6,8 @@ import { usePerfil } from "../../hooks/usePerfil";
 import { Avatar } from "../ui/Avatar";
 import type { CarritoDrawer } from "../../hooks/useCarritoDrawer";
 import { CartDrawer } from "../products/CartDrawer";
+import { BotonVolverDeseo } from "../escena/BotonVolverDeseo";
+import { ControlesEscena } from "../escena/ControlesEscena";
 import { EscenaMimi } from "../escena/EscenaMimi";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
@@ -64,11 +66,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   return (
     <div className="text-on-surface font-sans min-h-screen flex">
-      {/* Escenario pintado de fondo (fijo); el resto va por encima. */}
+      {/* Escenario pintado de fondo (fijo) y su botonera; el resto va por
+          encima pero deja pasar los clics a la escena (.sobre-escena). */}
       <EscenaMimi conMenuLateral />
+      <ControlesEscena />
+      <BotonVolverDeseo />
       <Sidebar isStaff={isStaff} hasAccess={hasAccess} onLogout={onLogout} />
 
-      <div className="relative z-10 flex-1 flex flex-col min-w-0 md:ml-64">
+      <div className="sobre-escena oculto-en-deseo relative z-10 flex-1 flex flex-col min-w-0 md:ml-64">
         {/* BARRA SUPERIOR. pl-16 en móvil: deja sitio al botón de menú del Sidebar. */}
         <header className="fixed top-0 right-0 left-0 md:left-64 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
           <div className="flex justify-between items-center gap-4 pl-16 pr-gutter md:px-gutter max-w-container-max mx-auto h-20">
