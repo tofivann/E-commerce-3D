@@ -5,21 +5,8 @@ import "./kit/character.css";
 import "./kit/seat.css";
 import { cargarKit, RUTA_ASSETS_KIT } from "./cargarKit";
 import { escenaStore } from "./escenaStore";
-import type { AsientoKit, EscenaKit, VistaEscena } from "./kit";
-
-// Habitación y pose de Mimi según la ruta. Lo que no esté aquí usa el
-// estudio de la portada.
-const VISTA_POR_RUTA: Record<string, VistaEscena> = {
-  "/": "home",
-  "/favoritos": "favorites",
-  "/mimi-gifts": "gifts",
-  "/mimicoins": "gifts",
-  "/biblioteca": "library",
-  "/comisiones": "commissions",
-  "/soporte": "chat",
-};
-
-const vistaDeRuta = (pathname: string): VistaEscena => VISTA_POR_RUTA[pathname] ?? "home";
+import type { AsientoKit, EscenaKit } from "./kit";
+import { vistaDeRuta } from "./rutas";
 
 // Resuelve cuando la página terminó de cargar (o enseguida si ya lo hizo):
 // Mimi (~0,8 MB) se pide después de la página y el fondo, para no competir

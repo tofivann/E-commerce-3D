@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { IconoConejo } from "../ui/IconosKit";
 
-export type AdminView = "catalogo" | "chat" | "comisiones" | "estadisticas" | "ajustes";
+export type AdminView = "catalogo" | "chat" | "comisiones" | "novedades" | "estadisticas" | "ajustes";
 
 // Mismo estilo de enlace que el menú de la tienda (Sidebar): pastilla con
 // borde, rosa con barra a la izquierda cuando está activa.
@@ -31,6 +31,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { view: "catalogo", label: t("adminSidebar.catalog"), icon: "inventory_2" },
     { view: "chat", label: t("adminSidebar.conversations"), icon: "chat" },
     { view: "comisiones", label: t("adminSidebar.commissions"), icon: "design_services" },
+    { view: "novedades", label: t("adminSidebar.posts"), icon: "newspaper" },
     { view: "estadisticas", label: t("adminSidebar.statistics"), icon: "monitoring" },
     { view: "ajustes", label: t("adminSidebar.settings"), icon: "settings" },
   ];

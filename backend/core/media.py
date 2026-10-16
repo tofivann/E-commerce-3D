@@ -32,6 +32,7 @@ CARPETAS_PUBLICAS = (
     'comisiones/modelo/referencias/',     # ComisionModelo.foto_referencia_1/2
     'comisiones/miniaturas/',             # miniaturas de las tres anteriores
     'perfiles/',                          # Usuario.foto_perfil
+    'publicaciones/',                     # FotoPublicacion.imagen y su miniatura (publicaciones/miniaturas/)
 )
 
 

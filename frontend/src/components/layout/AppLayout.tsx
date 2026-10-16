@@ -6,9 +6,6 @@ import { usePerfil } from "../../hooks/usePerfil";
 import { Avatar } from "../ui/Avatar";
 import type { CarritoDrawer } from "../../hooks/useCarritoDrawer";
 import { CartDrawer } from "../products/CartDrawer";
-import { BotonVolverDeseo } from "../escena/BotonVolverDeseo";
-import { ControlesEscena } from "../escena/ControlesEscena";
-import { EscenaMimi } from "../escena/EscenaMimi";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
 import { SaldoMonedas } from "./SaldoMonedas";
@@ -66,11 +63,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   return (
     <div className="text-on-surface font-sans min-h-screen flex">
-      {/* Escenario pintado de fondo (fijo) y su botonera; el resto va por
-          encima pero deja pasar los clics a la escena (.sobre-escena). */}
-      <EscenaMimi conMenuLateral />
-      <ControlesEscena />
-      <BotonVolverDeseo />
+      {/* La escena de Mimi la monta App.tsx (una vez para toda la app); aquí
+          el contenido va por encima pero deja pasar los clics (.sobre-escena). */}
       <Sidebar isStaff={isStaff} hasAccess={hasAccess} onLogout={onLogout} />
 
       <div className="sobre-escena oculto-en-deseo relative z-10 flex-1 flex flex-col min-w-0 md:ml-64">

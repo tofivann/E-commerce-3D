@@ -58,6 +58,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
         {t("sidebar.home")}
       </NavLink>
 
+      {/* Novedades: para cualquier cuenta con sesión (también la ven los visitantes). */}
+      <NavLink to="/novedades" className={linkClass} onClick={closeMobile}>
+        <span className="material-symbols-outlined text-[20px]">newspaper</span>
+        {t("sidebar.novedades")}
+      </NavLink>
+
       {/* Favoritos, Biblioteca, Comisiones y el chat solo se muestran con suscripción activa o staff;
           una cuenta pendiente de pago/inactiva no tiene nada que mostrar ahí todavía. */}
       {hasAccess && (

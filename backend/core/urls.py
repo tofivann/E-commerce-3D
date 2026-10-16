@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/v1/chat/', include('chat.urls')),
     path('api/v1/custom-orders/', include('custom_orders.urls')),
     path('api/v1/monedas/', include('monedas.urls')),
+    path('api/v1/novedades/', include('publicaciones.urls')),
 
     # Punto de entrada único para todos los webhooks de Stripe (ver
     # core/views.py: enruta por metadata['tipo'] a cada app correspondiente).

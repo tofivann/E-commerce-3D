@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, Navigate, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate, Link, useLocation } from "react-router-dom";
+import { BotonVolverDeseo } from "./components/escena/BotonVolverDeseo";
+import { ControlesEscena } from "./components/escena/ControlesEscena";
+import { EscenaMimi } from "./components/escena/EscenaMimi";
+import { tieneEscena } from "./components/escena/rutas";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
@@ -7,6 +11,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { MimiGiftsPage } from "./pages/MimiGiftsPage";
+import { NovedadesPage } from "./pages/NovedadesPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { MimiCoinsPage } from "./pages/MimiCoinsPage";
 import { perfilStore } from "./stores/perfilStore";
@@ -61,6 +66,12 @@ function AppRoutes() {
     () => localStorage.getItem("estado_suscripcion") === "ACTIVO"
   );
   const navigate = useNavigate();
+  // La escena de Mimi se monta UNA vez aquí, no dentro de cada página: cada
+  // página tiene su propio AppLayout/GuestLayout y, si la escena viviera ahí,
+  // cambiar de sección la reconstruiría entera (capas, texturas, sentar a
+  // Mimi, fundido). Así solo cambia de habitación con la ruta. Qué páginas la
+  // llevan lo dice components/escena/rutas.ts (una sola lista).
+  const conEscena = tieneEscena(useLocation().pathname);
 
   const handleLogout = () => {
     // Se invalida el refresh token en el servidor (lista negra) además de
@@ -87,6 +98,14 @@ function AppRoutes() {
   };
 
   return (
+    <>
+      {conEscena && (
+        <>
+          <EscenaMimi />
+          <ControlesEscena />
+          <BotonVolverDeseo />
+        </>
+      )}
     <Routes>
       {/* Ruta Raíz: HomePage */}
       <Route 
@@ -164,6 +183,20 @@ function AppRoutes() {
           ) : (
             <Navigate to="/" replace />
           )
+        }
+      />
+      {/* Ruta de Novedades: pública como la portada (comentar ya lo decide el backend) */}
+      <Route
+        path="/novedades"
+        element={
+          <NovedadesPage
+            isLoggedIn={isLoggedIn}
+            isStaff={isStaff}
+            isSubscribed={isSubscribed}
+            onLoginClick={() => navigate("/login")}
+            onRegisterClick={() => navigate("/register")}
+            onLogoutClick={handleLogout}
+          />
         }
       />
       {/* Ruta de Mimi Gifts (lo que se canjea con MimiCoins): misma regla que Favoritos */}
@@ -283,5 +316,6 @@ function AppRoutes() {
       <Route path="/privacidad" element={<LegalPage documento="privacidad" />} />
       <Route path="/terminos" element={<LegalPage documento="terminos" />} />
     </Routes>
+    </>
   );
 }

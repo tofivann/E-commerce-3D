@@ -1,8 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { BotonVolverDeseo } from "../escena/BotonVolverDeseo";
-import { ControlesEscena } from "../escena/ControlesEscena";
-import { EscenaMimi } from "../escena/EscenaMimi";
 import { IconoConejo } from "../ui/IconosKit";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
@@ -30,11 +28,8 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
 
   return (
     <div className="text-on-surface font-sans min-h-screen flex">
-      {/* Escenario pintado de fondo (fijo) y su botonera; el resto va por
-          encima pero deja pasar los clics a la escena (.sobre-escena). */}
-      <EscenaMimi />
-      <ControlesEscena />
-      <BotonVolverDeseo />
+      {/* La escena de Mimi la monta App.tsx (una vez para toda la app); aquí
+          el contenido va por encima pero deja pasar los clics (.sobre-escena). */}
       <div className="sobre-escena oculto-en-deseo relative z-10 flex-1 flex flex-col min-w-0">
         {/* BARRA SUPERIOR */}
         <header className="fixed top-0 right-0 left-0 z-50 bg-surface/70 backdrop-blur-xl border-b border-outline-variant/30 transition-all duration-300">
@@ -49,6 +44,9 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
 
             {/* Escritorio: botones directos */}
             <div className="hidden md:flex items-center gap-4">
+              <Link to="/novedades" className="text-on-surface-variant hover:text-primary transition-colors px-2 py-2 no-underline font-medium">
+                {t("home.novedades")}
+              </Link>
               <LanguageSwitcher />
               <button
                 onClick={onLoginClick}
@@ -112,6 +110,13 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
             </div>
 
             <div className="flex flex-col gap-2 px-3">
+              <Link
+                to="/novedades"
+                onClick={() => setGuestMenuOpen(false)}
+                className="w-full text-left px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-primary-container/10 transition-colors no-underline"
+              >
+                {t("home.novedades")}
+              </Link>
               <button
                 onClick={() => {
                   setGuestMenuOpen(false);

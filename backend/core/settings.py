@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'custom_orders',
     'monedas',
     'chat',
+    'publicaciones',
 ]
 
 # 3. Middleware (CorsMiddleware debe ir arriba de CommonMiddleware)

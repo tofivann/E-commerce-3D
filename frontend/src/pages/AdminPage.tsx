@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AdminView } from "../components/admin/AdminSidebar";
 import { AdminSidebar } from "../components/admin/AdminSidebar";
+import { PublicacionesAdmin } from "../components/admin/PublicacionesAdmin";
 import { ProductAdminGrid } from "../components/products/ProductAdminGrid";
 import { ProductAdminTable } from "../components/products/ProductAdminTable";
 import { UserAdminTable } from "../components/users/UserAdminTable";
@@ -34,6 +35,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onLogout }) => {
         {view === "chat" && <ChatPanel isAdmin={true} />}
 
         {view === "comisiones" && <ComisionesAdmin />}
+
+        {view === "novedades" && <PublicacionesAdmin />}
 
         {view === "estadisticas" && <EstadisticasPagos />}
 
