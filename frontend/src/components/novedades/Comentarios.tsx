@@ -8,10 +8,6 @@ import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 
 interface ComentariosProps {
   publicacionId: number;
-  // Suscriptor o staff: puede escribir. Sin sesión, o pendiente de pago, solo lee.
-  hasAccess: boolean;
-  isLoggedIn: boolean;
-  onLoginClick?: () => void;
   // Avisa al padre para que ajuste el contador de la publicación.
   onCambioTotal?: (delta: number) => void;
 }
@@ -19,9 +15,10 @@ interface ComentariosProps {
 const idDeComentario = (comentario: Comentario) => comentario.id;
 
 // Hilo plano de comentarios de una publicación, del más antiguo al más
-// nuevo, con la caja para escribir al final. Cada uno puede borrar el suyo;
-// el staff, cualquiera (lo decide el backend: `puede_borrar`).
-export const Comentarios: React.FC<ComentariosProps> = ({ publicacionId, hasAccess, isLoggedIn, onLoginClick, onCambioTotal }) => {
+// nuevo, con la caja para escribir al final. Quien llega aquí ya tiene
+// acceso (ruta y backend lo exigen). Cada uno puede borrar el suyo; el
+// staff, cualquiera (lo decide el backend: `puede_borrar`).
+export const Comentarios: React.FC<ComentariosProps> = ({ publicacionId, onCambioTotal }) => {
   const { t, i18n } = useTranslation();
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -104,8 +101,7 @@ export const Comentarios: React.FC<ComentariosProps> = ({ publicacionId, hasAcce
       {lista.cargandoMas && <p className="text-on-surface-variant text-xs text-center">{t("novedades.loading")}</p>}
       <InfiniteScrollSentinel onVisible={lista.cargarMas} disabled={!lista.hayMas || lista.cargando || lista.cargandoMas} />
 
-      {hasAccess ? (
-        <form onSubmit={enviar} className="flex flex-col gap-2">
+      <form onSubmit={enviar} className="flex flex-col gap-2">
           <textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
@@ -123,15 +119,6 @@ export const Comentarios: React.FC<ComentariosProps> = ({ publicacionId, hasAcce
             {enviando ? t("novedades.sending") : t("novedades.send")}
           </button>
         </form>
-      ) : isLoggedIn ? (
-        <p className="text-on-surface-variant text-sm">{t("novedades.subscribeToComment")}</p>
-      ) : (
-        <p className="text-on-surface-variant text-sm">
-          <button type="button" onClick={onLoginClick} className="font-semibold text-primary hover:underline">
-            {t("novedades.loginToComment")}
-          </button>
-        </p>
-      )}
     </div>
   );
 };

@@ -124,9 +124,7 @@
     "commentError": "No se pudo enviar el comentario. Inténtalo de nuevo.",
     "deleteComment": "Borrar",
     "confirmDeleteComment": "¿Borrar este comentario?",
-    "deleteError": "No se pudo borrar el comentario.",
-    "loginToComment": "Inicia sesión para comentar",
-    "subscribeToComment": "Necesitas una suscripción activa para comentar."
+    "deleteError": "No se pudo borrar el comentario."
   },
   "adminNovedades": {
     "title": "Novedades",
@@ -167,7 +165,6 @@
   "home": {
     "login": "Iniciar Sesión",
     "register": "Registrarse",
-    "novedades": "Novedades",
     "menu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "pendingTitle": "Cuenta pendiente de pago",

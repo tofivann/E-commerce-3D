@@ -185,18 +185,16 @@ function AppRoutes() {
           )
         }
       />
-      {/* Ruta de Novedades: pública como la portada (comentar ya lo decide el backend) */}
+      {/* Ruta de Novedades: solo con suscripción activa o staff (misma regla que Favoritos,
+          por decisión de la dueña: no es una vitrina pública) */}
       <Route
         path="/novedades"
         element={
-          <NovedadesPage
-            isLoggedIn={isLoggedIn}
-            isStaff={isStaff}
-            isSubscribed={isSubscribed}
-            onLoginClick={() => navigate("/login")}
-            onRegisterClick={() => navigate("/register")}
-            onLogoutClick={handleLogout}
-          />
+          isLoggedIn && (isStaff || isSubscribed) ? (
+            <NovedadesPage isStaff={isStaff} onLogoutClick={handleLogout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
       {/* Ruta de Mimi Gifts (lo que se canjea con MimiCoins): misma regla que Favoritos */}

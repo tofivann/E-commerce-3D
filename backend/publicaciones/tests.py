@@ -35,13 +35,24 @@ class BaseNovedades(MediaTemporalMixin, APITestCase):
 
 
 class VisibilidadTests(BaseNovedades):
-    def test_visitante_ve_solo_publicadas(self):
+    def test_solo_con_acceso_se_leen(self):
+        # Sin sesión: 401. Pendiente de pago: 403. Las novedades no son públicas.
+        self.assertEqual(self.client.get(self.url_lista()).status_code, 401)
+        self.assertEqual(self.client.get(self.url_detalle(self.publicada)).status_code, 401)
+        self.assertEqual(self.client.get(self.url_comentarios(self.publicada)).status_code, 401)
+        self.client.force_authenticate(self.pendiente)
+        self.assertEqual(self.client.get(self.url_lista()).status_code, 403)
+        self.assertEqual(self.client.get(self.url_comentarios(self.publicada)).status_code, 403)
+
+    def test_suscriptor_ve_solo_publicadas(self):
+        self.client.force_authenticate(self.suscriptor)
         r = self.client.get(self.url_lista())
         self.assertEqual(r.status_code, 200)
         self.assertEqual([p['titulo'] for p in r.data['results']], ['Hola'])
         self.assertEqual(r.data['results'][0]['total_comentarios'], 0)
 
-    def test_borrador_no_existe_para_visitante(self):
+    def test_borrador_no_existe_para_suscriptor(self):
+        self.client.force_authenticate(self.suscriptor)
         self.assertEqual(self.client.get(self.url_detalle(self.borrador)).status_code, 404)
         self.assertEqual(self.client.get(self.url_comentarios(self.borrador)).status_code, 404)
 
@@ -120,8 +131,10 @@ class PublicarTests(BaseNovedades):
 
 
 class ComentariosTests(BaseNovedades):
-    def test_cualquiera_lee_comentarios(self):
+    def test_otro_suscriptor_lee_comentarios_sin_poder_borrarlos(self):
         Comentario.objects.create(publicacion=self.publicada, usuario=self.suscriptor, texto='hola')
+        otro = Usuario.objects.create_user(username='otro2', email='otro2@test.com', password='x', estado_suscripcion='ACTIVO')
+        self.client.force_authenticate(otro)
         r = self.client.get(self.url_comentarios(self.publicada))
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.data['results'][0]['texto'], 'hola')

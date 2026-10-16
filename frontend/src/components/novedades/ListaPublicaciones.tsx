@@ -6,18 +6,12 @@ import { useListaPaginada } from "../../hooks/useListaPaginada";
 import { InfiniteScrollSentinel } from "../ui/InfiniteScrollSentinel";
 import { PublicacionCard } from "./PublicacionCard";
 
-interface ListaPublicacionesProps {
-  hasAccess: boolean;
-  isLoggedIn: boolean;
-  onLoginClick?: () => void;
-}
-
 const idDePublicacion = (publicacion: Publicacion) => publicacion.id;
 // Fuera del componente: tiene que ser siempre la misma función (ver useListaPaginada).
 const cargarPublicadas = (page: number) => novedadesApi.listar(page);
 
 // Las novedades publicadas, de la más nueva a la más antigua, con scroll infinito.
-export const ListaPublicaciones: React.FC<ListaPublicacionesProps> = ({ hasAccess, isLoggedIn, onLoginClick }) => {
+export const ListaPublicaciones: React.FC = () => {
   const { t } = useTranslation();
   const lista = useListaPaginada<Publicacion>({ clave: "publicadas", cargarPagina: cargarPublicadas, obtenerId: idDePublicacion });
 
@@ -34,7 +28,7 @@ export const ListaPublicaciones: React.FC<ListaPublicacionesProps> = ({ hasAcces
         <p className="text-on-surface-variant">{t("novedades.empty")}</p>
       )}
       {lista.items.map((publicacion) => (
-        <PublicacionCard key={publicacion.id} publicacion={publicacion} hasAccess={hasAccess} isLoggedIn={isLoggedIn} onLoginClick={onLoginClick} />
+        <PublicacionCard key={publicacion.id} publicacion={publicacion} />
       ))}
       {lista.cargandoMas && <div className="h-48 rounded-xl bg-surface-container-highest animate-pulse opacity-20" aria-hidden="true" />}
       <InfiniteScrollSentinel onVisible={lista.cargarMas} disabled={!lista.hayMas || lista.cargando || lista.cargandoMas} />

@@ -26,7 +26,8 @@ def publicaciones_visibles(usuario, incluir_borradores=False):
 
 
 class PublicacionViewSet(viewsets.ModelViewSet):
-    """Novedades. Leer: cualquiera (también sin sesión). Escribir: staff.
+    """Novedades. Leer: cuentas con acceso al catálogo (suscripción activa o
+    staff), por decisión de la dueña — no es una vitrina pública. Escribir: staff.
 
     Las fotos van en el mismo multipart que el resto de campos: `fotos`
     (varias) para añadir y `fotos_eliminar` (ids) para quitar al editar.
@@ -35,7 +36,8 @@ class PublicacionViewSet(viewsets.ModelViewSet):
     """
     serializer_class = PublicacionSerializer
     pagination_class = PaginacionNovedades
-    permission_classes = [EsAdminOSoloLectura]
+    # Las dos deben pasar: acceso al catálogo para todo, y staff para escribir.
+    permission_classes = [TieneAccesoAlCatalogo, EsAdminOSoloLectura]
 
     def get_queryset(self):
         usuario = self.request.user
@@ -83,20 +85,11 @@ class PublicacionViewSet(viewsets.ModelViewSet):
         self._guardar_fotos(publicacion, nuevas)
 
 
-class PuedeComentar(permissions.BasePermission):
-    """Leer comentarios: cualquiera. Escribir: cuentas con acceso al catálogo."""
-    message = TieneAccesoAlCatalogo.message
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return TieneAccesoAlCatalogo().has_permission(request, view)
-
-
 class ComentariosView(generics.ListCreateAPIView):
+    """Leer y escribir comentarios: cuentas con acceso al catálogo, como las publicaciones."""
     serializer_class = ComentarioSerializer
     pagination_class = PaginacionEstandar
-    permission_classes = [PuedeComentar]
+    permission_classes = [TieneAccesoAlCatalogo]
 
     def get_publicacion(self):
         # Un borrador no existe para quien no sea staff (404, no 403).

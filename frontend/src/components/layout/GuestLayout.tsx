@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { IconoConejo } from "../ui/IconosKit";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -44,9 +43,6 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
 
             {/* Escritorio: botones directos */}
             <div className="hidden md:flex items-center gap-4">
-              <Link to="/novedades" className="text-on-surface-variant hover:text-primary transition-colors px-2 py-2 no-underline font-medium">
-                {t("home.novedades")}
-              </Link>
               <LanguageSwitcher />
               <button
                 onClick={onLoginClick}
@@ -110,13 +106,6 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
             </div>
 
             <div className="flex flex-col gap-2 px-3">
-              <Link
-                to="/novedades"
-                onClick={() => setGuestMenuOpen(false)}
-                className="w-full text-left px-4 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-primary-container/10 transition-colors no-underline"
-              >
-                {t("home.novedades")}
-              </Link>
               <button
                 onClick={() => {
                   setGuestMenuOpen(false);

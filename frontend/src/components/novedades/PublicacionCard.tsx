@@ -6,14 +6,11 @@ import { Comentarios } from "./Comentarios";
 
 interface PublicacionCardProps {
   publicacion: Publicacion;
-  hasAccess: boolean;
-  isLoggedIn: boolean;
-  onLoginClick?: () => void;
 }
 
 // Una novedad: título y fecha, texto, fotos (miniaturas que abren la
 // original), el video de YouTube si lo hay, y los comentarios plegados.
-export const PublicacionCard: React.FC<PublicacionCardProps> = ({ publicacion, hasAccess, isLoggedIn, onLoginClick }) => {
+export const PublicacionCard: React.FC<PublicacionCardProps> = ({ publicacion }) => {
   const { t, i18n } = useTranslation();
   const [abiertos, setAbiertos] = useState(false);
   // Contador local: se ajusta al comentar/borrar sin volver a pedir la lista.
@@ -78,13 +75,7 @@ export const PublicacionCard: React.FC<PublicacionCardProps> = ({ publicacion, h
       </button>
 
       {abiertos && (
-        <Comentarios
-          publicacionId={publicacion.id}
-          hasAccess={hasAccess}
-          isLoggedIn={isLoggedIn}
-          onLoginClick={onLoginClick}
-          onCambioTotal={(delta) => setTotal((n) => Math.max(0, n + delta))}
-        />
+        <Comentarios publicacionId={publicacion.id} onCambioTotal={(delta) => setTotal((n) => Math.max(0, n + delta))} />
       )}
     </article>
   );
