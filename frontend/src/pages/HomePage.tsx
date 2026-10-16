@@ -104,11 +104,13 @@ export const HomePage: React.FC<HomePageProps> = ({
   // layout que lo envuelve.
   const contenido = (
     <>
+      {/* Aviso de pago pendiente. Fondo de papel casi opaco: va directamente
+          sobre la escena pintada y un tinte rojo al 10 % no se leía. */}
       {isLoggedIn && !isStaff && !isSubscribed && (
-        <div className="interactivo bg-error/10 border-l-4 border-error p-6 rounded-r-xl text-on-error-container flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
+        <div className="interactivo bg-papel-suave/95 backdrop-blur-sm border border-error/40 border-l-4 border-l-error p-6 rounded-r-xl text-on-surface flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl mt-4">
           <div>
             <h3 className="text-xl font-bold text-error">{t("home.pendingTitle")}</h3>
-            <p className="text-sm text-on-error-container/80 mt-1">
+            <p className="text-sm text-on-surface-variant mt-1">
               {t("home.pendingBody")}
             </p>
             <PrecioSuscripcion className="text-error mt-3" />
