@@ -5,6 +5,7 @@ import { ConversacionLista } from './ConversacionLista';
 import { ChatHeader } from './ChatHeader';
 import { MensajesLista } from './MensajesLista';
 import { ChatInput } from './ChatInput';
+import { avisarChatLeido } from '../../hooks/useChatNoLeidos';
 
 interface ChatPanelProps {
     isAdmin: boolean;
@@ -32,6 +33,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ isAdmin }) => {
     const cargarMensajes = useCallback(async (id: number, hacerScroll: boolean) => {
         try {
             const data = await chatApi.obtenerMensajes(id);
+            // El backend acaba de marcar la conversación como leída: que el
+            // globo del menú se entere ya.
+            avisarChatLeido();
             setMensajes(data);
             if (hacerScroll) {
                 setTimeout(scrollToBottom, 50);

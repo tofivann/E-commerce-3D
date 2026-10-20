@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Globo } from "../ui/Globo";
 import { IconoConejo } from "../ui/IconosKit";
+import { useChatNoLeidos } from "../../hooks/useChatNoLeidos";
 
 export type AdminView = "catalogo" | "chat" | "comisiones" | "novedades" | "estadisticas" | "ajustes";
 
@@ -25,6 +27,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Mensajes de clientes sin leer, para el globo de "Conversaciones".
+  const chatNoLeidos = useChatNoLeidos(true);
   const closeMobile = () => setMobileOpen(false);
 
   const navItems: { view: AdminView; label: string; icon: string }[] = [
@@ -60,6 +64,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         >
           <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
           {item.label}
+          {item.view === "chat" && (
+            <Globo cantidad={chatNoLeidos} etiqueta={t("chat.unreadBadge", { count: chatNoLeidos })} className="ml-auto" />
+          )}
         </button>
       ))}
     </nav>

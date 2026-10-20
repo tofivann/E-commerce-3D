@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SaldoMonedas } from "./SaldoMonedas";
 import { IconoConejo, IconoCorazon } from "../ui/IconosKit";
+import { Globo } from "../ui/Globo";
 import { IconoMoneda } from "../ui/Monedas";
+import { useChatNoLeidos } from "../../hooks/useChatNoLeidos";
 
 interface SidebarProps {
   isStaff: boolean;
@@ -26,6 +28,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = () => setMobileOpen(false);
   const { t } = useTranslation();
+  // Mensajes del admin que el cliente no ha visto, para el globo de "Chat con Mimi".
+  const chatNoLeidos = useChatNoLeidos(hasAccess);
 
   // Marca del kit: la conejita, el nombre y el lema debajo.
   const marca = (
@@ -100,6 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isStaff, hasAccess, onLogout }
         <NavLink to="/soporte" className={linkClass} onClick={closeMobile}>
           <span className="material-symbols-outlined text-[20px]">chat</span>
           {t("sidebar.support")}
+          <Globo cantidad={chatNoLeidos} etiqueta={t("chat.unreadBadge", { count: chatNoLeidos })} className="ml-auto" />
         </NavLink>
       )}
 

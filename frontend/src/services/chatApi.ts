@@ -27,7 +27,18 @@ export interface Mensaje {
     fecha_envio: string;
 }
 
+// Para el globo del menú: mensajes sin leer de quien pregunta (admin: de los
+// clientes en todas las conversaciones; cliente: del admin en la suya).
+export interface NoLeidos {
+    mensajes: number;
+    conversaciones: number;
+}
+
 export const chatApi = {
+    noLeidos: async (): Promise<NoLeidos> => {
+        const response = await axiosClient.get<NoLeidos>('chat/no-leidos/');
+        return response.data;
+    },
     listarConversaciones: async (): Promise<Conversacion[]> => {
         const response = await axiosClient.get<Conversacion[]>('chat/conversaciones/');
         return response.data;

@@ -1,12 +1,41 @@
 # chat/views.py corregido para seguridad estricta
-from django.db.models import Prefetch
+from django.db.models import Count, F, Prefetch, Q
 from django.utils import timezone
-from rest_framework import viewsets, status
+from rest_framework import permissions, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Conversacion, Mensaje
 from .serializers import ConversacionSerializer, MensajeSerializer
 from .permissions import EsAdminOPropietarioConversacion
+
+
+class NoLeidosView(APIView):
+    """Total de mensajes sin leer para quien pregunta, para el globo del menú
+    (admin: "Conversaciones", en todas las conversaciones; cliente: "Chat con
+    Mimi", en la suya). Se consulta cada poco, así que es una sola consulta.
+    "Sin leer" = mensajes de la otra parte posteriores a la última lectura
+    (o todos, si nunca se abrió la conversación), el mismo criterio que
+    ConversacionSerializer.mensajes_no_leidos.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        usuario = request.user
+        if usuario.is_staff or usuario.is_superuser:
+            conversaciones = Conversacion.objects.all()
+            campo_leido = 'admin_ultimo_leido'
+        else:
+            conversaciones = Conversacion.objects.filter(usuario=usuario)
+            campo_leido = 'cliente_ultimo_leido'
+        nuevos = Q(mensajes__fecha_envio__gt=F(campo_leido)) | Q(**{f'{campo_leido}__isnull': True})
+        pendientes = list(
+            conversaciones
+            .annotate(pendientes=Count('mensajes', filter=~Q(mensajes__remitente=usuario) & nuevos))
+            .filter(pendientes__gt=0)
+            .values_list('pendientes', flat=True)
+        )
+        return Response({'mensajes': sum(pendientes), 'conversaciones': len(pendientes)})
 
 class ConversacionViewSet(viewsets.ModelViewSet):
     serializer_class = ConversacionSerializer

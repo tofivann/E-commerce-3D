@@ -414,6 +414,8 @@
   },
   "chat": {
     "selectConversation": "Selecciona una conversación para comenzar a chatear.",
+    "unreadBadge_one": "{{count}} mensaje sin leer",
+    "unreadBadge_other": "{{count}} mensajes sin leer",
     "conversations": "Conversaciones",
     "inboxSubtitle": "Bandeja de atención a clientes",
     "noConversations": "No hay conversaciones activas.",

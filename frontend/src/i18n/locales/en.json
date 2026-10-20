@@ -414,6 +414,8 @@
   },
   "chat": {
     "selectConversation": "Select a conversation to start chatting.",
+    "unreadBadge_one": "{{count}} unread message",
+    "unreadBadge_other": "{{count}} unread messages",
     "conversations": "Conversations",
     "inboxSubtitle": "Customer support inbox",
     "noConversations": "No active conversations.",
