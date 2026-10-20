@@ -35,7 +35,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ isAdmin, conversacionAct
                         ? t('chat.chatWith', { name: conversacionActiva.usuario_info?.nombre || conversacionActiva.usuario_info?.username })
                         : t('chat.supportTitle')}
                 </h3>
-                <p className="text-xs text-on-surface-variant">{t('chat.online')}</p>
+                {/* Sin "En línea": no hay detección de presencia, era un texto fijo. */}
             </div>
         </div>
     );
