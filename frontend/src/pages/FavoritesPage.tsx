@@ -6,30 +6,26 @@ import type { Producto } from "../api/productos.api";
 import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
 import { ProductGrid } from "../components/products/ProductGrid";
 import { ProductGridSkeleton } from "../components/products/ProductGridSkeleton";
-import { AppLayout } from "../components/layout/AppLayout";
+import { Bandeja } from "../components/layout/Bandeja";
 import { HojaSeccion } from "../components/layout/HojaSeccion";
+import { useCarritoLayout } from "../components/layout/contextoLayout";
 import { InfiniteScrollSentinel } from "../components/ui/InfiniteScrollSentinel";
 import { useCanjeMonedas } from "../hooks/useCanjeMonedas";
-import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
 import { useComprasIds } from "../hooks/useComprasIds";
 import { useListaPaginada } from "../hooks/useListaPaginada";
-
-interface FavoritesPageProps {
-  isStaff?: boolean;
-  onLogoutClick: () => void;
-}
 
 const idDeProducto = (producto: Producto) => producto.id;
 
 // Página "Favoritos": los productos que el usuario guardó con el corazón,
 // con las mismas tarjetas del catálogo para poder comprarlos desde aquí.
-// La ruta solo es accesible con acceso al catálogo (ver App.tsx).
-export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, onLogoutClick }) => {
+// La ruta solo es accesible con acceso al catálogo (ver App.tsx); el menú y
+// la barra los pone AppLayout, aquí solo va el contenido.
+export const FavoritesPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [seleccionado, setSeleccionado] = useState<Producto | null>(null);
 
-  const carrito = useCarritoDrawer(true);
+  const carrito = useCarritoLayout();
   // Un favorito solo-MimiCoins se canjea directo (ver ProductCard).
   const canje = useCanjeMonedas(() => navigate("/biblioteca"));
   const purchasedIds = useComprasIds(true);
@@ -65,14 +61,9 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
 
   return (
     <>
-      <AppLayout
-        isStaff={isStaff}
-        hasAccess
-        onLogout={onLogoutClick}
-        carrito={carrito}
-        mainClassName="flex flex-col gap-6"
-        hoja={<HojaSeccion titulo={t("favoritos.title")} subtitulo={t("favoritos.subtitle")} />}
-      >
+      <HojaSeccion titulo={t("favoritos.title")} subtitulo={t("favoritos.subtitle")} />
+
+      <Bandeja className="flex flex-col gap-6">
         {lista.cargando && <ProductGridSkeleton />}
 
         {lista.error && (
@@ -110,7 +101,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({ isStaff = false, o
           onVisible={lista.cargarMas}
           disabled={!lista.hayMas || lista.cargando || lista.cargandoMas}
         />
-      </AppLayout>
+      </Bandeja>
 
       <ProductDetailsModal
         producto={seleccionado}

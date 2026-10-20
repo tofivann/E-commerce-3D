@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { Producto } from "../../api/productos.api";
 import { extraerIdYoutube } from "../../utils/youtube";
@@ -45,7 +46,9 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   const imagenUrl =
     portadaDe(producto) ?? fallbackImage;
 
-  return (
+  // Portal a <body>: la página vive dentro de la capa que deja pasar los clics
+  // a la escena (.sobre-escena), donde el fondo de cierre no recibiría el clic.
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
       <div className="glass-panel relative w-full max-w-2xl rounded-2xl p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto bg-surface-container-lowest/95">
@@ -142,6 +145,7 @@ export const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

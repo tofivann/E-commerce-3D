@@ -4,6 +4,8 @@ import { BotonVolverDeseo } from "./components/escena/BotonVolverDeseo";
 import { ControlesEscena } from "./components/escena/ControlesEscena";
 import { EscenaMimi } from "./components/escena/EscenaMimi";
 import { tieneEscena } from "./components/escena/rutas";
+import { AppLayout } from "./components/layout/AppLayout";
+import { GuestLayout } from "./components/layout/GuestLayout";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
@@ -107,22 +109,66 @@ function AppRoutes() {
         </>
       )}
     <Routes>
-      {/* Ruta Raíz: HomePage */}
-      <Route 
-        path="/" 
+      {/* Las secciones de la tienda comparten UN layout montado una sola vez
+          (ruta "layout" sin path): con sesión AppLayout —menú, barra, carrito,
+          pie—, sin sesión GuestLayout. Las páginas se dibujan en su <Outlet />,
+          así que cambiar de sección no reconstruye el menú (el globo de
+          mensajes y el contador del carrito no parpadean ni se vuelven a
+          pedir). Las guardas de acceso siguen aquí, ruta por ruta. */}
+      <Route
         element={
-          <HomePage
-            isLoggedIn={isLoggedIn}
-            isStaff={isStaff}
-            isSubscribed={isSubscribed}
-            onLoginClick={() => {
-              navigate("/login");
-            }}
-            onLogoutClick={handleLogout}
-            onRegisterClick={() => navigate("/register")}
-          />
-        } 
-      />
+          isLoggedIn ? (
+            <AppLayout isStaff={isStaff} hasAccess={isStaff || isSubscribed} onLogout={handleLogout} />
+          ) : (
+            <GuestLayout onLoginClick={() => navigate("/login")} onRegisterClick={() => navigate("/register")} />
+          )
+        }
+      >
+        {/* Ruta Raíz: HomePage */}
+        <Route
+          path="/"
+          element={
+            <HomePage
+              isLoggedIn={isLoggedIn}
+              isStaff={isStaff}
+              isSubscribed={isSubscribed}
+              onLoginClick={() => navigate("/login")}
+              onRegisterClick={() => navigate("/register")}
+            />
+          }
+        />
+        {/* Ruta de Favoritos: admins o suscriptores con cuenta activa (misma
+            regla que el backend: sin acceso al catálogo no hay favoritos) */}
+        <Route
+          path="/favoritos"
+          element={isLoggedIn && (isStaff || isSubscribed) ? <FavoritesPage /> : <Navigate to="/" replace />}
+        />
+        {/* Ruta de Novedades: solo con suscripción activa o staff (misma regla que Favoritos,
+            por decisión de la dueña: no es una vitrina pública) */}
+        <Route
+          path="/novedades"
+          element={isLoggedIn && (isStaff || isSubscribed) ? <NovedadesPage /> : <Navigate to="/" replace />}
+        />
+        {/* Ruta de Mimi Gifts (lo que se canjea con MimiCoins): misma regla que Favoritos */}
+        <Route
+          path="/mimi-gifts"
+          element={isLoggedIn && (isStaff || isSubscribed) ? <MimiGiftsPage /> : <Navigate to="/" replace />}
+        />
+        {/* Ruta de Mi perfil: cualquier cuenta con sesión (el perfil es de la
+            cuenta, no depende de la suscripción) */}
+        <Route path="/perfil" element={isLoggedIn ? <ProfilePage /> : <Navigate to="/" replace />} />
+        {/* Ruta de Mis MimiCoins (saldo e historial completo): misma regla que el perfil */}
+        <Route path="/mimicoins" element={isLoggedIn ? <MimiCoinsPage /> : <Navigate to="/" replace />} />
+        {/* Ruta de Biblioteca Digital: solo accesible con sesión iniciada */}
+        <Route path="/biblioteca" element={isLoggedIn ? <LibraryPage /> : <Navigate to="/" replace />} />
+        {/* Ruta de Chat de Soporte: admins o suscriptores con cuenta activa */}
+        <Route
+          path="/soporte"
+          element={isLoggedIn && (isStaff || isSubscribed) ? <SupportChatPage isStaff={isStaff} /> : <Navigate to="/" replace />}
+        />
+        {/* Ruta de Comisiones (Motion / Modelo Nuevo): solo accesible con sesión iniciada */}
+        <Route path="/comisiones" element={isLoggedIn ? <CommissionsPage /> : <Navigate to="/" replace />} />
+      </Route>
 
       {/* Ruta de Login con su contenedor visual y botón de volver */}
       <Route 
@@ -168,97 +214,6 @@ function AppRoutes() {
         element={
           isLoggedIn && isStaff ? (
             <AdminPage onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Favoritos: admins o suscriptores con cuenta activa (misma
-          regla que el backend: sin acceso al catálogo no hay favoritos) */}
-      <Route
-        path="/favoritos"
-        element={
-          isLoggedIn && (isStaff || isSubscribed) ? (
-            <FavoritesPage isStaff={isStaff} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Novedades: solo con suscripción activa o staff (misma regla que Favoritos,
-          por decisión de la dueña: no es una vitrina pública) */}
-      <Route
-        path="/novedades"
-        element={
-          isLoggedIn && (isStaff || isSubscribed) ? (
-            <NovedadesPage isStaff={isStaff} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Mimi Gifts (lo que se canjea con MimiCoins): misma regla que Favoritos */}
-      <Route
-        path="/mimi-gifts"
-        element={
-          isLoggedIn && (isStaff || isSubscribed) ? (
-            <MimiGiftsPage isStaff={isStaff} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Mi perfil: cualquier cuenta con sesión (el perfil es de la
-          cuenta, no depende de la suscripción) */}
-      <Route
-        path="/perfil"
-        element={
-          isLoggedIn ? (
-            <ProfilePage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Mis MimiCoins (saldo e historial completo): misma regla que el perfil */}
-      <Route
-        path="/mimicoins"
-        element={
-          isLoggedIn ? (
-            <MimiCoinsPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Biblioteca Digital: solo accesible con sesión iniciada */}
-      <Route
-        path="/biblioteca"
-        element={
-          isLoggedIn ? (
-            <LibraryPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Chat de Soporte: admins o suscriptores con cuenta activa */}
-      <Route
-        path="/soporte"
-        element={
-          isLoggedIn && (isStaff || isSubscribed) ? (
-            <SupportChatPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      {/* Ruta de Comisiones (Motion / Modelo Nuevo): solo accesible con sesión iniciada */}
-      <Route
-        path="/comisiones"
-        element={
-          isLoggedIn ? (
-            <CommissionsPage isStaff={isStaff} isSubscribed={isSubscribed} onLogoutClick={handleLogout} />
           ) : (
             <Navigate to="/" replace />
           )

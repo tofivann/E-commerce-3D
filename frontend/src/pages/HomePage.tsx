@@ -6,10 +6,10 @@ import { ProductList } from "../components/products/ProductList";
 import { SearchInput } from "../components/products/SearchInput";
 import { ProductDetailsModal } from "../components/products/ProductDetailsModal";
 import { PrecioSuscripcion } from "../components/ui/PrecioSuscripcion";
-import { AppLayout } from "../components/layout/AppLayout";
-import { GuestLayout } from "../components/layout/GuestLayout";
+import { Bandeja } from "../components/layout/Bandeja";
+import { Buscador } from "../components/layout/Buscador";
+import { useCarritoLayout } from "../components/layout/contextoLayout";
 import { HeroAtelier, ID_CATALOGO } from "../components/home/HeroAtelier";
-import { useCarritoDrawer } from "../hooks/useCarritoDrawer";
 import { useComprasIds } from "../hooks/useComprasIds";
 import { useFavoritos } from "../hooks/useFavoritos";
 import { useCanjeMonedas } from "../hooks/useCanjeMonedas";
@@ -22,16 +22,16 @@ interface HomePageProps {
   isStaff?: boolean;
   isSubscribed?: boolean;
   onLoginClick: () => void;
-  onLogoutClick: () => void;
   onRegisterClick: () => void;
 }
 
+// Portada. Se dibuja dentro de AppLayout (con sesión) o GuestLayout (sin
+// ella), según la ruta "layout" de App.tsx; aquí solo va el contenido.
 export const HomePage: React.FC<HomePageProps> = ({
   isLoggedIn,
   isStaff = false,
   isSubscribed = false,
   onLoginClick,
-  onLogoutClick,
   onRegisterClick,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,7 +44,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   const hasAccess = isLoggedIn && (isStaff || isSubscribed);
   const canSearch = isStaff || isSubscribed;
 
-  const carrito = useCarritoDrawer(hasAccess);
+  // El carrito es el del layout (icono, contador y panel de la barra).
+  const carrito = useCarritoLayout();
   const purchasedIds = useComprasIds(isLoggedIn);
   const favoritos = useFavoritos(hasAccess);
   // Canje directo con MimiCoins (un producto que solo acepta MimiCoins): el
@@ -100,10 +101,20 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
-  // Lo mismo para visitantes y para cuentas con sesión; solo cambia el
-  // layout que lo envuelve.
-  const contenido = (
+  return (
     <>
+      {/* El buscador va en la barra superior del layout (solo con acceso al
+          catálogo; sin sesión no hay barra y Buscador no dibuja nada). */}
+      {canSearch && (
+        <Buscador>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full max-w-40 sm:max-w-xs md:max-w-sm"
+          />
+        </Buscador>
+      )}
+
       {/* Aviso de pago pendiente. Fondo de papel casi opaco: va directamente
           sobre la escena pintada y un tinte rojo al 10 % no se leía. */}
       {isLoggedIn && !isStaff && !isSubscribed && (
@@ -146,7 +157,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* Lista de productos, en su bandeja de papel (el hero va fuera, sobre la escena). */}
-      <div id={ID_CATALOGO} className="bandeja-kit scroll-mt-24">
+      <Bandeja id={ID_CATALOGO} className="scroll-mt-24">
         <ProductList
           hasAccess={hasAccess}
           purchasedIds={purchasedIds}
@@ -158,41 +169,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           onToggleFavorito={favoritos.alternar}
           searchQuery={canSearch ? searchQuery : ""}
         />
-      </div>
-    </>
-  );
-
-  return (
-    <>
-      {isLoggedIn ? (
-        <AppLayout
-          isStaff={isStaff}
-          hasAccess={hasAccess}
-          onLogout={onLogoutClick}
-          carrito={carrito}
-          sinBandeja
-          mainClassName="flex flex-col gap-16"
-          barra={
-            canSearch && (
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                className="w-full max-w-40 sm:max-w-xs md:max-w-sm"
-              />
-            )
-          }
-        >
-          {contenido}
-        </AppLayout>
-      ) : (
-        <GuestLayout
-          onLoginClick={onLoginClick}
-          onRegisterClick={onRegisterClick}
-          mainClassName="flex flex-col gap-16"
-        >
-          {contenido}
-        </GuestLayout>
-      )}
+      </Bandeja>
 
       <ProductDetailsModal
         producto={selectedProduct}

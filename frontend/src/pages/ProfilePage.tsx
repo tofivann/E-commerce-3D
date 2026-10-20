@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { perfilApi, TAMANO_MAXIMO_FOTO_MB } from "../api/perfil.api";
 import type { Perfil } from "../api/perfil.api";
-import { AppLayout } from "../components/layout/AppLayout";
+import { Bandeja } from "../components/layout/Bandeja";
 import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { HistorialMonedas } from "../components/perfil/HistorialMonedas";
 import { RecortarFotoModal } from "../components/perfil/RecortarFotoModal";
@@ -11,12 +11,6 @@ import { Avatar } from "../components/ui/Avatar";
 import { usePerfil } from "../hooks/usePerfil";
 import { perfilStore } from "../stores/perfilStore";
 import { extraerErroresValidacion } from "../utils/erroresApi";
-
-interface ProfilePageProps {
-  isStaff?: boolean;
-  isSubscribed?: boolean;
-  onLogoutClick: () => void;
-}
 
 type Aviso = { tipo: "ok" | "error"; texto: string } | null;
 
@@ -27,29 +21,28 @@ const labelClass = "block text-xs font-semibold tracking-wider text-on-surface-v
 // "Mi perfil": el usuario ve sus datos y cambia su foto y su nombre. Lo demás
 // (correo, suscripción) es de solo lectura; la contraseña se cambia por el
 // flujo de correo que ya existe. Disponible para cualquier cuenta con sesión.
-export const ProfilePage: React.FC<ProfilePageProps> = ({ isStaff = false, isSubscribed = false, onLogoutClick }) => {
+// El menú y la barra los pone AppLayout; aquí solo va el contenido.
+export const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
   const { perfil, fase } = usePerfil();
 
   return (
-    <AppLayout
-      isStaff={isStaff}
-      hasAccess={isStaff || isSubscribed}
-      onLogout={onLogoutClick}
-      mainClassName="flex flex-col gap-6"
-      hoja={<HojaSeccion titulo={t("perfil.title")} subtitulo={t("perfil.subtitle")} />}
-    >
-      {fase === "error" && (
-        <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
-          {t("perfil.loadError")}
-        </div>
-      )}
-      {(fase === "vacio" || fase === "cargando") && (
-        <div className="glass-panel rounded-xl p-6 md:p-8 max-w-2xl h-72 animate-pulse" aria-hidden="true" />
-      )}
-      {/* key: si cambia la cuenta, el formulario arranca limpio con sus datos. */}
-      {perfil && <FormularioPerfil key={perfil.id} perfil={perfil} />}
-    </AppLayout>
+    <>
+      <HojaSeccion titulo={t("perfil.title")} subtitulo={t("perfil.subtitle")} />
+
+      <Bandeja className="flex flex-col gap-6">
+        {fase === "error" && (
+          <div className="p-4 bg-error/20 border border-error/50 rounded-md text-on-error-container text-center">
+            {t("perfil.loadError")}
+          </div>
+        )}
+        {(fase === "vacio" || fase === "cargando") && (
+          <div className="glass-panel rounded-xl p-6 md:p-8 max-w-2xl h-72 animate-pulse" aria-hidden="true" />
+        )}
+        {/* key: si cambia la cuenta, el formulario arranca limpio con sus datos. */}
+        {perfil && <FormularioPerfil key={perfil.id} perfil={perfil} />}
+      </Bandeja>
+    </>
   );
 };
 

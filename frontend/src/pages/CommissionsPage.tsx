@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AppLayout } from "../components/layout/AppLayout";
+import { Bandeja } from "../components/layout/Bandeja";
 import { HojaSeccion } from "../components/layout/HojaSeccion";
 import { ComisionMotionForm } from "../components/comisiones/ComisionMotionForm";
 import { ComisionModeloForm } from "../components/comisiones/ComisionModeloForm";
@@ -9,19 +9,11 @@ import { MisComisionesList } from "../components/comisiones/MisComisionesList";
 import { carritoApi } from "../api/carrito.api";
 import { perfilStore } from "../stores/perfilStore";
 
-interface CommissionsPageProps {
-  isStaff?: boolean;
-  isSubscribed?: boolean;
-  onLogoutClick: () => void;
-}
-
 type TipoComision = "motion" | "modelo";
 
-export const CommissionsPage: React.FC<CommissionsPageProps> = ({
-  isStaff = false,
-  isSubscribed = false,
-  onLogoutClick,
-}) => {
+// "Comisiones": pedir una y seguir las propias. El menú y la barra los pone
+// AppLayout; aquí solo va el contenido.
+export const CommissionsPage: React.FC = () => {
   const { t } = useTranslation();
   const [tipo, setTipo] = useState<TipoComision>("motion");
   const [formularioAbierto, setFormularioAbierto] = useState(false);
@@ -29,8 +21,6 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [confirmandoPago, setConfirmandoPago] = useState(Boolean(sessionId));
-
-  const hasAccess = isStaff || isSubscribed;
 
   // Si volvemos de Stripe con ?session_id=, esperamos brevemente a que el
   // webhook confirme el pago antes de mostrar la lista con normalidad.
@@ -64,13 +54,10 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
   }, [sessionId]);
 
   return (
-    <AppLayout
-      isStaff={isStaff}
-      hasAccess={hasAccess}
-      onLogout={onLogoutClick}
-      mainClassName="flex flex-col gap-8"
-      hoja={<HojaSeccion titulo={t("commissionsPage.title")} subtitulo={t("commissionsPage.subtitle")} />}
-    >
+    <>
+      <HojaSeccion titulo={t("commissionsPage.title")} subtitulo={t("commissionsPage.subtitle")} />
+
+      <Bandeja className="flex flex-col gap-8">
       {confirmandoPago && (
         <div className="bg-primary-container/15 border border-primary-container/40 text-on-surface p-4 rounded-lg flex items-center gap-3">
           <div className="w-5 h-5 rounded-full border-2 border-outline-variant/40 border-t-primary-container animate-spin shrink-0" />
@@ -133,6 +120,7 @@ export const CommissionsPage: React.FC<CommissionsPageProps> = ({
         <h2 className="text-xl font-bold text-on-surface">{t("commissionsPage.myCommissions")}</h2>
         <MisComisionesList refreshKey={refreshKey} />
       </section>
-    </AppLayout>
+      </Bandeja>
+    </>
   );
 };

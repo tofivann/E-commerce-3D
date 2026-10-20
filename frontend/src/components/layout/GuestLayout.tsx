@@ -1,31 +1,32 @@
 import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useCarritoDrawer } from "../../hooks/useCarritoDrawer";
 import { IconoConejo } from "../ui/IconosKit";
+import { ContextoLayout } from "./contextoLayout";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PieDePagina } from "./PieDePagina";
 
 interface GuestLayoutProps {
   onLoginClick: () => void;
   onRegisterClick: () => void;
-  // Clases extra para <main>, igual que en AppLayout.
-  mainClassName?: string;
-  children: React.ReactNode;
 }
 
 // Layout de la portada para visitantes sin sesión: barra con el logo y los
 // botones de entrar/registrarse (menú desplegable en móvil), contenido y
 // pie. Es el equivalente público de AppLayout — sin menú lateral ni carrito,
-// porque un visitante no tiene secciones propias.
-export const GuestLayout: React.FC<GuestLayoutProps> = ({
-  onLoginClick,
-  onRegisterClick,
-  mainClassName = "",
-  children,
-}) => {
+// porque un visitante no tiene secciones propias. Como AppLayout, es una ruta
+// "layout" en App.tsx y la página se dibuja en su <Outlet />.
+export const GuestLayout: React.FC<GuestLayoutProps> = ({ onLoginClick, onRegisterClick }) => {
   const { t } = useTranslation();
   const [guestMenuOpen, setGuestMenuOpen] = useState(false);
+  // Un visitante no compra: carrito apagado (no pide nada), pero existe para
+  // que HomePage use el mismo useCarritoLayout() con o sin sesión. Sin barra
+  // para buscadores: el visitante no busca.
+  const carrito = useCarritoDrawer(false);
 
   return (
+    <ContextoLayout.Provider value={{ carrito, nodoBarra: null }}>
     <div className="text-on-surface font-sans min-h-screen flex">
       {/* La escena de Mimi la monta App.tsx (una vez para toda la app); aquí
           el contenido va por encima pero deja pasar los clics (.sobre-escena). */}
@@ -128,12 +129,13 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({
           </aside>
         </div>
 
-        <main className={`flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full ${mainClassName}`}>
-          {children}
+        <main className="flex-grow pt-24 pb-16 px-gutter md:px-16 max-w-container-max mx-auto w-full flex flex-col gap-16">
+          <Outlet />
         </main>
 
         <PieDePagina />
       </div>
     </div>
+    </ContextoLayout.Provider>
   );
 };
