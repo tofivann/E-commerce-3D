@@ -1,6 +1,8 @@
 """Los archivos que se venden o se entregan no se pueden pedir por su
 dirección: solo salen por las vistas de descarga, que comprueban sesión y
-derecho. Las imágenes sí se sirven por dirección (las pinta un <img>).
+derecho (core/descargas.py; el detalle del enlace firmado está en
+core/tests_descargas.py). Las imágenes sí se sirven por dirección (las pinta
+un <img>).
 """
 import json
 import shutil
@@ -12,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db import models
 from django.test import override_settings
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from core.media import CARPETAS_PUBLICAS, es_publico
 from custom_orders.models import ComisionMotion, EstadoComision, TramoPersonajesMotion
@@ -209,6 +211,15 @@ class RespuestasSinDireccionesTests(MediaTestsBase):
 
 
 class DescargasConPermisoTests(MediaTestsBase):
+    def bajar(self, url):
+        """El flujo completo: el enlace con la sesión que tenga self.client y,
+        con él, el archivo sin sesión (como lo abre el navegador)."""
+        enlace = self.client.get(url)
+        self.assertEqual(enlace.status_code, 200, getattr(enlace, 'data', None))
+        respuesta = APIClient().get(enlace.data['url'])
+        self.assertEqual(respuesta.status_code, 200)
+        return cuerpo(respuesta)
+
     def test_quien_compro_descarga_y_quien_no_no(self):
         producto = self.crear_producto()
         compra = self.comprar(self.comprador, producto)
@@ -218,9 +229,7 @@ class DescargasConPermisoTests(MediaTestsBase):
         self.client.force_authenticate(self.otro)
         self.assertEqual(self.client.get(url).status_code, 404)
         self.client.force_authenticate(self.comprador)
-        respuesta = self.client.get(url)
-        self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(cuerpo(respuesta), b'CONTENIDO-DE-PAGO')
+        self.assertEqual(self.bajar(url), b'CONTENIDO-DE-PAGO')
 
     def test_el_admin_descarga_el_archivo_de_un_producto_y_nadie_mas(self):
         producto = self.crear_producto()
@@ -230,10 +239,7 @@ class DescargasConPermisoTests(MediaTestsBase):
         self.client.force_authenticate(self.comprador)
         self.assertEqual(self.client.get(url).status_code, 403)
         self.client.force_authenticate(self.admin)
-        respuesta = self.client.get(url)
-        self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(cuerpo(respuesta), b'CONTENIDO-DE-PAGO')
-        self.assertIn('attachment', respuesta['Content-Disposition'])
+        self.assertEqual(self.bajar(url), b'CONTENIDO-DE-PAGO')
 
     def test_la_entrega_la_baja_su_cliente_y_el_admin_pero_no_otro_cliente(self):
         comision = self.crear_comision(self.comprador)
@@ -245,11 +251,11 @@ class DescargasConPermisoTests(MediaTestsBase):
         self.assertEqual(self.client.get(del_admin).status_code, 403)
 
         self.client.force_authenticate(self.comprador)
-        self.assertEqual(cuerpo(self.client.get(del_cliente)), b'ENTREGA-PRIVADA')
+        self.assertEqual(self.bajar(del_cliente), b'ENTREGA-PRIVADA')
         self.assertEqual(self.client.get(del_admin).status_code, 403)
 
         self.client.force_authenticate(self.admin)
-        self.assertEqual(cuerpo(self.client.get(del_admin)), b'ENTREGA-PRIVADA')
+        self.assertEqual(self.bajar(del_admin), b'ENTREGA-PRIVADA')
 
     def test_un_producto_publicado_desde_una_comision_lo_descarga_quien_lo_compra(self):
         comision = self.crear_comision(self.comprador)
@@ -273,4 +279,4 @@ class DescargasConPermisoTests(MediaTestsBase):
         # Y quien lo compra en la tienda lo descarga por su biblioteca.
         compra = self.comprar(self.otro, producto)
         self.client.force_authenticate(self.otro)
-        self.assertEqual(cuerpo(self.client.get(f'/api/v1/orders/biblioteca/{compra.id}/descargar/')), b'ENTREGA-PRIVADA')
+        self.assertEqual(self.bajar(f'/api/v1/orders/biblioteca/{compra.id}/descargar/'), b'ENTREGA-PRIVADA')

@@ -69,9 +69,6 @@ CORS_ALLOWED_ORIGINS = os.getenv(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:5173,http://127.0.0.1:5173',
 ).split(',')
-# Permite que el frontend lea el nombre de archivo al descargar una compra
-# (por defecto los navegadores ocultan este header en peticiones cross-origin).
-CORS_EXPOSE_HEADERS = ['Content-Disposition']
 
 # Origen del frontend, usado para construir las URLs de retorno de Stripe Checkout.
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
@@ -158,7 +155,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 7. Archivos subidos por el usuario (archivo_3d, imagen_previa, etc.)
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# En producción MEDIA_ROOT vive DENTRO de la carpeta del dominio de la API,
+# con un nombre no adivinable y un .htaccess que niega el acceso directo: es
+# la única forma de que LiteSpeed sirva las descargas él mismo (ver
+# core/descargas.py; no sigue enlaces simbólicos ni rutas fuera del docroot).
+MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT') or BASE_DIR / 'media')
+
+# Descarga directa por LiteSpeed (core/descargas.py::respuesta_con_archivo):
+# dirección interna de MEDIA_ROOT dentro del dominio (p. ej. '/_media-x7k2/')
+# y la clave que exige su .htaccess en ?clave=. Vacío = Django envía el
+# archivo él mismo (desarrollo y tests).
+DESCARGA_DIRECTA_URL = os.getenv('DESCARGA_DIRECTA_URL', '').strip('/ ')
+if DESCARGA_DIRECTA_URL:
+    DESCARGA_DIRECTA_URL = f'/{DESCARGA_DIRECTA_URL}/'
+DESCARGA_DIRECTA_CLAVE = os.getenv('DESCARGA_DIRECTA_CLAVE', '')
+# Validez del enlace firmado de descarga. Una hora: tiene que cubrir la
+# descarga entera y una reanudación, no solo el clic.
+DESCARGA_ENLACE_SEGUNDOS = 60 * 60
 
 STORAGES = {
     'default': {

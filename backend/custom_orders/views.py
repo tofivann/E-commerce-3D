@@ -1,17 +1,16 @@
 import json
-import os
 import uuid
 
 import stripe
 from django.conf import settings
 from django.db import transaction
-from django.http import FileResponse, Http404
 from rest_framework import generics, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core import paypal_utils
+from core.descargas import enlace_de_descarga
 from core.email_utils import enviar_email
 from core.idiomas import EN, ES
 from monedas.reglas import NOMBRE_MONEDAS, PASARELA_MONEDAS
@@ -356,32 +355,21 @@ class SolicitarComisionModeloMonedasView(APIView):
         )
 
 
-def _descargar_archivo(archivo):
-    if not archivo:
-        raise Http404("Esta comisión todavía no tiene un archivo de entrega.")
-    return FileResponse(archivo.open('rb'), as_attachment=True, filename=os.path.basename(archivo.name))
-
+# Enlace de descarga de la entrega, para el cliente de la comisión. El archivo
+# lo sirve core.descargas (DescargaFirmadaView) con ese enlace, sin sesión.
 
 class DescargarComisionMotionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        try:
-            comision = ComisionMotion.objects.get(pk=pk, usuario=request.user)
-        except ComisionMotion.DoesNotExist:
-            raise Http404("No tienes una comisión con ese identificador.")
-        return _descargar_archivo(comision.archivo_entrega)
+        return Response(enlace_de_descarga(request, 'motion', pk))
 
 
 class DescargarComisionModeloView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        try:
-            comision = ComisionModelo.objects.get(pk=pk, usuario=request.user)
-        except ComisionModelo.DoesNotExist:
-            raise Http404("No tienes una comisión con ese identificador.")
-        return _descargar_archivo(comision.archivo_entrega)
+        return Response(enlace_de_descarga(request, 'modelo', pk))
 
 
 class ComisionAdminViewSetBase(
@@ -441,12 +429,15 @@ class ComisionAdminViewSetBase(
                 idioma=idioma,
             )
 
+    # Qué resolutor de core.descargas sirve la entrega a staff; lo fija cada subclase.
+    tipo_descarga = None
+
     @action(detail=True, methods=['get'])
     def descargar(self, request, pk=None):
-        """Archivo entregado de una comisión, para el admin (el viewset
-        entero es solo staff). El cliente descarga por
-        DescargarComision{Motion,Modelo}View, que comprueba que es suya."""
-        return _descargar_archivo(self.get_object().archivo_entrega)
+        """Enlace de descarga de la entrega, para el admin (el viewset entero
+        es solo staff). El cliente la baja por DescargarComision{Motion,Modelo}View,
+        que comprueba que es suya."""
+        return Response(enlace_de_descarga(request, self.tipo_descarga, pk))
 
     def _publicar_producto(self, comision):
         """
@@ -518,6 +509,7 @@ class ComisionAdminViewSetBase(
 class ComisionMotionAdminViewSet(ComisionAdminViewSetBase):
     queryset = ComisionMotion.objects.select_related('orden', 'usuario', 'tramo_personajes').order_by('-orden__fecha_orden')
     serializer_class = ComisionMotionAdminSerializer
+    tipo_descarga = 'motion-admin'
 
     @action(detail=True, methods=['post'])
     @transaction.atomic
@@ -535,6 +527,7 @@ class ComisionMotionAdminViewSet(ComisionAdminViewSetBase):
 class ComisionModeloAdminViewSet(ComisionAdminViewSetBase):
     queryset = ComisionModelo.objects.select_related('orden', 'usuario', 'juego').order_by('-orden__fecha_orden')
     serializer_class = ComisionModeloAdminSerializer
+    tipo_descarga = 'modelo-admin'
 
     @action(detail=True, methods=['post'])
     @transaction.atomic

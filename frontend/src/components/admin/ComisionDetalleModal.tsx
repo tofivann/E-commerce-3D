@@ -64,7 +64,7 @@ export const ComisionDetalleModal: React.FC<ComisionDetalleModalProps> = ({ item
     if (!item.data.archivo_entrega_nombre) return;
     setDescargando(true);
     try {
-      await comisionesAdminApi.descargarEntrega(item.tipo, item.data.id, item.data.archivo_entrega_nombre);
+      await comisionesAdminApi.descargarEntrega(item.tipo, item.data.id);
     } catch (err) {
       console.error("Error al descargar la entrega:", err);
       window.alert(t("misComisiones.downloadError"));

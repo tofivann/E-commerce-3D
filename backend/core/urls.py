@@ -17,11 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 
+from .descargas import DescargaFirmadaView
 from .media import servir_media
 from .views import StripeWebhookView, PayPalCapturarOrdenView, PayPalWebhookView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # La dirección que abre el navegador para bajar un archivo de pago (ver
+    # core/descargas.py): firmada, sin sesión, la devuelven las vistas
+    # .../descargar/ de orders, custom_orders y products.
+    path('api/v1/descargas/<str:token>/<str:nombre>', DescargaFirmadaView.as_view(), name='descarga-firmada'),
 
     # Rutas de tus módulos / APIs
     path('api/v1/users/', include('users.urls')),

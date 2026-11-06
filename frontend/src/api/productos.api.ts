@@ -140,5 +140,5 @@ export function deleteProducto(id: string | number) {
 // Archivo 3D de un producto, para el admin (el comprador lo baja desde su
 // biblioteca: bibliotecaApi / descargarCompra).
 export function descargarArchivoProducto(producto: Producto): Promise<void> {
-  return descargarConSesion(`${BASE}${producto.id}/descargar/`, producto.archivo_nombre || `${producto.titulo}.zip`);
+  return descargarConSesion(`${BASE}${producto.id}/descargar/`);
 }

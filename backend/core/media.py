@@ -6,10 +6,10 @@ Todo lo que se sube vive en MEDIA_ROOT, pero no todo es público:
   las pinta el navegador con un <img>, que no puede mandar el token de
   sesión: tienen que poder pedirse por su dirección, sin más.
 - Los ARCHIVOS QUE SE VENDEN o se entregan (el 3D de un producto, la entrega
-  de una comisión) NO se piden por dirección nunca. Solo salen por las
-  vistas de descarga, que comprueban sesión y que el archivo le corresponde
-  a quien lo pide: orders.DescargarCompraView, custom_orders
-  .DescargarComision{Motion,Modelo}View, y las descargas de admin.
+  de una comisión) NO se piden por dirección nunca. Solo salen por
+  core/descargas.py: las vistas .../descargar/ comprueban sesión y que el
+  archivo le corresponde a quien lo pide, y dan un enlace firmado con el que
+  el navegador lo baja.
 
 Por eso esta vista es una lista de PERMITIDOS, no de prohibidos: una carpeta
 nueva queda cerrada hasta que alguien la añada aquí a propósito. Antes se

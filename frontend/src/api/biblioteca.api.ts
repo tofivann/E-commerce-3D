@@ -21,8 +21,5 @@ export const bibliotecaApi = {
 
 // Descarga el archivo de una compra (exige sesión: ver utils/descarga.ts)
 export async function descargarCompra(compra: CompraDigital): Promise<void> {
-  await descargarConSesion(
-    `orders/biblioteca/${compra.id}/descargar/`,
-    `${compra.producto.titulo}.${(compra.producto.formato_archivo || "3d").toLowerCase()}`
-  );
+  await descargarConSesion(`orders/biblioteca/${compra.id}/descargar/`);
 }

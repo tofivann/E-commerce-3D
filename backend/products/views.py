@@ -1,6 +1,3 @@
-import os
-
-from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets, permissions
 from rest_framework.decorators import action
@@ -8,6 +5,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.descargas import enlace_de_descarga
 from core.pagination import PaginacionEstandar
 from .filters import BusquedaNormalizadaFilter, CategoriasFilter, TiendaFilter
 from .models import Categoria, Favorito, Producto
@@ -60,13 +58,11 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def descargar(self, request, pk=None):
-        """Archivo 3D de un producto, para el admin (get_permissions lo
-        limita a staff: no es ni `list` ni `retrieve`). El comprador descarga
-        por orders.DescargarCompraView, que comprueba su compra."""
-        archivo = self.get_object().archivo_3d
-        if not archivo:
-            raise Http404('El producto no tiene un archivo 3D asociado.')
-        return FileResponse(archivo.open('rb'), as_attachment=True, filename=os.path.basename(archivo.name))
+        """Enlace de descarga del archivo 3D de un producto, para el admin
+        (get_permissions lo limita a staff: no es ni `list` ni `retrieve`). El
+        comprador lo baja por orders.DescargarCompraView, que comprueba su
+        compra. El archivo lo sirve core.descargas con ese enlace."""
+        return Response(enlace_de_descarga(request, 'producto', pk))
 
     def get_queryset(self):
         user = self.request.user

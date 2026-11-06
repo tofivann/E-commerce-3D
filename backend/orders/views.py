@@ -1,6 +1,3 @@
-import os
-
-from django.http import FileResponse, Http404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import generics, permissions
@@ -8,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.descargas import enlace_de_descarga
 from core.pagination import PaginacionEstandar
 from .models import ComprasDigitales
 from .serializers import ComprasDigitalesSerializer, VentaSerializer
@@ -33,28 +31,14 @@ class MiBibliotecaView(generics.ListAPIView):
 
 class DescargarCompraView(APIView):
     """
-    Descarga el archivo 3D de una compra digital, verificando que
-    pertenezca al usuario autenticado y que el permiso siga activo.
+    Enlace de descarga del archivo 3D de una compra digital, si pertenece al
+    usuario autenticado y el permiso sigue activo. El archivo en sí lo sirve
+    core.descargas (DescargaFirmadaView) con ese enlace, sin sesión.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        try:
-            compra = ComprasDigitales.objects.select_related('producto').get(
-                pk=pk, usuario=request.user, activo=True,
-            )
-        except ComprasDigitales.DoesNotExist:
-            raise Http404("No tienes una compra activa con ese identificador.")
-
-        archivo = compra.producto.archivo_3d
-        if not archivo:
-            raise Http404("El producto no tiene un archivo 3D asociado.")
-
-        return FileResponse(
-            archivo.open('rb'),
-            as_attachment=True,
-            filename=os.path.basename(archivo.name),
-        )
+        return Response(enlace_de_descarga(request, 'compra', pk))
 
 
 class RangoDeFechasMixin:

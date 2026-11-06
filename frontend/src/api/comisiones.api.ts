@@ -272,16 +272,16 @@ export const comisionesAdminApi = {
     return data;
   },
   // Archivo entregado de una comisión, para el admin.
-  descargarEntrega: (tipo: "motion" | "modelo", id: number, nombre: string): Promise<void> =>
-    descargarConSesion(`custom-orders/admin/comisiones/${tipo}/${id}/descargar/`, nombre),
+  descargarEntrega: (tipo: "motion" | "modelo", id: number): Promise<void> =>
+    descargarConSesion(`custom-orders/admin/comisiones/${tipo}/${id}/descargar/`),
 };
 
 export async function descargarComisionMotion(comision: ComisionMotion): Promise<void> {
   if (!comision.descarga_url) return;
-  await descargarConSesion(`custom-orders/comisiones/motion/${comision.id}/descargar/`, `${comision.nombre_cancion}.zip`);
+  await descargarConSesion(`custom-orders/comisiones/motion/${comision.id}/descargar/`);
 }
 
 export async function descargarComisionModelo(comision: ComisionModelo): Promise<void> {
   if (!comision.descarga_url) return;
-  await descargarConSesion(`custom-orders/comisiones/modelo/${comision.id}/descargar/`, `${comision.nombre_personaje}.zip`);
+  await descargarConSesion(`custom-orders/comisiones/modelo/${comision.id}/descargar/`);
 }
